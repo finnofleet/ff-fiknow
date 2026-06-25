@@ -185,8 +185,10 @@ const payloadStrategy: AuthStrategy = {
 };
 
 export function createOidcProvider(): AuthProvider {
-  // Pflicht-Config früh validieren (wirft mit klarer Meldung statt still
-  // unsicher zu starten).
-  oidcConfig();
+  // KEINE eager Config-Validierung hier: dieser Provider wird beim
+  // `next build` (Page-Data-Collection) konstruiert, wo die OIDC-Env nicht
+  // gesetzt ist. oidcConfig() wird lazy zur Request-Zeit aufgerufen
+  // (authenticate / getServerIdentity / Routes / Middleware) und wirft dort
+  // mit klarer Meldung, falls etwas fehlt.
   return { name: "oidc", payloadStrategy, getServerIdentity };
 }

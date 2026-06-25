@@ -1,0 +1,109 @@
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 48px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.brandWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+  /* Höhe des Brand-Logo-SVGs im Logo-Mode (kompakt für die Top-Nav). */
+  --brand-logo-h: 28px;
+}
+/* Marken-Claim neben dem Logo (brand.tagline). Markenneutral: jede Marke
+   zeigt ihren eigenen Claim. Auf schmalen Viewports ausgeblendet. */
+.tag {
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1;
+}
+.name {
+  display: inline-flex;
+  align-items: baseline;
+}
+.tld {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+.links {
+  display: flex;
+  gap: 28px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.links a {
+  color: var(--ink-3);
+  transition: color var(--dur);
+}
+.links a:hover {
+  color: var(--ink);
+}
+.active {
+  color: var(--ink) !important;
+}
+.right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  /* Claim weicht zuerst — Logo + Navigation haben Vorrang. */
+  .tag {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .links {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}

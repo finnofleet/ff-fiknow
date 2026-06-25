@@ -1,0 +1,27 @@
+edu-platform ({{ .Values.image.repository }}:{{ .Values.image.tag }}) wurde deployed.
+
+Auth-Provider: {{ .Values.config.AUTH_PROVIDER | default "gotrue" }}
+{{- if eq (.Values.config.AUTH_PROVIDER | default "gotrue") "oidc" }}
+OIDC-Issuer:   {{ .Values.config.OIDC_ISSUER }}
+Redirect-Base: {{ include "fiknow.redirectBase" . }}
+
+WICHTIG: In Keycloak muss als gültige redirect_uri eingetragen sein:
+  {{ include "fiknow.redirectBase" . }}/auth/oidc/callback
+{{- end }}
+
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+URL: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+Kein Ingress aktiv — Zugriff via Port-Forward:
+  kubectl port-forward svc/{{ include "fiknow.fullname" . }} 8080:{{ .Values.service.port }}
+{{- end }}
+
+Status:
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+  kubectl logs -l app.kubernetes.io/instance={{ .Release.Name }} -f
+
+Hinweis: Das Schema wird beim Pod-Start automatisch migriert (Auto-Migrate,
+Advisory-Lock → bei mehreren Replicas migriert nur einer). Postgres und
+Keycloak werden von diesem Chart NICHT bereitgestellt.

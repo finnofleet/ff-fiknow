@@ -1,0 +1,43 @@
+.wrap {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  box-shadow: var(--shadow-md);
+}
+.wrap button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  /* --ink-2 statt --ink-3 — letzteres hatte im Light-Theme nur ~3:1
+     Kontrast gegen --bg-elev (fast Weiß), unter WCAG-AA. */
+  color: var(--ink-2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: background 200ms, color 200ms;
+}
+.wrap button:hover {
+  color: var(--ink);
+}
+/* button.on statt nur .on — sonst gewinnt der generische `.wrap button`-
+   Selektor (specificity 0,1,1) gegen das alleinstehende `.on` (0,1,0)
+   und überschreibt die accent-ink-Farbe mit --ink-2. */
+.wrap button.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  /* Inset-Shadow gibt der Pille mehr Präsenz und schärft den Text-Rand —
+     hilft bei Lighthouse-Kontrastmessung auf kleinen Schriftgrößen. */
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent-ink) 35%, transparent);
+}
+.wrap button.on:hover {
+  color: var(--accent-ink);
+}

@@ -1,0 +1,33 @@
+---
+title: "Quiz: Warmup"
+type: "quiz"
+estimated_minutes: 2
+summary: "Zwei Fragen zur Demonstration des Quiz-Formats."
+passing_score: 0.5
+---
+
+# Quiz: Warmup
+
+Zwei kurze Fragen, um das Quiz-Format zu zeigen.
+
+<Question
+  prompt="Welche Komponente nutzt man am Ende einer Reading-Lesson für die Zusammenfassung?"
+  explanation="`<KeyTakeaways>` ist die Konvention. Sie rendert eine hervorgehobene Box mit den wichtigsten Punkten."
+  type="single"
+>
+  <Option>`<Summary>`</Option>
+  <Option correct={true}>`<KeyTakeaways>`</Option>
+  <Option>`<Recap>`</Option>
+  <Option>`<TheEnd>`</Option>
+</Question>
+
+<Question
+  prompt="Welche Frontmatter-Felder sind in course.mdx PFLICHT?"
+  explanation="`title` und `description` sind Pflicht. Subtitle, Category, Difficulty etc. sind empfohlen aber optional."
+  type="multi"
+>
+  <Option correct={true}>title</Option>
+  <Option correct={true}>description</Option>
+  <Option>cover_alt</Option>
+  <Option>category</Option>
+</Question>

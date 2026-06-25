@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1779044355374,
+      "tag": "0000_lumpy_bruce_banner",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781038550432,
+      "tag": "0001_add_authoring_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781195108197,
+      "tag": "0002_add_annotations",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781200000000,
+      "tag": "0003_drop_legacy_content_fks",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781248026643,
+      "tag": "0004_add_mdx_previews",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781458002572,
+      "tag": "0005_drop_mdx_previews",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781545333361,
+      "tag": "0006_add_lesson_chunks",
+      "breakpoints": true
+    }
+  ]
+}

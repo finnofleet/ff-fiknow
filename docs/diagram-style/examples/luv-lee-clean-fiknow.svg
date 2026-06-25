@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-labelledby="t1 d1" font-family="Sora, system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title id="t1">Luv und Lee an einem Gebäude (fiknow)</title>
+  <desc id="d1">Auf der Luvseite trifft der Wind geordnet auf die Fassade; auf der Leeseite bilden sich Wirbel und Turbulenz. fiknow clean, theme-adaptiv (currentColor).</desc>
+
+  <defs>
+    <marker id="ah-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse">
+      <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <line x1="3" y1="2.5" x2="11" y2="7"/>
+        <line x1="3" y1="11.5" x2="11" y2="7"/>
+      </g>
+    </marker>
+    <marker id="ah-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse">
+      <g fill="none" stroke="#2D779B" stroke-width="1.7" stroke-linecap="round">
+        <line x1="3" y1="2.5" x2="11" y2="7"/>
+        <line x1="3" y1="11.5" x2="11" y2="7"/>
+      </g>
+    </marker>
+  </defs>
+
+  <!-- transparent: KEIN Hintergrund-Rect → erbt den Karten-/Seiten-Grund -->
+
+  <!-- Gebäude: currentColor-Füllungen, niedrige Opazität (adaptiv) -->
+  <rect x="340" y="175" width="150" height="155" fill="currentColor" fill-opacity="0.07"/>
+  <rect x="360" y="196" width="22" height="26" fill="currentColor" fill-opacity="0.16"/>
+  <rect x="396" y="196" width="22" height="26" fill="currentColor" fill-opacity="0.16"/>
+  <rect x="360" y="236" width="22" height="26" fill="currentColor" fill-opacity="0.16"/>
+  <rect x="396" y="236" width="22" height="26" fill="currentColor" fill-opacity="0.16"/>
+
+  <!-- Grundlinie (dezent, adaptiv) -->
+  <line x1="30" y1="330" x2="770" y2="330" stroke="currentColor" stroke-opacity="0.4" stroke-width="1.5"/>
+
+  <!-- Luv: geordnete Strömung (Tinte = currentColor) -->
+  <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 120 L300 120 C 370 96, 445 96, 510 130" marker-end="url(#ah-ink)"/>
+    <path d="M45 162 L300 162 C 372 140, 448 144, 512 176" marker-end="url(#ah-ink)"/>
+    <line x1="45" y1="204" x2="320" y2="204" marker-end="url(#ah-ink)"/>
+    <line x1="45" y1="246" x2="320" y2="246" marker-end="url(#ah-ink)"/>
+  </g>
+
+  <!-- Lee: Turbulenz (Brand-Blau, fix — liest auf hell und dunkel) -->
+  <g fill="none" stroke="#2D779B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M556 215 C 556 240, 578 255, 610 255 C 642 255, 664 240, 664 215 C 664 190, 642 177, 610 177" marker-end="url(#ah-blue)"/>
+    <path d="M515 288 C 546 268, 586 268, 606 285 C 621 300, 596 315, 576 308" marker-end="url(#ah-blue)"/>
+    <path d="M660 246 C 686 226, 706 256, 732 238" stroke="#68B8DF" stroke-dasharray="3 5" stroke-width="1.4"/>
+    <path d="M620 304 C 660 289, 706 309, 744 292" stroke="#68B8DF" stroke-dasharray="3 5" stroke-width="1.4"/>
+  </g>
+
+  <!-- Beschriftung -->
+  <g fill="currentColor">
+    <text x="55" y="78" font-size="12" letter-spacing="0.12em" fill-opacity="0.5">WIND  &#8594;</text>
+    <text x="178" y="366" text-anchor="middle" font-size="17" font-weight="600">Luvseite</text>
+    <text x="178" y="385" text-anchor="middle" font-size="11" fill-opacity="0.55" letter-spacing="0.04em">geordnete Strömung</text>
+    <text x="625" y="366" text-anchor="middle" font-size="17" font-weight="600" fill="#2D779B">Leeseite</text>
+    <text x="625" y="385" text-anchor="middle" font-size="11" fill-opacity="0.55" letter-spacing="0.04em">Wirbel &amp; Turbulenz</text>
+    <text x="415" y="352" text-anchor="middle" font-size="10.5" fill-opacity="0.42" letter-spacing="0.08em">GEBÄUDE</text>
+  </g>
+</svg>

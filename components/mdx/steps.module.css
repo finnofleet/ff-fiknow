@@ -1,0 +1,36 @@
+.steps {
+  margin: 32px 0;
+}
+.steps :global(ol) {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 16px;
+}
+.steps :global(li) {
+  counter-increment: step;
+  padding-left: 56px;
+  position: relative;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.steps :global(li)::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 40px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-text);
+  letter-spacing: 0.08em;
+  padding-top: 4px;
+}
+.steps :global(li) :global(strong) {
+  color: var(--ink);
+  font-weight: 600;
+}

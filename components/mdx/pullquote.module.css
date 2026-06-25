@@ -1,0 +1,10 @@
+.quote {
+  margin: 48px 0;
+  padding: 0 0 0 24px;
+  border-left: 2px solid var(--accent);
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}

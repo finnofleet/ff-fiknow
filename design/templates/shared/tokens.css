@@ -1,0 +1,195 @@
+/* ============================================================
+   verstande.ch – Design Tokens
+   Nöd nur gwüsst. Verstande.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ----- Type families ----- */
+  --font-display: 'Newsreader', 'Iowan Old Style', 'Palatino', Georgia, serif;
+  --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  /* ----- Type scale ----- */
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-md: 17px;
+  --fs-lg: 21px;
+  --fs-xl: 28px;
+  --fs-2xl: 40px;
+  --fs-3xl: 56px;
+  --fs-4xl: 80px;
+  --fs-5xl: 112px;
+
+  /* ----- Spacing ----- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+
+  /* ----- Radius ----- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-xl: 22px;
+  --r-full: 999px;
+
+  /* ----- Timing ----- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur: 240ms;
+  --dur-slow: 480ms;
+}
+
+/* ============================================================
+   DARK THEME (default) – warm charcoal + amber
+   ============================================================ */
+:root, [data-theme="dark"] {
+  --bg: oklch(0.18 0.008 60);
+  --bg-elev: oklch(0.22 0.009 60);
+  --bg-elev-2: oklch(0.26 0.010 60);
+  --bg-inset: oklch(0.15 0.007 60);
+  --line: oklch(0.32 0.008 60);
+  --line-strong: oklch(0.42 0.010 60);
+
+  --ink: oklch(0.97 0.010 80);
+  --ink-2: oklch(0.82 0.012 80);
+  --ink-3: oklch(0.62 0.010 80);
+  --ink-4: oklch(0.48 0.008 80);
+
+  --accent: oklch(0.78 0.14 70);
+  --accent-ink: oklch(0.20 0.02 70);
+  --accent-soft: oklch(0.30 0.06 70);
+
+  --positive: oklch(0.78 0.12 150);
+  --warning: oklch(0.82 0.13 95);
+  --danger: oklch(0.70 0.16 25);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.35);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,0.5);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   LIGHT THEME – cream paper
+   ============================================================ */
+[data-theme="light"] {
+  --bg: oklch(0.985 0.006 80);
+  --bg-elev: oklch(1 0.003 80);
+  --bg-elev-2: oklch(0.965 0.008 80);
+  --bg-inset: oklch(0.94 0.010 80);
+  --line: oklch(0.88 0.010 80);
+  --line-strong: oklch(0.75 0.012 80);
+
+  --ink: oklch(0.18 0.010 60);
+  --ink-2: oklch(0.35 0.010 60);
+  --ink-3: oklch(0.52 0.008 60);
+  --ink-4: oklch(0.68 0.006 60);
+
+  --accent: oklch(0.58 0.16 60);
+  --accent-ink: oklch(0.98 0.010 80);
+  --accent-soft: oklch(0.92 0.05 70);
+
+  --positive: oklch(0.50 0.15 150);
+  --warning: oklch(0.68 0.15 95);
+  --danger: oklch(0.52 0.20 25);
+
+  --shadow-sm: 0 1px 2px rgba(40,30,20,0.06);
+  --shadow-md: 0 8px 24px rgba(40,30,20,0.08);
+  --shadow-lg: 0 24px 60px rgba(40,30,20,0.12);
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+em { font-style: italic; font-family: var(--font-display); font-weight: 500; }
+
+/* ============================================================
+   TYPOGRAPHIC HELPERS
+   ============================================================ */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
+.kicker {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.meta { font-size: var(--fs-sm); color: var(--ink-3); }
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+.icon {
+  width: 1em; height: 1em;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: -0.125em;
+}
+
+/* ============================================================
+   BUTTONS (shared)
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-ghost { border: 1px solid var(--line); color: var(--ink-2); }
+.btn-ghost:hover { border-color: var(--line-strong); color: var(--ink); }
+
+/* ============================================================
+   PROGRESS ATOMS
+   ============================================================ */
+.progress-bar {
+  height: 3px; background: var(--line); border-radius: var(--r-full); overflow: hidden;
+}
+.progress-bar > span {
+  display: block; height: 100%; background: var(--accent);
+  transition: width var(--dur-slow) var(--ease);
+}

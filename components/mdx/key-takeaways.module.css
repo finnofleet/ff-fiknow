@@ -1,0 +1,45 @@
+.box {
+  padding: 24px 28px;
+  border-radius: var(--r-lg);
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  margin: 32px 0;
+}
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 10px;
+}
+.heading {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 0 0 14px;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+.list :global(ul) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.list :global(li) {
+  display: flex;
+  gap: 10px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.list :global(li)::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 10px;
+  flex-shrink: 0;
+}

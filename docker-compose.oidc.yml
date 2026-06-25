@@ -1,0 +1,74 @@
+# ============================================================
+# Lokaler OIDC-Test (AUTH_PROVIDER=oidc) — Keycloak + Postgres
+#
+#   docker compose -f docker-compose.oidc.yml up
+#
+# Dieses Compose startet NUR die Infrastruktur (Keycloak + plain Postgres),
+# beide auf localhost veröffentlicht. Die App selbst läuft auf dem HOST
+# (npm run dev), damit Browser UND App-Server Keycloak unter derselben URL
+# (http://localhost:8080) sehen — sonst bricht der OIDC-Flow an der
+# Issuer-/Endpoint-URL (Container-„localhost" ≠ Host-„localhost").
+#
+# Diese Topologie spiegelt das IBM-Ziel: App + plain Postgres + externes
+# Keycloak. Kein Supabase/GoTrue.
+#
+# ---- Schritt 1: Infra hochfahren ----
+#   docker compose -f docker-compose.oidc.yml up
+#
+# WICHTIG: KEIN `npm run db:push` ausführen! Das Schema wird beim App-Start
+# automatisch via Auto-Migrate (drizzle/-Migrationen) angelegt — genau wie in
+# Prod. `db:push` würde die Tabellen ohne Journal-Eintrag anlegen und den
+# Migrate-Lauf beim Boot mit „relation already exists" brechen. Bei
+# verkorkstem DB-State: `docker compose -f docker-compose.oidc.yml down -v`.
+#
+# ---- Schritt 2: App auf dem Host starten ----
+#   Setze in .env.local (oder inline):
+#     AUTH_PROVIDER=oidc
+#     OIDC_ISSUER=http://localhost:8080/realms/fiknow
+#     OIDC_CLIENT_ID=edu-platform
+#     OIDC_CLIENT_SECRET=local-dev-secret
+#     OIDC_ROLE_MAP=fiknow-curator:curator,fiknow-admin:admin
+#     OIDC_SESSION_SECRET=local-dev-session-secret-min-16
+#     OIDC_ALLOW_INSECURE=true        # erlaubt http-Issuer (NUR lokal!)
+#     DATABASE_URL=postgres://postgres:postgres@localhost:5544/edu
+#   dann:  npm run dev
+#
+# Test-User (im importierten Realm, Passwort = der Username):
+#   curator@fiknow.test  (Realm-Rolle fiknow-curator → App-Rolle curator)
+#   admin@fiknow.test    (Realm-Rolle fiknow-admin   → App-Rolle admin)
+#   learner@fiknow.test  (keine Rolle               → App-Rolle learner)
+# ============================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: edu-oidc-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: edu
+    ports:
+      - "5544:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: edu-oidc-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Stabiler Hostname für konsistente Issuer-/Endpoint-URLs (= das, was
+      # Browser und Host-App nutzen).
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      # Realm wird beim Start importiert (Client, Rollen, Test-User).
+      - ./tooling/keycloak:/opt/keycloak/data/import:ro

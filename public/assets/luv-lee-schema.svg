@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-labelledby="t1 d1" font-family="Newsreader, Georgia, serif">
+  <title id="t1">Luv und Lee an einem Gebäude</title>
+  <desc id="d1">Auf der Luvseite trifft der Wind geordnet auf die Fassade; auf der Leeseite hinter dem Gebäude bilden sich Wirbel und Turbulenz.</desc>
+
+  <defs>
+    <filter id="rough" x="-6%" y="-6%" width="112%" height="112%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <marker id="ah-amber" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" refX="13" refY="8" orient="auto-start-reverse">
+      <g fill="none" stroke="#D9A441" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="2.5" x2="13" y2="8"/>
+        <line x1="3" y1="13.5" x2="13" y2="8"/>
+      </g>
+    </marker>
+    <marker id="ah-ter" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7.5" orient="auto-start-reverse">
+      <g fill="none" stroke="#B56E4D" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="2.5" x2="12" y2="7.5"/>
+        <line x1="3" y1="12.5" x2="12" y2="7.5"/>
+      </g>
+    </marker>
+  </defs>
+
+  <!-- Papier -->
+  <rect width="800" height="400" fill="#F3EFE6"/>
+
+  <!-- Skizzen-Linienwerk (gefiltert = handgezeichnet) -->
+  <g filter="url(#rough)" fill="none" stroke="#4E463F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Grundlinie -->
+    <line x1="30" y1="330" x2="770" y2="330"/>
+
+    <!-- Gebäude -->
+    <rect x="340" y="175" width="150" height="155" fill="#C8C2B2" fill-opacity="0.5"/>
+    <!-- Cross-Hatch Schattierung (Leeseiten-Wand) -->
+    <g stroke="#4E463F" stroke-width="1" opacity="0.38">
+      <line x1="455" y1="192" x2="486" y2="223"/>
+      <line x1="455" y1="218" x2="486" y2="249"/>
+      <line x1="455" y1="244" x2="486" y2="275"/>
+      <line x1="455" y1="270" x2="486" y2="301"/>
+    </g>
+    <!-- Fenster -->
+    <rect x="360" y="196" width="22" height="26" stroke-width="1.4"/>
+    <rect x="396" y="196" width="22" height="26" stroke-width="1.4"/>
+    <rect x="360" y="236" width="22" height="26" stroke-width="1.4"/>
+    <rect x="396" y="236" width="22" height="26" stroke-width="1.4"/>
+
+    <!-- Luv: geordnete Strömung (amber) -->
+    <g stroke="#D9A441" stroke-width="2.2" fill="none">
+      <!-- obere zwei: gerade → über das Dach, EIN Pfeilkopf am Ende (kein Mid-Pfeil) -->
+      <path d="M45 120 L300 120 C 370 96, 445 96, 510 130" marker-end="url(#ah-amber)"/>
+      <path d="M45 162 L300 162 C 372 140, 448 144, 512 176" marker-end="url(#ah-amber)"/>
+      <!-- untere zwei treffen die Fassade -->
+      <line x1="45" y1="204" x2="320" y2="204" marker-end="url(#ah-amber)"/>
+      <line x1="45" y1="246" x2="320" y2="246" marker-end="url(#ah-amber)"/>
+    </g>
+
+    <!-- Lee: Turbulenz (terracotta) -->
+    <g stroke="#B56E4D" stroke-width="2.2" fill="none">
+      <path d="M556 215 C 556 240, 578 255, 610 255 C 642 255, 664 240, 664 215 C 664 190, 642 177, 610 177" marker-end="url(#ah-ter)"/>
+      <path d="M515 288 C 546 268, 586 268, 606 285 C 621 300, 596 315, 576 308" marker-end="url(#ah-ter)"/>
+      <path d="M660 246 C 686 226, 706 256, 732 238" stroke-dasharray="3 5" stroke-width="1.6"/>
+      <path d="M620 304 C 660 289, 706 309, 744 292" stroke-dasharray="3 5" stroke-width="1.6"/>
+    </g>
+  </g>
+
+  <!-- Beschriftung (ausserhalb Filter = scharf) -->
+  <g fill="#4E463F">
+    <text x="55" y="78" font-size="12" letter-spacing="0.14em" fill="#C08A2E" font-family="'JetBrains Mono', ui-monospace, monospace">WIND  &#8594;</text>
+    <text x="178" y="366" text-anchor="middle" font-size="18">Luvseite</text>
+    <text x="178" y="385" text-anchor="middle" font-size="11" fill="#8A8275" font-family="'JetBrains Mono', ui-monospace, monospace" letter-spacing="0.06em">GEORDNETE STRÖMUNG</text>
+    <text x="625" y="366" text-anchor="middle" font-size="18" fill="#B56E4D">Leeseite</text>
+    <text x="625" y="385" text-anchor="middle" font-size="11" fill="#8A8275" font-family="'JetBrains Mono', ui-monospace, monospace" letter-spacing="0.06em">WIRBEL &amp; TURBULENZ</text>
+    <text x="415" y="352" text-anchor="middle" font-size="10.5" fill="#6B6358" font-family="'JetBrains Mono', ui-monospace, monospace" letter-spacing="0.1em">GEBÄUDE</text>
+  </g>
+</svg>

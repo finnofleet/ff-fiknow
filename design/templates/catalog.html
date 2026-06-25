@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Katalog</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  /* ==== Variant A – sidebar filter, dense card grid ==== */
+  .a-nav { display: flex; justify-content: space-between; align-items: center; padding: 24px 48px; border-bottom: 1px solid var(--line); }
+  .a-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; }
+  .a-brand .d { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .a-brand .tld { color: var(--ink-3); font-size: 13px; }
+  .a-links { display: flex; gap: 28px; font-size: 14px; color: var(--ink-3); }
+  .a-links a.active { color: var(--ink); }
+  .a-right { display: flex; gap: 12px; align-items: center; }
+  .a-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 14px; }
+
+  .a-head { max-width: 1360px; margin: 0 auto; padding: 56px 48px 32px; }
+  .a-head h1 { font-family: var(--font-display); font-size: 72px; letter-spacing: -0.025em; font-weight: 400; line-height: 1; margin: 0 0 12px; }
+  .a-head h1 em { color: var(--accent); }
+  .a-head p { color: var(--ink-2); font-size: 16px; max-width: 60ch; margin: 0; }
+
+  .a-wrap { max-width: 1360px; margin: 0 auto; padding: 0 48px 96px; display: grid; grid-template-columns: 240px 1fr; gap: 56px; }
+
+  .a-filter h5 {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-3); margin: 24px 0 10px;
+  }
+  .a-filter h5:first-child { margin-top: 0; }
+  .a-f-list { display: flex; flex-direction: column; gap: 4px; }
+  .a-f-list label {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; margin: 0 -10px;
+    font-size: 14px; color: var(--ink-2); border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+  .a-f-list label:hover { background: var(--bg-elev); color: var(--ink); }
+  .a-f-list label.on { color: var(--ink); font-weight: 500; }
+  .a-f-list label .count { color: var(--ink-3); font-family: var(--font-mono); font-size: 11px; }
+  .a-f-list label .bullet { width: 12px; height: 12px; border: 1.5px solid var(--line-strong); border-radius: 3px; margin-right: 10px; display: inline-block; }
+  .a-f-list label.on .bullet { background: var(--accent); border-color: var(--accent); }
+
+  .a-sort { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .a-sort .n { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+  .a-sort select { background: transparent; color: var(--ink); font: inherit; border: none; cursor: pointer; }
+
+  .a-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .a-card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; transition: border-color 200ms, transform 200ms; }
+  .a-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .a-cover { height: 160px; position: relative; display: grid; place-items: end start; padding: 16px; font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--ink-3); }
+  .a-cover.c1 { background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2)); }
+  .a-cover.c2 { background: linear-gradient(135deg, oklch(0.35 0.08 220 / 0.4), var(--bg-elev-2)); }
+  .a-cover.c3 { background: linear-gradient(135deg, oklch(0.45 0.1 310 / 0.3), var(--bg-elev-2)); }
+  .a-cover.c4 { background: linear-gradient(135deg, oklch(0.4 0.08 150 / 0.4), var(--bg-elev-2)); }
+  .a-cover.c5 { background: linear-gradient(135deg, oklch(0.35 0.1 60 / 0.5), var(--bg-elev-2)); }
+  .a-cover.c6 { background: linear-gradient(135deg, oklch(0.35 0.08 280 / 0.4), var(--bg-elev-2)); }
+  .a-cover .k { position: absolute; top: 14px; left: 14px; font-family: var(--font-mono); font-style: normal; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .a-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .a-body h3 { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; line-height: 1.2; margin: 0; font-weight: 400; }
+  .a-body .sub { color: var(--ink-3); font-size: 13px; line-height: 1.5; flex: 1; }
+  .a-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-3); }
+  .a-foot .chips { display: flex; gap: 6px; }
+  .a-foot .chips .chip { padding: 3px 9px; font-size: 11px; }
+  .a-foot .cert { color: var(--accent); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  /* ==== Variant B – editorial list, typographic ==== */
+  .b-wrap { max-width: 1200px; margin: 0 auto; padding: 48px; }
+  .b-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 64px; }
+  .b-top .b-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; }
+  .b-top .b-brand .d { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .b-top .b-brand .tld { color: var(--ink-3); font-size: 13px; }
+  .b-top .b-nav-links { display: flex; gap: 24px; font-size: 13px; color: var(--ink-3); }
+
+  .b-head { margin-bottom: 56px; }
+  .b-head .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+  .b-head h1 { font-family: var(--font-display); font-size: 88px; letter-spacing: -0.03em; line-height: 0.98; margin: 16px 0; font-weight: 400; }
+
+  .b-tabs { display: flex; gap: 2px; background: var(--line); border: 1px solid var(--line); border-radius: 999px; padding: 3px; width: fit-content; margin-bottom: 32px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .b-tabs span { padding: 7px 16px; border-radius: 999px; color: var(--ink-3); background: var(--bg); }
+  .b-tabs span.on { background: var(--ink); color: var(--bg); }
+
+  .b-rows { border-top: 1px solid var(--line); }
+  .b-row { display: grid; grid-template-columns: 60px 2fr 1fr 120px 40px; gap: 24px; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--line); cursor: pointer; transition: padding 200ms; }
+  .b-row:hover { padding-left: 12px; background: var(--bg-elev); }
+  .b-row .num { font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); letter-spacing: 0.05em; }
+  .b-row .t .cat { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .b-row .t .ttl { font-family: var(--font-display); font-size: 28px; letter-spacing: -0.015em; line-height: 1.15; font-weight: 400; }
+  .b-row .t .ttl em { color: var(--accent); }
+  .b-row .sub { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+  .b-row .m { font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); letter-spacing: 0.08em; }
+  .b-row .arr { color: var(--ink-3); text-align: right; }
+
+  .b-manifest { margin-top: 80px; padding: 64px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-elev); text-align: center; }
+  .b-manifest .q { font-family: var(--font-display); font-style: italic; font-size: 36px; letter-spacing: -0.02em; line-height: 1.2; max-width: 26ch; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<!-- ==== VARIANT A ==== -->
+<div id="var-a" class="variant active">
+  <nav class="a-nav">
+    <div class="a-brand"><span class="d"></span>verstande<span class="tld">.ch</span></div>
+    <div class="a-links">
+      <a href="dashboard.html">Mein Lernen</a>
+      <a href="#" class="active">Katalog</a>
+      <a href="#">Pfade</a>
+    </div>
+    <div class="a-right">
+      <div class="nav-search"><svg class="icon" style="width:14px;height:14px;"><use href="shared/icons.svg#i-search"/></svg>Kurse, Themen, Dozenten</div>
+      <a href="profile.html" class="a-avatar">m</a>
+    </div>
+  </nav>
+
+  <div class="a-head">
+    <h1>Alle <em>42 Kurse</em>.</h1>
+    <p>Filtere nach Kategorie, Dauer, Level. Oder blättere einfach – du findest immer etwas, was dich überrascht.</p>
+  </div>
+
+  <div class="a-wrap">
+    <aside class="a-filter">
+      <h5>Kategorie</h5>
+      <div class="a-f-list">
+        <label class="on"><span><span class="bullet"></span>Alle</span><span class="count">42</span></label>
+        <label><span><span class="bullet"></span>Weinkunde</span><span class="count">8</span></label>
+        <label><span><span class="bullet"></span>Recht</span><span class="count">6</span></label>
+        <label><span><span class="bullet"></span>Meteorologie</span><span class="count">4</span></label>
+        <label><span><span class="bullet"></span>Programmieren</span><span class="count">12</span></label>
+        <label><span><span class="bullet"></span>Geschichte</span><span class="count">5</span></label>
+        <label><span><span class="bullet"></span>Sprache</span><span class="count">7</span></label>
+      </div>
+      <h5>Level</h5>
+      <div class="a-f-list">
+        <label><span><span class="bullet"></span>Einsteiger</span><span class="count">18</span></label>
+        <label class="on"><span><span class="bullet"></span>Mittel</span><span class="count">19</span></label>
+        <label><span><span class="bullet"></span>Fortgeschritten</span><span class="count">5</span></label>
+      </div>
+      <h5>Dauer</h5>
+      <div class="a-f-list">
+        <label><span><span class="bullet"></span>Unter 3 h</span><span class="count">9</span></label>
+        <label><span><span class="bullet"></span>3 – 10 h</span><span class="count">21</span></label>
+        <label><span><span class="bullet"></span>Über 10 h</span><span class="count">12</span></label>
+      </div>
+      <h5>Format</h5>
+      <div class="a-f-list">
+        <label><span><span class="bullet"></span>Nur Kurs</span><span class="count">30</span></label>
+        <label><span><span class="bullet"></span>Mit Zertifikat</span><span class="count">12</span></label>
+      </div>
+    </aside>
+
+    <main>
+      <div class="a-sort">
+        <div class="n">19 Kurse · gefiltert nach: Mittel</div>
+        <select><option>Sortierung · Beliebt</option><option>Neueste</option><option>Kürzeste</option></select>
+      </div>
+      <div class="a-cards">
+        <a href="course.html" class="a-card">
+          <div class="a-cover c1"><span class="k">Weinkunde</span>Burgund &amp; Rhône</div>
+          <div class="a-body"><h3>WSET Level 2 Wine</h3><div class="sub">Die wichtigsten Regionen Europas, prüfungsfertig aufbereitet.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">12 h</span><span class="chip">Mittel</span></div><div class="cert">● Zertifikat</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c2"><span class="k">Recht</span>Drohnen A2</div>
+          <div class="a-body"><h3>Drohnen-Führerschein A2</h3><div class="sub">Offizieller Theorietest der SBFA, mit Simulator und 280 Originalfragen.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">6 h</span><span class="chip">Einsteiger</span></div><div class="cert">● Zertifikat</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c3"><span class="k">Meteorologie</span>Wolken lesen</div>
+          <div class="a-body"><h3>Wetter verstehen</h3><div class="sub">Wolken, Drücke, Fronten. Praktisches Wetter-Lesen.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">4 h</span><span class="chip">Einsteiger</span></div><div class="cert">Kurs</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c4"><span class="k">Programmieren</span>TypeScript</div>
+          <div class="a-body"><h3>TypeScript für Ungeduldige</h3><div class="sub">Vom JS-Pragmatiker zum Typen-Fan – in einem Wochenende.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">14 h</span><span class="chip">Mittel</span></div><div class="cert">Kurs</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c5"><span class="k">Geschichte</span>Schweizer Neutralität</div>
+          <div class="a-body"><h3>Neutralität · 1815 – 2026</h3><div class="sub">Von der Wiener Konferenz bis zum Ukraine-Krieg.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">5 h</span><span class="chip">Einsteiger</span></div><div class="cert">Kurs</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c6"><span class="k">Sprache</span>Französisch B1</div>
+          <div class="a-body"><h3>Französisch B1 · Konversation</h3><div class="sub">Von B1 schriftlich zu B1 gesprochen.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">20 h</span><span class="chip">Mittel</span></div><div class="cert">● Zertifikat</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c1"><span class="k">Weinkunde</span>Italien</div>
+          <div class="a-body"><h3>Italienischer Wein</h3><div class="sub">Barolo, Chianti, Etna – 20 Regionen in einer Landkarte.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">9 h</span><span class="chip">Mittel</span></div><div class="cert">Kurs</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c2"><span class="k">Recht</span>Datenschutz</div>
+          <div class="a-body"><h3>DSGVO &amp; revDSG</h3><div class="sub">Für KMUs, Freelancer, Vereine. Praktisch, nicht juristisch.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">7 h</span><span class="chip">Mittel</span></div><div class="cert">● Zertifikat</div></div>
+        </a>
+        <a href="course.html" class="a-card">
+          <div class="a-cover c4"><span class="k">Programmieren</span>SQL</div>
+          <div class="a-body"><h3>SQL · von Null bis Join</h3><div class="sub">Eine Datenbank verstehen, nicht nur bedienen.</div></div>
+          <div class="a-foot"><div class="chips"><span class="chip">8 h</span><span class="chip">Mittel</span></div><div class="cert">Kurs</div></div>
+        </a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==== VARIANT B ==== -->
+<div id="var-b" class="variant">
+  <div class="b-wrap">
+    <div class="b-top">
+      <a href="index.html" class="b-brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+      <div class="b-nav-links">
+        <a href="dashboard.html">Mein Lernen</a>
+        <a href="#">Manifest</a>
+        <a href="profile.html">Profil</a>
+      </div>
+    </div>
+
+    <div class="b-head">
+      <div class="k">Katalog · 42 Kurse · April 2026</div>
+      <h1>Was willst du<br>heute <em>verstehen</em>?</h1>
+    </div>
+
+    <div class="b-tabs">
+      <span class="on">Alle</span>
+      <span>Weinkunde</span>
+      <span>Recht</span>
+      <span>Meteorologie</span>
+      <span>Programmieren</span>
+      <span>Geschichte</span>
+      <span>Sprache</span>
+    </div>
+
+    <div class="b-rows">
+      <a href="course.html" class="b-row">
+        <div class="num">No. 01</div>
+        <div class="t"><div class="cat">Weinkunde · Zertifikat</div><div class="ttl">Die <em>Climats</em> von Burgund</div></div>
+        <div class="sub">Vier Kapitel über die wichtigste Weinlandkarte Europas – für den offiziellen WSET Level 2.</div>
+        <div class="m">12 h · Mittel</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="b-row">
+        <div class="num">No. 02</div>
+        <div class="t"><div class="cat">Recht · Zertifikat</div><div class="ttl">Drohnen-Führerschein <em>A2</em></div></div>
+        <div class="sub">Die offizielle Theorie-Prüfung der SBFA, Schritt für Schritt aufgebaut.</div>
+        <div class="m">6 h · Einsteiger</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="b-row">
+        <div class="num">No. 03</div>
+        <div class="t"><div class="cat">Meteorologie</div><div class="ttl">Wolken <em>lesen</em> lernen</div></div>
+        <div class="sub">Cirrus, Cumulus, Stratus – und was sie für dich bedeuten, wenn du nach oben schaust.</div>
+        <div class="m">4 h · Einsteiger</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="b-row">
+        <div class="num">No. 04</div>
+        <div class="t"><div class="cat">Programmieren</div><div class="ttl">TypeScript für <em>Ungeduldige</em></div></div>
+        <div class="sub">Vom JS-Pragmatiker zum Typen-Fan – in einem Wochenende.</div>
+        <div class="m">14 h · Mittel</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="b-row">
+        <div class="num">No. 05</div>
+        <div class="t"><div class="cat">Geschichte</div><div class="ttl">Schweizer <em>Neutralität</em> · 1815 – 2026</div></div>
+        <div class="sub">Von der Wiener Konferenz bis zum Ukraine-Krieg. Ein zähes Konzept in neun Lektionen.</div>
+        <div class="m">5 h · Einsteiger</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="b-row">
+        <div class="num">No. 06</div>
+        <div class="t"><div class="cat">Sprache · Zertifikat</div><div class="ttl">Französisch B1 · <em>Konversation</em></div></div>
+        <div class="sub">Von B1 schriftlich zu B1 gesprochen. Mit Live-Sprechübungen und Prüfungssimulation.</div>
+        <div class="m">20 h · Mittel</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="b-row">
+        <div class="num">No. 07</div>
+        <div class="t"><div class="cat">Weinkunde</div><div class="ttl">Italien von <em>Nord nach Süd</em></div></div>
+        <div class="sub">Barolo, Chianti, Etna – 20 Regionen in einer Landkarte.</div>
+        <div class="m">9 h · Mittel</div>
+        <div class="arr">→</div>
+      </a>
+    </div>
+
+    <div class="b-manifest">
+      <div class="q">"Ein guter Kurs ist kein Meer aus Informationen – sondern ein scharfer Pfad hindurch."</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-cat-var') || 'a';
+  function setVar(v) {
+    localStorage.setItem('v-cat-var', v);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v));
+  }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

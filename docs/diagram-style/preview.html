@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagramm-Stil — verstande (Sketch, fix) vs fiknow (Clean, theme-adaptiv)</title>
+<style>
+  body { margin:0; padding:40px; background:#e9e6df; font-family:Georgia, serif; color:#332f2a; }
+  h1 { font-weight:400; letter-spacing:-.01em; }
+  h2 { font-weight:400; font-size:18px; border-bottom:2px solid #cbc4b6; padding-bottom:8px; margin-top:40px; }
+  .note { font-size:13px; color:#6b6358; max-width:1100px; line-height:1.6; }
+  code { font-family:ui-monospace, monospace; font-size:.9em; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1100px; }
+  .card { border-radius:12px; overflow:hidden; border:1px solid #d8d2c7; }
+  .card h3 { margin:0; padding:10px 14px; font-size:12px; font-weight:400; font-family:ui-monospace, monospace; letter-spacing:.06em; }
+  .card .body { padding:14px; }
+  .card img, .card svg { display:block; width:100%; height:auto; }
+  /* Theme-Demo-Karten: die .ink-Variable steuert currentColor */
+  .light { background:#fff; color:#1f2328; }
+  .light h3 { background:#faf8f3; color:#9a9182; border-bottom:1px solid #eee5d8; }
+  .dark  { background:#333; color:#f1f1f1; }
+  .dark h3 { background:#2a2a2a; color:#888; border-bottom:1px solid #444; }
+  .light .body svg { color:#1f2328; }   /* currentColor = Ink hell */
+  .dark .body svg  { color:#f1f1f1; }    /* currentColor = Ink dunkel */
+</style>
+</head>
+<body>
+  <h1>Diagramm-Stil — zwei Marken, zwei Idiome</h1>
+  <p class="note"><b>verstande</b> = skizzenhaft, fixe Elfenbein-Papier-Karte (das Papier IST der Stil). <b>fiknow</b> = clean &amp; weich nach FINNOFLEET-Brandbook,
+  <b>theme-adaptiv</b>: Tinte = <code>currentColor</code>, transparenter Grund, Lime/Blau fix. Dasselbe SVG unten links (hell) und rechts (dunkel) — es flippt automatisch mit dem Theme.</p>
+
+  <h2>verstande — Sketch (fix)</h2>
+  <div class="row">
+    <div class="card light"><h3>SKETCH · Luv/Lee</h3><img src="examples/luv-lee-sketch.svg" alt="verstande luv-lee"></div>
+    <div class="card light"><h3>SKETCH · Ablauf</h3><img src="examples/ablauf-3-schritte.svg" alt="verstande ablauf"></div>
+  </div>
+
+  <h2>fiknow — Clean, theme-adaptiv (gleiches Asset, beide Themes)</h2>
+  <div class="row">
+    <div class="card light"><h3>LIGHT-THEME</h3><div class="body">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" font-family="Sora, system-ui, sans-serif">
+  <defs>
+    <marker id="li-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="3" y1="2.5" x2="11" y2="7"/><line x1="3" y1="11.5" x2="11" y2="7"/></g></marker>
+    <marker id="li-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse"><g fill="none" stroke="#2D779B" stroke-width="1.7" stroke-linecap="round"><line x1="3" y1="2.5" x2="11" y2="7"/><line x1="3" y1="11.5" x2="11" y2="7"/></g></marker>
+  </defs>
+  <rect x="340" y="175" width="150" height="155" fill="currentColor" fill-opacity="0.07"/>
+  <rect x="360" y="196" width="22" height="26" fill="currentColor" fill-opacity="0.16"/><rect x="396" y="196" width="22" height="26" fill="currentColor" fill-opacity="0.16"/><rect x="360" y="236" width="22" height="26" fill="currentColor" fill-opacity="0.16"/><rect x="396" y="236" width="22" height="26" fill="currentColor" fill-opacity="0.16"/>
+  <line x1="30" y1="330" x2="770" y2="330" stroke="currentColor" stroke-opacity="0.4" stroke-width="1.5"/>
+  <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 120 L300 120 C 370 96, 445 96, 510 130" marker-end="url(#li-ink)"/><path d="M45 162 L300 162 C 372 140, 448 144, 512 176" marker-end="url(#li-ink)"/><line x1="45" y1="204" x2="320" y2="204" marker-end="url(#li-ink)"/><line x1="45" y1="246" x2="320" y2="246" marker-end="url(#li-ink)"/>
+  </g>
+  <g fill="none" stroke="#2D779B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M556 215 C 556 240, 578 255, 610 255 C 642 255, 664 240, 664 215 C 664 190, 642 177, 610 177" marker-end="url(#li-blue)"/><path d="M515 288 C 546 268, 586 268, 606 285 C 621 300, 596 315, 576 308" marker-end="url(#li-blue)"/>
+    <path d="M660 246 C 686 226, 706 256, 732 238" stroke="#68B8DF" stroke-dasharray="3 5" stroke-width="1.4"/><path d="M620 304 C 660 289, 706 309, 744 292" stroke="#68B8DF" stroke-dasharray="3 5" stroke-width="1.4"/>
+  </g>
+  <g fill="currentColor">
+    <text x="55" y="78" font-size="12" fill-opacity="0.5">WIND  &#8594;</text>
+    <text x="178" y="366" text-anchor="middle" font-size="17" font-weight="600">Luvseite</text><text x="178" y="385" text-anchor="middle" font-size="11" fill-opacity="0.55">geordnete Strömung</text>
+    <text x="625" y="366" text-anchor="middle" font-size="17" font-weight="600" fill="#2D779B">Leeseite</text><text x="625" y="385" text-anchor="middle" font-size="11" fill-opacity="0.55">Wirbel &amp; Turbulenz</text>
+    <text x="415" y="352" text-anchor="middle" font-size="10.5" fill-opacity="0.42">GEBÄUDE</text>
+  </g>
+</svg>
+    </div></div>
+    <div class="card dark"><h3>DARK-THEME</h3><div class="body">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" font-family="Sora, system-ui, sans-serif">
+  <defs>
+    <marker id="da-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="3" y1="2.5" x2="11" y2="7"/><line x1="3" y1="11.5" x2="11" y2="7"/></g></marker>
+    <marker id="da-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse"><g fill="none" stroke="#2D779B" stroke-width="1.7" stroke-linecap="round"><line x1="3" y1="2.5" x2="11" y2="7"/><line x1="3" y1="11.5" x2="11" y2="7"/></g></marker>
+  </defs>
+  <rect x="340" y="175" width="150" height="155" fill="currentColor" fill-opacity="0.07"/>
+  <rect x="360" y="196" width="22" height="26" fill="currentColor" fill-opacity="0.16"/><rect x="396" y="196" width="22" height="26" fill="currentColor" fill-opacity="0.16"/><rect x="360" y="236" width="22" height="26" fill="currentColor" fill-opacity="0.16"/><rect x="396" y="236" width="22" height="26" fill="currentColor" fill-opacity="0.16"/>
+  <line x1="30" y1="330" x2="770" y2="330" stroke="currentColor" stroke-opacity="0.4" stroke-width="1.5"/>
+  <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 120 L300 120 C 370 96, 445 96, 510 130" marker-end="url(#da-ink)"/><path d="M45 162 L300 162 C 372 140, 448 144, 512 176" marker-end="url(#da-ink)"/><line x1="45" y1="204" x2="320" y2="204" marker-end="url(#da-ink)"/><line x1="45" y1="246" x2="320" y2="246" marker-end="url(#da-ink)"/>
+  </g>
+  <g fill="none" stroke="#2D779B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M556 215 C 556 240, 578 255, 610 255 C 642 255, 664 240, 664 215 C 664 190, 642 177, 610 177" marker-end="url(#da-blue)"/><path d="M515 288 C 546 268, 586 268, 606 285 C 621 300, 596 315, 576 308" marker-end="url(#da-blue)"/>
+    <path d="M660 246 C 686 226, 706 256, 732 238" stroke="#68B8DF" stroke-dasharray="3 5" stroke-width="1.4"/><path d="M620 304 C 660 289, 706 309, 744 292" stroke="#68B8DF" stroke-dasharray="3 5" stroke-width="1.4"/>
+  </g>
+  <g fill="currentColor">
+    <text x="55" y="78" font-size="12" fill-opacity="0.5">WIND  &#8594;</text>
+    <text x="178" y="366" text-anchor="middle" font-size="17" font-weight="600">Luvseite</text><text x="178" y="385" text-anchor="middle" font-size="11" fill-opacity="0.55">geordnete Strömung</text>
+    <text x="625" y="366" text-anchor="middle" font-size="17" font-weight="600" fill="#2D779B">Leeseite</text><text x="625" y="385" text-anchor="middle" font-size="11" fill-opacity="0.55">Wirbel &amp; Turbulenz</text>
+    <text x="415" y="352" text-anchor="middle" font-size="10.5" fill-opacity="0.42">GEBÄUDE</text>
+  </g>
+</svg>
+    </div></div>
+  </div>
+
+  <p class="note" style="margin-top:28px"><b>Hinweis:</b> Beide fiknow-Kästen oben zeigen <i>dasselbe</i> SVG (identisches Markup) — nur <code>currentColor</code> der Karte unterscheidet sich. So rendert <code>&lt;Figure&gt;</code> es in der App: ein Asset, automatisch theme-korrekt. Die Datei-Beispiele liegen in <code>examples/*-clean-fiknow.svg</code>.</p>
+</body>
+</html>

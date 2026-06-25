@@ -1,0 +1,41 @@
+---
+title: "Willkommen"
+type: "reading"
+estimated_minutes: 3
+summary: "Erste Lesson — demonstriert Markdown + Callout + KeyTakeaways."
+---
+
+# Willkommen im Beispiel-Kurs
+
+Dieser Mini-Kurs zeigt das Bundle-Format. Du siehst Standard-Markdown
+mit ein paar Custom-Komponenten, die die Plattform bereitstellt.
+
+## Was hier demonstriert wird
+
+- Frontmatter mit Pflichtfeldern
+- Standard Markdown-Elementen (Headers, Listen, Inline-Formatierung)
+- Custom-Komponenten am Beispiel von `<Callout>` und `<KeyTakeaways>`
+
+<Callout type="tip" title="Pro-Tipp">
+  Plattform-Komponenten wie `<Callout>` brauchen kein `import`. Sie sind
+  überall verfügbar — siehe System-Prompt für die volle Liste.
+</Callout>
+
+## Standard-Inhalte funktionieren auch
+
+Klassisches Markdown rendert wie erwartet: **fett**, *kursiv*, `Code`,
+[Links](https://verstande.ch), Listen:
+
+1. Erster Punkt
+2. Zweiter Punkt
+3. Dritter Punkt
+
+Und Blockquotes:
+
+> So sieht ein Zitat aus, wenn man die Standard-Markdown-Syntax nutzt.
+
+<KeyTakeaways>
+- Eine Lesson hat Frontmatter + Markdown-Body
+- Custom-Komponenten sind in JSX-Syntax direkt einbindbar
+- `<KeyTakeaways>` am Lesson-Ende ist Konvention bei Reading-Lessons
+</KeyTakeaways>

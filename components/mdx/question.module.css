@@ -1,0 +1,147 @@
+.card {
+  margin: 24px 0;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg-elev);
+}
+.prompt {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0 0 24px;
+  color: var(--ink);
+  font-weight: 400;
+}
+.options {
+  display: grid;
+  gap: 8px;
+}
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  transition: border-color 200ms, background 200ms, color 200ms;
+}
+.option:not(:disabled):hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.option:disabled {
+  cursor: default;
+}
+
+.bullet {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+  background: var(--bg);
+  color: var(--bg);
+  transition: background 200ms, border-color 200ms, color 200ms;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.selected {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.selected .bullet {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.selected .dot {
+  background: var(--accent-ink);
+}
+
+.correct {
+  border-color: var(--positive);
+  color: var(--ink);
+  background: color-mix(in oklch, var(--positive) 8%, transparent);
+}
+.correct .bullet {
+  border-color: var(--positive);
+  background: var(--positive);
+  color: var(--bg);
+}
+
+.wrong {
+  border-color: var(--danger);
+  color: var(--ink);
+  background: color-mix(in oklch, var(--danger) 8%, transparent);
+}
+.wrong .bullet {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--bg);
+}
+
+.missed {
+  border-color: var(--positive);
+  color: var(--ink-2);
+  border-style: dashed;
+}
+.missed .bullet {
+  border-color: var(--positive);
+  background: transparent;
+  color: var(--positive);
+}
+
+.text {
+  flex: 1;
+}
+
+.submit {
+  margin-top: 16px;
+}
+
+.feedback {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-inset);
+}
+.right {
+  border-left-color: var(--positive);
+}
+.fail {
+  border-left-color: var(--danger);
+}
+.verdict {
+  font-family: var(--font-display);
+  font-size: 17px;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.explanation {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.lampIcon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--accent-text);
+}

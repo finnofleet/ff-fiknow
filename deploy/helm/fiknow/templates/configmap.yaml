@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fiknow.fullname" . }}-env
+  labels:
+    {{- include "fiknow.labels" . | nindent 4 }}
+data:
+  AUTH_PROVIDER: {{ .Values.config.AUTH_PROVIDER | default "gotrue" | quote }}
+  {{- if eq (.Values.config.AUTH_PROVIDER | default "gotrue") "oidc" }}
+  {{- with .Values.config.OIDC_ISSUER }}
+  OIDC_ISSUER: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.OIDC_CLIENT_ID }}
+  OIDC_CLIENT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.OIDC_ROLE_MAP }}
+  OIDC_ROLE_MAP: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.OIDC_SCOPES }}
+  OIDC_SCOPES: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.OIDC_SESSION_MAX_AGE_SEC }}
+  OIDC_SESSION_MAX_AGE_SEC: {{ . | quote }}
+  {{- end }}
+  {{- $redirectBase := include "fiknow.redirectBase" . }}
+  {{- if $redirectBase }}
+  OIDC_REDIRECT_BASE: {{ $redirectBase | quote }}
+  {{- end }}
+  {{- else }}
+  {{- with .Values.config.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.SUPABASE_URL }}
+  SUPABASE_URL: {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  {{- range $k, $v := .Values.config.extra }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}

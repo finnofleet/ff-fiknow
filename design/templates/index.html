@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Alle Templates</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  body { min-height: 100vh; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 72px 48px 120px; }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 72px; gap: 48px; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .brand .mark {
+    width: 56px; height: 56px; border-radius: var(--r-md);
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-display); font-style: italic; font-weight: 500;
+    font-size: 36px; display: grid; place-items: center; line-height: 1;
+  }
+  .brand-text .name { font-family: var(--font-display); font-size: 32px; letter-spacing: -0.02em; }
+  .brand-text .name .tld { color: var(--ink-3); }
+  .brand-text .tag { font-family: var(--font-display); font-style: italic; color: var(--ink-2); font-size: 17px; margin-top: 2px; }
+
+  .lede { max-width: 520px; }
+  .lede h1 { font-family: var(--font-display); font-weight: 400; font-size: 44px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 16px; }
+  .lede p { color: var(--ink-2); font-size: 16px; line-height: 1.55; margin: 0; }
+
+  .section-label {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+    margin: 48px 0 18px; display: flex; align-items: baseline; gap: 12px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .tile {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 24px; border: 1px solid var(--line); border-radius: var(--r-lg);
+    background: var(--bg-elev); transition: border-color 200ms, transform 200ms;
+  }
+  .tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tile .num { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .tile .ttl { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; }
+  .tile .desc { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+  .tile .footer {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px; color: var(--ink-3); font-family: var(--font-mono);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .tile .arrow { color: var(--accent); font-size: 16px; }
+
+  .review-cta {
+    margin-top: 40px; padding: 28px;
+    border: 1px dashed var(--line-strong); border-radius: var(--r-lg);
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  }
+  .review-cta h3 { font-family: var(--font-display); font-size: 22px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .review-cta p { margin: 0; color: var(--ink-3); font-size: 13px; }
+
+  footer {
+    margin-top: 96px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="mark">v</div>
+      <div class="brand-text">
+        <div class="name">verstande<span class="tld">.ch</span></div>
+        <div class="tag">Nöd nur gwüsst. Verstande.</div>
+      </div>
+    </div>
+    <div class="lede">
+      <h1>Acht Templates für eine <em>editoriale</em> Lernplattform.</h1>
+      <p>Jedes Template existiert in zwei Designvarianten. Oben mittig wechselst du zwischen A und B, unten rechts zwischen Hell und Dunkel.</p>
+    </div>
+  </header>
+
+  <div class="section-label">Fundament</div>
+  <div class="grid">
+    <a href="design-system.html" class="tile">
+      <div class="num">00</div>
+      <div class="ttl">Design-System</div>
+      <div class="desc">Typografie, Farben, Komponenten, MDX-Bausteine, Icons, Badges.</div>
+      <div class="footer"><span>Tokens · MDX · Atomics</span><span class="arrow">→</span></div>
+    </a>
+  </div>
+
+  <div class="section-label">Öffentliche Flächen</div>
+  <div class="grid">
+    <a href="landing.html" class="tile">
+      <div class="num">01</div>
+      <div class="ttl">Landing</div>
+      <div class="desc">Hero, Leitbild, ausgewählte Kurse, Instruktoren, Social Proof.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="catalog.html" class="tile">
+      <div class="num">02</div>
+      <div class="ttl">Katalog</div>
+      <div class="desc">Alle Kurse, nach Kategorie, Dauer, Level filterbar.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="course.html" class="tile">
+      <div class="num">03</div>
+      <div class="ttl">Kursdetail</div>
+      <div class="desc">Hero, Curriculum-Akkordeon, Dozent, Einschreiben-CTA.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="auth.html" class="tile">
+      <div class="num">04</div>
+      <div class="ttl">Auth</div>
+      <div class="desc">Login, Register, Passwort vergessen – drei Zustände.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+  </div>
+
+  <div class="section-label">Eingeloggter Bereich</div>
+  <div class="grid">
+    <a href="dashboard.html" class="tile">
+      <div class="num">05</div>
+      <div class="ttl">Dashboard</div>
+      <div class="desc">„Weiterlernen", meine Kurse, Streak, Wiederholung fällig.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="lesson-reading.html" class="tile">
+      <div class="num">06</div>
+      <div class="ttl">Lesson · Reading</div>
+      <div class="desc">Sidebar + Long-form MDX + Next/Prev + Progress.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="lesson-video.html" class="tile">
+      <div class="num">07</div>
+      <div class="ttl">Lesson · Video</div>
+      <div class="desc">Sidebar + Player + optionales Transkript.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="lesson-quiz.html" class="tile">
+      <div class="num">08</div>
+      <div class="ttl">Lesson · Quiz</div>
+      <div class="desc">Frage für Frage, Auswertung, Erklärungen. Assessment + Lernkartei.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+  </div>
+
+  <div class="section-label">Bonus</div>
+  <div class="grid">
+    <a href="certificate.html" class="tile">
+      <div class="num">09</div>
+      <div class="ttl">Zertifikat</div>
+      <div class="desc">Der Moment des Bestehens – würdig, nicht übertrieben.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+    <a href="profile.html" class="tile">
+      <div class="num">10</div>
+      <div class="ttl">Profil</div>
+      <div class="desc">Statistiken, Achievements, Einstellungen.</div>
+      <div class="footer"><span>Variante A · B</span><span class="arrow">→</span></div>
+    </a>
+  </div>
+
+  <a href="review.html" class="review-cta">
+    <div>
+      <h3>Varianten bewerten</h3>
+      <p>Klick dich durch alle Varianten, markiere Favoriten, schreibe Kommentare – ich baue daraus den finalen Flow.</p>
+    </div>
+    <div class="arrow" style="font-size: 24px; color: var(--accent);">→</div>
+  </a>
+
+  <footer>
+    <div>verstande.ch · 8 templates · v0.2</div>
+    <div>~/nöd nur gwüsst · verstande</div>
+  </footer>
+
+</div>
+
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

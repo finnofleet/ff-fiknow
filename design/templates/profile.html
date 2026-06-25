@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Profil</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  body { min-height: 100vh; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 48px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 20; }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  .topbar .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .topbar .brand .tld { color: var(--ink-3); font-size: 12px; }
+  .topbar nav { display: flex; gap: 24px; font-size: 13px; color: var(--ink-3); }
+  .topbar nav a { padding: 6px 0; }
+  .topbar nav a.active { color: var(--ink); border-bottom: 2px solid var(--accent); }
+
+  .page { max-width: 1120px; margin: 0 auto; padding: 48px; }
+
+  /* =================== Variant A – Editorial / long bio column =================== */
+  .a-hero { display: grid; grid-template-columns: 180px 1fr auto; gap: 40px; align-items: center; margin-bottom: 64px; }
+  .a-hero .avatar {
+    width: 180px; height: 180px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2));
+    display: grid; place-items: center;
+    font-family: var(--font-display); font-style: italic; font-size: 96px; color: var(--accent);
+    border: 1px solid var(--line);
+    position: relative;
+  }
+  .a-hero .avatar .ring { position: absolute; inset: -8px; border-radius: 50%; border: 1.5px solid var(--accent); opacity: 0.3; }
+  .a-hero .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+  .a-hero h1 { font-family: var(--font-display); font-size: 64px; letter-spacing: -0.025em; line-height: 1; margin: 0 0 12px; font-weight: 400; }
+  .a-hero h1 em { color: var(--accent); }
+  .a-hero .bio { color: var(--ink-2); font-size: 16px; line-height: 1.55; max-width: 56ch; font-family: var(--font-display); }
+  .a-hero .actions { display: flex; flex-direction: column; gap: 8px; }
+
+  .a-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 64px; }
+  .a-stats .c { background: var(--bg-elev); padding: 32px; }
+  .a-stats .n { font-family: var(--font-display); font-size: 52px; letter-spacing: -0.02em; line-height: 1; }
+  .a-stats .n em { color: var(--accent); font-style: normal; }
+  .a-stats .n .u { font-size: 20px; color: var(--ink-3); }
+  .a-stats .l { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-top: 10px; }
+  .a-stats .d { font-size: 12px; color: var(--ink-2); margin-top: 14px; line-height: 1.4; }
+
+  .a-section { margin-bottom: 64px; }
+  .a-section-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; }
+  .a-section-head .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+  .a-section-head h2 { font-family: var(--font-display); font-size: 36px; letter-spacing: -0.02em; margin: 0; font-weight: 400; }
+  .a-section-head::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .a-certs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .a-cert { padding: 28px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-elev); display: flex; flex-direction: column; gap: 14px; }
+  .a-cert .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .a-cert .seal { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 20px; }
+  .a-cert .state { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--positive); }
+  .a-cert h4 { font-family: var(--font-display); font-size: 22px; margin: 0; letter-spacing: -0.01em; font-weight: 400; }
+  .a-cert .grade { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .a-cert .grade strong { color: var(--accent); }
+  .a-cert .foot { padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  .a-cert.in-progress { border-style: dashed; }
+  .a-cert.in-progress .seal { background: var(--bg-inset); color: var(--ink-3); }
+  .a-cert.in-progress .state { color: var(--warning); }
+
+  .a-achievements { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .a-ach { aspect-ratio: 1; border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px; display: flex; flex-direction: column; justify-content: space-between; background: var(--bg-elev); }
+  .a-ach.locked { opacity: 0.35; }
+  .a-ach .ic { font-family: var(--font-display); font-size: 36px; font-style: italic; color: var(--accent); }
+  .a-ach.locked .ic { color: var(--ink-3); }
+  .a-ach .ttl { font-family: var(--font-display); font-size: 13px; letter-spacing: -0.01em; line-height: 1.2; }
+  .a-ach .sub { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; }
+
+  .a-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .a-settings-col h3 { font-family: var(--font-display); font-size: 22px; margin: 0 0 16px; font-weight: 400; letter-spacing: -0.01em; }
+  .a-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .a-row:last-child { border-bottom: none; }
+  .a-row .lbl { color: var(--ink-2); }
+  .a-row .val { color: var(--ink); font-family: var(--font-mono); font-size: 12px; }
+  .a-row .switch { width: 36px; height: 20px; background: var(--line); border-radius: 999px; position: relative; cursor: pointer; }
+  .a-row .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); transition: left var(--dur) var(--ease); }
+  .a-row .switch.on { background: var(--accent); }
+  .a-row .switch.on::after { left: 18px; }
+
+  /* =================== Variant B – Dashboard-style cards =================== */
+  .b-hero { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; padding: 32px; border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev)); margin-bottom: 32px; }
+  .b-hero .avatar { width: 96px; height: 96px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--font-display); font-size: 44px; font-style: italic; }
+  [data-theme="light"] .b-hero .avatar { background: oklch(0.18 0.010 60); color: oklch(0.985 0.006 80); }
+  .b-hero .name { font-family: var(--font-display); font-size: 34px; letter-spacing: -0.02em; margin: 0 0 4px; font-weight: 400; }
+  .b-hero .sub { color: var(--ink-2); font-size: 14px; }
+  .b-hero .badges { display: flex; gap: 8px; margin-top: 14px; }
+  .b-hero .badge { padding: 5px 12px; border-radius: 999px; background: var(--bg-elev); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+  .b-hero .quick { display: flex; gap: 24px; margin-left: auto; padding-left: 32px; border-left: 1px solid var(--line); }
+  .b-hero .quick .n { font-family: var(--font-display); font-size: 32px; letter-spacing: -0.02em; }
+  .b-hero .quick .l { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-top: 2px; }
+
+  .b-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+  .b-card { padding: 28px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-elev); margin-bottom: 24px; }
+  .b-card h3 { font-family: var(--font-display); font-size: 22px; margin: 0 0 20px; font-weight: 400; letter-spacing: -0.01em; display: flex; justify-content: space-between; align-items: center; }
+  .b-card h3 .c { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; }
+
+  .b-activity { display: grid; grid-template-columns: repeat(52, 1fr); gap: 3px; margin-bottom: 8px; }
+  .b-activity .day { aspect-ratio: 1; border-radius: 2px; background: var(--bg-inset); }
+  .b-activity .day.l1 { background: color-mix(in oklch, var(--accent) 20%, var(--bg-inset)); }
+  .b-activity .day.l2 { background: color-mix(in oklch, var(--accent) 45%, var(--bg-inset)); }
+  .b-activity .day.l3 { background: color-mix(in oklch, var(--accent) 75%, var(--bg-inset)); }
+  .b-activity .day.l4 { background: var(--accent); }
+  .b-activity-foot { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; }
+  .b-activity-foot .scale { display: flex; gap: 3px; align-items: center; }
+  .b-activity-foot .scale span { width: 10px; height: 10px; border-radius: 2px; }
+
+  .b-cert-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .b-cert-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .b-cert-row .left { display: flex; gap: 14px; align-items: center; }
+  .b-cert-row .seal { width: 36px; height: 36px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 18px; }
+  .b-cert-row .seal.pending { background: var(--bg-inset); color: var(--ink-3); }
+  .b-cert-row h4 { font-family: var(--font-display); font-size: 16px; margin: 0 0 2px; font-weight: 400; }
+  .b-cert-row .m { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .variant { display: none; }
+  .variant.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<header class="topbar">
+  <a href="index.html" class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="catalog.html">Katalog</a>
+    <a href="profile.html" class="active">Profil</a>
+  </nav>
+  <div style="display: flex; gap: 8px;">
+    <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-settings"/></svg></button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- VARIANT A -->
+  <div id="var-a" class="variant active">
+    <div class="a-hero">
+      <div class="avatar">m<span class="ring"></span></div>
+      <div>
+        <div class="k">● Lernende seit Mai 2023</div>
+        <h1>Marie <em>Hirschi</em></h1>
+        <p class="bio">Sommelière in Ausbildung, Grafikerin aus Zürich. Lernt im Zug, schläft mit Notizbuch, trinkt Pinot Noir. 3 Zertifikate, 2 laufende Kurse, 74 Tage Streak.</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-edit"/></svg>Profil bearbeiten</button>
+        <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-share"/></svg>Öffentlich teilen</button>
+      </div>
+    </div>
+
+    <div class="a-stats">
+      <div class="c">
+        <div class="n">3<span class="u"> Zertifikate</span></div>
+        <div class="l">● Abgeschlossen</div>
+        <div class="d">WSET 1 · WSET 2 · Sensorik-Grundlagen. Jedes öffentlich verifizierbar.</div>
+      </div>
+      <div class="c">
+        <div class="n"><em>74</em><span class="u"> Tage</span></div>
+        <div class="l">● Lern-Streak</div>
+        <div class="d">Seit 30. August 2024 ohne Unterbruch. Längster Streak bisher.</div>
+      </div>
+      <div class="c">
+        <div class="n">142<span class="u"> h</span></div>
+        <div class="l">● Gesamtlernzeit</div>
+        <div class="d">Ø 24 Minuten pro Tag. Meiste Aktivität 7–8 Uhr morgens.</div>
+      </div>
+      <div class="c">
+        <div class="n">91<span class="u"> %</span></div>
+        <div class="l">● Quiz-Genauigkeit</div>
+        <div class="d">Über 342 Fragen. Stark: Riesling, Sensorik. Schwach: Barolo DOCG.</div>
+      </div>
+    </div>
+
+    <section class="a-section">
+      <div class="a-section-head"><span class="k">● 03</span><h2>Zertifikate &amp; Kurse</h2></div>
+      <div class="a-certs">
+        <div class="a-cert">
+          <div class="top"><div class="seal">✓</div><div class="state">● Merit · 84 %</div></div>
+          <h4>WSET Level 2<br>Wines &amp; Spirits</h4>
+          <div class="grade">12. Nov 2024 · <strong>28 h</strong></div>
+          <div class="foot"><span>Nr. VS-0847</span><span>Ansehen →</span></div>
+        </div>
+        <div class="a-cert">
+          <div class="top"><div class="seal">✓</div><div class="state">● Pass · 76 %</div></div>
+          <h4>Sensorik<br>Grundlagen</h4>
+          <div class="grade">03. Aug 2024 · <strong>12 h</strong></div>
+          <div class="foot"><span>Nr. VS-0612</span><span>Ansehen →</span></div>
+        </div>
+        <div class="a-cert">
+          <div class="top"><div class="seal">✓</div><div class="state">● Distinction · 92 %</div></div>
+          <h4>WSET Level 1<br>Wines</h4>
+          <div class="grade">18. Mai 2023 · <strong>8 h</strong></div>
+          <div class="foot"><span>Nr. VS-0234</span><span>Ansehen →</span></div>
+        </div>
+        <div class="a-cert in-progress">
+          <div class="top"><div class="seal">··</div><div class="state">● läuft · 62 %</div></div>
+          <h4>Burgund<br>vertieft</h4>
+          <div class="grade">14 / 24 Lektionen · <strong>6 h</strong></div>
+          <div class="foot"><span>seit 02.10.24</span><span>Fortsetzen →</span></div>
+        </div>
+        <div class="a-cert in-progress">
+          <div class="top"><div class="seal">··</div><div class="state">● läuft · 18 %</div></div>
+          <h4>Schweizer<br>Weinregionen</h4>
+          <div class="grade">4 / 22 Lektionen · <strong>2 h</strong></div>
+          <div class="foot"><span>seit 04.11.24</span><span>Fortsetzen →</span></div>
+        </div>
+        <div class="a-cert in-progress" style="opacity: 0.6;">
+          <div class="top"><div class="seal">+</div><div class="state" style="color: var(--ink-3);">● empfohlen</div></div>
+          <h4>WSET Level 3<br>Start: 6. Jan 2025</h4>
+          <div class="grade">Frühbucher bis 20.12. · <strong>−15 %</strong></div>
+          <div class="foot"><span>42 h</span><span>Vormerken →</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="a-section">
+      <div class="a-section-head"><span class="k">● 04</span><h2>Abzeichen</h2></div>
+      <div class="a-achievements">
+        <div class="a-ach"><div class="ic">✦</div><div><div class="ttl">Erster Kurs</div><div class="sub">Mai 2023</div></div></div>
+        <div class="a-ach"><div class="ic">🜂</div><div><div class="ttl">7-Tage-Streak</div><div class="sub">Juni 2023</div></div></div>
+        <div class="a-ach"><div class="ic">☾</div><div><div class="ttl">Nachteule</div><div class="sub">12× 23–02 Uhr</div></div></div>
+        <div class="a-ach"><div class="ic">◐</div><div><div class="ttl">Halbierer</div><div class="sub">50 %</div></div></div>
+        <div class="a-ach"><div class="ic">✱</div><div><div class="ttl">Merit</div><div class="sub">WSET 2</div></div></div>
+        <div class="a-ach"><div class="ic">⬢</div><div><div class="ttl">Perfektionist</div><div class="sub">10×100 %</div></div></div>
+        <div class="a-ach"><div class="ic">◉</div><div><div class="ttl">Sensorik-Schärfe</div><div class="sub">Blind</div></div></div>
+        <div class="a-ach"><div class="ic">☀</div><div><div class="ttl">Frühaufsteherin</div><div class="sub">30×vor 8</div></div></div>
+        <div class="a-ach locked"><div class="ic">⬡</div><div><div class="ttl">Distinction</div><div class="sub">offen</div></div></div>
+        <div class="a-ach locked"><div class="ic">⟠</div><div><div class="ttl">100-Tage</div><div class="sub">in 26 Tagen</div></div></div>
+        <div class="a-ach locked"><div class="ic">◈</div><div><div class="ttl">Polyglott</div><div class="sub">3 Sprachen</div></div></div>
+        <div class="a-ach locked"><div class="ic">✧</div><div><div class="ttl">Empfehlerin</div><div class="sub">gesperrt</div></div></div>
+      </div>
+    </section>
+
+    <section class="a-section">
+      <div class="a-section-head"><span class="k">● 05</span><h2>Einstellungen</h2></div>
+      <div class="a-settings">
+        <div class="a-settings-col">
+          <h3>Konto</h3>
+          <div class="a-row"><span class="lbl">E-Mail</span><span class="val">marie.hirschi@gmail.com</span></div>
+          <div class="a-row"><span class="lbl">Sprache</span><span class="val">Deutsch (CH)</span></div>
+          <div class="a-row"><span class="lbl">Zeitzone</span><span class="val">Europe/Zurich</span></div>
+          <div class="a-row"><span class="lbl">Abo</span><span class="val" style="color: var(--accent);">Plus · jährlich</span></div>
+        </div>
+        <div class="a-settings-col">
+          <h3>Benachrichtigungen</h3>
+          <div class="a-row"><span class="lbl">Tägliche Erinnerung · 07:30</span><span class="switch on"></span></div>
+          <div class="a-row"><span class="lbl">Wiederholung fällig</span><span class="switch on"></span></div>
+          <div class="a-row"><span class="lbl">Neue Kurse aus meinen Themen</span><span class="switch on"></span></div>
+          <div class="a-row"><span class="lbl">Wöchentlicher Rückblick</span><span class="switch"></span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- VARIANT B -->
+  <div id="var-b" class="variant">
+    <div class="b-hero">
+      <div class="avatar">M</div>
+      <div>
+        <h2 class="name">Marie Hirschi</h2>
+        <div class="sub">marie.hirschi@gmail.com · Zürich · seit 18. Mai 2023</div>
+        <div class="badges">
+          <span class="badge">● Plus</span>
+          <span class="badge">● 3 Zertifikate</span>
+          <span class="badge">● 74 Tage Streak</span>
+        </div>
+      </div>
+      <div class="quick">
+        <div><div class="n" style="color: var(--accent);">74</div><div class="l">Streak</div></div>
+        <div><div class="n">91%</div><div class="l">Quiz-Ø</div></div>
+        <div><div class="n">142h</div><div class="l">Gesamt</div></div>
+      </div>
+    </div>
+
+    <div class="b-grid">
+      <div>
+        <div class="b-card">
+          <h3>Aktivität · letzte 52 Wochen <span class="c">2,318 Minuten</span></h3>
+          <div class="b-activity" id="heatmap"></div>
+          <div class="b-activity-foot">
+            <span>Nov 2023</span>
+            <div class="scale">
+              Weniger
+              <span style="background: var(--bg-inset);"></span>
+              <span style="background: color-mix(in oklch, var(--accent) 20%, var(--bg-inset));"></span>
+              <span style="background: color-mix(in oklch, var(--accent) 45%, var(--bg-inset));"></span>
+              <span style="background: color-mix(in oklch, var(--accent) 75%, var(--bg-inset));"></span>
+              <span style="background: var(--accent);"></span>
+              Mehr
+            </div>
+            <span>Nov 2024</span>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <h3>Zertifikate <span class="c">3 · 2 laufend</span></h3>
+          <div class="b-cert-row">
+            <div class="left"><div class="seal">✓</div><div><h4>WSET Level 2 – Wines &amp; Spirits</h4><div class="m">12.11.2024 · Merit · 84 %</div></div></div>
+            <a href="certificate.html" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Ansehen</a>
+          </div>
+          <div class="b-cert-row">
+            <div class="left"><div class="seal">✓</div><div><h4>Sensorik Grundlagen</h4><div class="m">03.08.2024 · Pass · 76 %</div></div></div>
+            <a href="#" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Ansehen</a>
+          </div>
+          <div class="b-cert-row">
+            <div class="left"><div class="seal">✓</div><div><h4>WSET Level 1 – Wines</h4><div class="m">18.05.2023 · Distinction · 92 %</div></div></div>
+            <a href="#" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Ansehen</a>
+          </div>
+          <div class="b-cert-row">
+            <div class="left"><div class="seal pending">··</div><div><h4>Burgund vertieft</h4><div class="m">läuft · 14/24 · 62 %</div></div></div>
+            <a href="#" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Weiter</a>
+          </div>
+          <div class="b-cert-row">
+            <div class="left"><div class="seal pending">··</div><div><h4>Schweizer Weinregionen</h4><div class="m">läuft · 4/22 · 18 %</div></div></div>
+            <a href="#" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Weiter</a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="b-card">
+          <h3>Nächstes Ziel</h3>
+          <div style="padding: 20px; border-radius: var(--r-md); background: var(--bg-inset); margin-bottom: 16px;">
+            <div style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px;">● In 26 Tagen</div>
+            <h4 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 6px; font-weight: 400;">100-Tage-Streak</h4>
+            <div style="font-size: 13px; color: var(--ink-2); margin-bottom: 12px;">Noch 26 Tage ohne Unterbruch.</div>
+            <div class="progress-bar"><span style="width: 74%;"></span></div>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <h3>Abzeichen <span class="c">8 / 24</span></h3>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+            <div class="a-ach"><div class="ic">✦</div><div><div class="ttl" style="font-size: 11px;">Erster Kurs</div></div></div>
+            <div class="a-ach"><div class="ic">🜂</div><div><div class="ttl" style="font-size: 11px;">7-Tage</div></div></div>
+            <div class="a-ach"><div class="ic">☾</div><div><div class="ttl" style="font-size: 11px;">Nachteule</div></div></div>
+            <div class="a-ach"><div class="ic">◐</div><div><div class="ttl" style="font-size: 11px;">Halbierer</div></div></div>
+            <div class="a-ach"><div class="ic">✱</div><div><div class="ttl" style="font-size: 11px;">Merit</div></div></div>
+            <div class="a-ach"><div class="ic">⬢</div><div><div class="ttl" style="font-size: 11px;">Perfekt</div></div></div>
+            <div class="a-ach"><div class="ic">◉</div><div><div class="ttl" style="font-size: 11px;">Sensorik</div></div></div>
+            <div class="a-ach"><div class="ic">☀</div><div><div class="ttl" style="font-size: 11px;">Früh</div></div></div>
+          </div>
+        </div>
+
+        <div class="b-card">
+          <h3>Einstellungen</h3>
+          <div class="a-row"><span class="lbl">Tägliche Erinnerung · 07:30</span><span class="switch on"></span></div>
+          <div class="a-row"><span class="lbl">Wiederholung fällig</span><span class="switch on"></span></div>
+          <div class="a-row"><span class="lbl">Wöchentlicher Rückblick</span><span class="switch"></span></div>
+          <div class="a-row"><span class="lbl">Abo</span><span class="val" style="color: var(--accent); font-size: 12px;">Plus · jährlich</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const heatmap = document.getElementById('heatmap');
+  if (heatmap) {
+    const days = 52 * 7;
+    let html = '';
+    for (let i = 0; i < days; i++) {
+      const r = Math.random();
+      let cls = '';
+      if (i < 40) cls = r < 0.5 ? '' : 'l1';
+      else if (i < 200) cls = r < 0.4 ? '' : (r < 0.7 ? 'l1' : 'l2');
+      else if (i > days - 80) cls = r < 0.1 ? '' : (r < 0.3 ? 'l2' : r < 0.7 ? 'l3' : 'l4');
+      else cls = r < 0.25 ? '' : (r < 0.55 ? 'l1' : r < 0.8 ? 'l2' : 'l3');
+      html += `<div class="day ${cls}"></div>`;
+    }
+    heatmap.innerHTML = html;
+  }
+
+  document.querySelectorAll('.switch').forEach(s => s.addEventListener('click', () => s.classList.toggle('on')));
+
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-profile') || 'a';
+  function setVar(v) {
+    localStorage.setItem('v-profile', v);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v));
+  }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

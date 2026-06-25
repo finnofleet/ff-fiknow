@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Lesson · Video</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  /* Shared lesson top */
+  .lsn-top { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 20; }
+  .lsn-top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  .lsn-top .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .lsn-top .brand .tld { color: var(--ink-3); font-size: 12px; }
+  .lsn-top .crumb { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+  .lsn-top .crumb .cur { color: var(--ink); }
+  .lsn-top .right { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-3); }
+  .lsn-top .progress-bar { position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--line); }
+  .lsn-top .progress-bar span { height: 2px; background: var(--accent); }
+
+  /* Variant A – theater mode, sidebar + wide video + collapsible transcript */
+  .a-layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 57px); }
+  .a-sidebar { border-right: 1px solid var(--line); padding: 32px 24px; overflow-y: auto; background: var(--bg-elev); }
+  .a-sidebar .course-head { padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .a-sidebar .course-head .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+  .a-sidebar .course-head .t { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.01em; line-height: 1.15; }
+  .a-sidebar h5 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin: 20px 0 8px; }
+  .a-sidebar ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+  .a-sidebar li a { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; margin: 0 -10px; border-radius: var(--r-sm); color: var(--ink-2); font-size: 13px; line-height: 1.35; }
+  .a-sidebar li a:hover { background: var(--bg); color: var(--ink); }
+  .a-sidebar li a.done .dot { background: var(--line-strong); }
+  .a-sidebar li a.cur { background: var(--bg-elev-2); color: var(--ink); border-left: 2px solid var(--accent); padding-left: 12px; margin-left: -12px; }
+  .a-sidebar li a.cur .dot { background: var(--accent); }
+  .a-sidebar li a .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); margin-top: 6px; flex-shrink: 0; }
+  .a-sidebar li a .ic { width: 14px; height: 14px; color: var(--ink-3); flex-shrink: 0; margin-top: 2px; }
+
+  .a-main { padding: 32px 48px 96px; max-width: 1200px; width: 100%; margin: 0 auto; }
+  .a-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; }
+  .a-header .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .a-header h1 { font-family: var(--font-display); font-size: 44px; letter-spacing: -0.02em; font-weight: 400; line-height: 1.05; margin: 0; }
+  .a-header h1 em { color: var(--accent); }
+  .a-header .meta { display: flex; gap: 24px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; color: var(--ink-3); text-transform: uppercase; }
+
+  .a-player {
+    aspect-ratio: 16/9; background: #0a0a0a; border-radius: var(--r-lg); overflow: hidden;
+    position: relative; margin-bottom: 16px;
+    background-image:
+      radial-gradient(circle at 40% 45%, oklch(0.4 0.08 60 / 0.5), transparent 55%),
+      linear-gradient(135deg, oklch(0.22 0.04 70), oklch(0.15 0.02 240));
+  }
+  .a-player .mountains {
+    position: absolute; bottom: 0; left: 0; right: 0;
+  }
+  .a-player .play-btn {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    display: grid; place-items: center; color: #fff;
+    cursor: pointer;
+  }
+  .a-player .play-btn svg { width: 28px; height: 28px; margin-left: 3px; }
+  .a-player .chapter-label {
+    position: absolute; top: 20px; left: 20px;
+    padding: 6px 12px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+    border-radius: 999px; color: rgba(255,255,255,0.8); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .a-player .controls {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 16px 20px; background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    display: flex; align-items: center; gap: 14px; color: #fff;
+  }
+  .a-player .controls .pb { flex: 1; height: 3px; background: rgba(255,255,255,0.2); border-radius: 999px; position: relative; }
+  .a-player .controls .pb span { display: block; height: 100%; background: var(--accent); border-radius: 999px; width: 32%; }
+  .a-player .controls .pb .dot { position: absolute; top: 50%; left: 32%; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 4px rgba(212, 158, 60, 0.2); }
+  .a-player .controls button { color: #fff; padding: 4px; display: grid; place-items: center; }
+  .a-player .controls button svg { width: 18px; height: 18px; }
+  .a-player .controls .time { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
+
+  .a-video-meta { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+  .a-video-meta .actions { display: flex; gap: 8px; }
+  .a-video-meta .actions button { display: flex; gap: 8px; align-items: center; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--r-md); font-size: 12px; color: var(--ink-2); background: var(--bg-elev); }
+  .a-video-meta .actions button svg { width: 14px; height: 14px; }
+  .a-video-meta .chapters { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.08em; }
+
+  /* Chapter markers */
+  .a-chapters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 40px; }
+  .a-chapter { padding: 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-elev); cursor: pointer; }
+  .a-chapter.cur { border-color: var(--accent); background: var(--bg-elev-2); }
+  .a-chapter .time { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 6px; }
+  .a-chapter .t { font-family: var(--font-display); font-size: 17px; letter-spacing: -0.01em; line-height: 1.2; }
+
+  /* Transcript */
+  .a-transcript-hd { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .a-transcript-hd h3 { font-family: var(--font-display); font-size: 24px; margin: 0; letter-spacing: -0.01em; font-weight: 400; }
+  .a-transcript-hd .toggle { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  .a-transcript { max-height: 480px; overflow-y: auto; padding-right: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .a-transcript .line { display: grid; grid-template-columns: 60px 1fr; gap: 20px; padding: 10px 14px; border-radius: var(--r-sm); cursor: pointer; }
+  .a-transcript .line:hover { background: var(--bg-elev); }
+  .a-transcript .line.cur { background: var(--bg-elev-2); }
+  .a-transcript .line .tc { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.04em; padding-top: 3px; }
+  .a-transcript .line .tx { font-size: 15px; line-height: 1.65; color: var(--ink-2); }
+  .a-transcript .line.cur .tx { color: var(--ink); }
+
+  .a-nav-bottom { margin: 48px 0 0; padding-top: 24px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .a-nav-bottom a { padding: 20px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-elev); }
+  .a-nav-bottom a:hover { border-color: var(--accent); }
+  .a-nav-bottom .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+  .a-nav-bottom .t { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.01em; }
+  .a-nav-bottom .prev { text-align: right; }
+
+  /* Variant B – full-bleed video, minimal chrome, transcript as drawer */
+  #var-b { background: #0a0a0a; color: #f3f2ee; min-height: 100vh; }
+  .b-top { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; position: absolute; top: 0; left: 0; right: 0; z-index: 30; }
+  .b-top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; color: #f3f2ee; }
+  .b-top .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .b-top .menu { display: flex; gap: 14px; }
+  .b-top .menu button { padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,0.08); color: #fff; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; backdrop-filter: blur(10px); }
+
+  .b-stage {
+    position: relative; height: 100vh;
+    background-image:
+      radial-gradient(circle at 60% 40%, oklch(0.45 0.12 60 / 0.6), transparent 55%),
+      linear-gradient(to bottom, oklch(0.24 0.04 70), oklch(0.1 0.02 240));
+    overflow: hidden;
+  }
+  .b-stage .landscape {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 40%;
+    background: linear-gradient(to top, oklch(0.1 0.02 240), transparent);
+  }
+
+  .b-stage .play-hero {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 140px; height: 140px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    display: grid; place-items: center; color: #fff; cursor: pointer;
+    transition: transform 200ms;
+  }
+  .b-stage .play-hero:hover { transform: translate(-50%,-50%) scale(1.05); }
+  .b-stage .play-hero svg { width: 48px; height: 48px; margin-left: 5px; }
+
+  .b-overlay-text {
+    position: absolute; bottom: 160px; left: 60px; right: 60px;
+    color: #fff;
+  }
+  .b-overlay-text .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+  .b-overlay-text h1 { font-family: var(--font-display); font-size: 80px; letter-spacing: -0.03em; line-height: 0.98; margin: 0; font-weight: 400; max-width: 16ch; }
+  .b-overlay-text h1 em { color: var(--accent); }
+  .b-overlay-text .caption { margin-top: 20px; font-family: var(--font-display); font-style: italic; font-size: 22px; color: rgba(255,255,255,0.7); max-width: 42ch; }
+
+  .b-ctrl {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 32px 40px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    display: flex; flex-direction: column; gap: 16px; color: #fff;
+  }
+  .b-ctrl .track { display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
+  .b-ctrl .pb { flex: 1; height: 3px; background: rgba(255,255,255,0.15); border-radius: 999px; position: relative; }
+  .b-ctrl .pb .filled { display: block; height: 100%; background: var(--accent); border-radius: 999px; width: 32%; }
+  .b-ctrl .pb .marks span { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.35); }
+  .b-ctrl .buttons { display: flex; justify-content: space-between; align-items: center; }
+  .b-ctrl .buttons .left { display: flex; gap: 20px; align-items: center; }
+  .b-ctrl .buttons .right { display: flex; gap: 12px; align-items: center; }
+  .b-ctrl button { color: #fff; padding: 6px; background: transparent; }
+  .b-ctrl button svg { width: 20px; height: 20px; }
+  .b-ctrl .ttl { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.01em; }
+  .b-ctrl .chip-btn { padding: 6px 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .b-ctrl .chip-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  /* Transcript drawer */
+  .b-drawer {
+    position: fixed; right: 0; top: 0; bottom: 0; width: 440px;
+    background: oklch(0.18 0.008 240 / 0.96); backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255,255,255,0.12);
+    transform: translateX(0); transition: transform 300ms;
+    overflow-y: auto; padding: 32px;
+    z-index: 40;
+  }
+  .b-drawer.hidden { transform: translateX(100%); }
+  .b-drawer h3 { font-family: var(--font-display); font-size: 26px; letter-spacing: -0.01em; margin: 0 0 8px; font-weight: 400; }
+  .b-drawer .sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+  .b-drawer .line { display: grid; grid-template-columns: 50px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.08); cursor: pointer; }
+  .b-drawer .line:hover { color: #fff; }
+  .b-drawer .line .tc { font-family: var(--font-mono); font-size: 11px; color: var(--accent); padding-top: 3px; }
+  .b-drawer .line .tx { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.7); }
+  .b-drawer .line.cur .tx { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<!-- VARIANT A -->
+<div id="var-a" class="variant active">
+  <header class="lsn-top">
+    <div class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></div>
+    <div class="crumb">WSET Level 2 · Kap. 02 · <span class="cur">Lekt. 06 · Drei Weinberge, drei Böden</span></div>
+    <div class="right"><span>41 % · 6 / 14</span></div>
+    <div class="progress-bar"><span style="width: 41%;"></span></div>
+  </header>
+
+  <div class="a-layout">
+    <aside class="a-sidebar">
+      <div class="course-head">
+        <div class="k">Kurs</div>
+        <div class="t">Die Climats von Burgund</div>
+      </div>
+      <h5>Kap. 02 · Terroir</h5>
+      <ul>
+        <li><a href="#" class="done"><span class="dot"></span>Kalk, Mergel, Granit</a></li>
+        <li><a href="lesson-reading.html" class="done"><span class="dot"></span>Mikroklima auf 50 km</a></li>
+        <li><a href="#" class="cur"><span class="dot"></span>Video: Drei Weinberge, drei Böden</a></li>
+        <li><a href="lesson-quiz.html"><span class="dot"></span>Übung: Terroir-Quiz</a></li>
+      </ul>
+      <h5>Kap. 03 · Rebsorten</h5>
+      <ul>
+        <li><a href="#"><span class="dot"></span>Pinot Noir – die dünne Haut</a></li>
+        <li><a href="#"><span class="dot"></span>Chardonnay – weltweit, hier geboren</a></li>
+        <li><a href="#"><span class="dot"></span>Video: Ein Jahr im Weinberg</a></li>
+      </ul>
+    </aside>
+
+    <main class="a-main">
+      <div class="a-header">
+        <div>
+          <div class="eyebrow">● Video · Kapitel 02 · Lektion 06</div>
+          <h1>Drei Weinberge,<br>drei <em>Böden</em>.</h1>
+        </div>
+        <div class="meta"><span>16:24 Min</span><span>HD · 1080p</span><span>DE · FR · EN</span></div>
+      </div>
+
+      <div class="a-player">
+        <div class="chapter-label">Kap. 03 · Chambolle-Musigny</div>
+        <div class="play-btn"><svg><use href="shared/icons.svg#i-play"/></svg></div>
+        <div class="controls">
+          <button><svg><use href="shared/icons.svg#i-play"/></svg></button>
+          <span class="time">05:12</span>
+          <div class="pb"><span></span><div class="dot"></div></div>
+          <span class="time">16:24</span>
+          <button>CC</button>
+          <button>1x</button>
+          <button>⛶</button>
+        </div>
+      </div>
+
+      <div class="a-video-meta">
+        <div class="chapters">3 Kapitel · Autor: Claire Moreau</div>
+        <div class="actions">
+          <button><svg><use href="shared/icons.svg#i-note"/></svg>Notiz</button>
+          <button><svg><use href="shared/icons.svg#i-book"/></svg>Merken</button>
+          <button>Abspielgeschw. · 1×</button>
+        </div>
+      </div>
+
+      <div class="a-chapters">
+        <div class="a-chapter"><div class="time">00:00 · 04:12</div><div class="t">Gevrey-Chambertin · Mergel &amp; Kalk</div></div>
+        <div class="a-chapter cur"><div class="time">04:12 · 10:30</div><div class="t">Chambolle-Musigny · reiner Kalk</div></div>
+        <div class="a-chapter"><div class="time">10:30 · 16:24</div><div class="t">Vosne-Romanée · das perfekte Band</div></div>
+      </div>
+
+      <div class="a-transcript-hd">
+        <h3>Transkript</h3>
+        <div class="toggle">● Synchron mit Video</div>
+      </div>
+      <div class="a-transcript">
+        <div class="line"><span class="tc">03:58</span><span class="tx">… und das sehen Sie deutlich: je weiter nördlich, desto mehr Mergel, desto kräftiger die Weine. Chambertin, das nördlichste Grand Cru, gibt die strukturiertesten Weine der ganzen Côte de Nuits.</span></div>
+        <div class="line cur"><span class="tc">04:12</span><span class="tx">Jetzt bewegen wir uns nach Süden, nach Chambolle-Musigny. Schauen Sie auf den Boden – sehen Sie den Unterschied? Hier ist kaum noch Mergel. Fast reiner Kalkstein, zerfressen, kalkhaltig, aber leicht.</span></div>
+        <div class="line"><span class="tc">04:48</span><span class="tx">Und genau das schmecken Sie im Glas. Musigny ist der eleganteste Wein Burgunds. Nicht der stärkste, nicht der dunkelste – der eleganteste. Parfümiert, fein, fast schwebend.</span></div>
+        <div class="line"><span class="tc">05:24</span><span class="tx">Das Konzept heißt Terroir, und wir benutzen das Wort oft leichtfertig. Aber hier, an diesem Hang, an diesen drei Gemeinden, können Sie es mit den Händen anfassen. Drei Kilometer – drei Stile.</span></div>
+        <div class="line"><span class="tc">06:10</span><span class="tx">Bevor wir zur dritten Station weiterfahren, lassen Sie uns kurz die Mineralogie wiederholen …</span></div>
+      </div>
+
+      <nav class="a-nav-bottom">
+        <a href="lesson-reading.html" class="prev">
+          <div class="k">← Vorher</div>
+          <div class="t">Mikroklima auf 50 km</div>
+        </a>
+        <a href="lesson-quiz.html">
+          <div class="k">Nächste Lektion →</div>
+          <div class="t">Übung: Terroir-Quiz</div>
+        </a>
+      </nav>
+    </main>
+  </div>
+</div>
+
+<!-- VARIANT B – cinema mode -->
+<div id="var-b" class="variant">
+  <div class="b-top">
+    <a href="index.html" class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+    <div class="menu">
+      <button>Kursübersicht</button>
+      <button onclick="document.querySelector('.b-drawer').classList.toggle('hidden')">Transkript</button>
+      <button>⛶</button>
+    </div>
+  </div>
+
+  <div class="b-stage">
+    <div class="landscape"></div>
+
+    <div class="play-hero"><svg><use href="shared/icons.svg#i-play"/></svg></div>
+
+    <div class="b-overlay-text">
+      <div class="eyebrow">● WSET Level 2 · Lektion 06 von 14</div>
+      <h1>Drei Weinberge,<br>drei <em>Böden</em>.</h1>
+      <div class="caption">Von Gevrey-Chambertin nach Vosne-Romanée in 16 Minuten – und der Boden unter unseren Füßen erzählt jedes Mal eine andere Geschichte.</div>
+    </div>
+
+    <div class="b-ctrl">
+      <div class="track">
+        <span>05:12</span>
+        <div class="pb">
+          <span class="filled"></span>
+          <div class="marks">
+            <span style="left: 26%;"></span>
+            <span style="left: 64%;"></span>
+          </div>
+        </div>
+        <span>16:24</span>
+      </div>
+      <div class="buttons">
+        <div class="left">
+          <button><svg style="width:16px;height:16px;"><use href="shared/icons.svg#i-arrow-right"/></svg></button>
+          <button><svg><use href="shared/icons.svg#i-play"/></svg></button>
+          <button><svg style="width:16px;height:16px; transform: scaleX(-1);"><use href="shared/icons.svg#i-arrow-right"/></svg></button>
+          <span class="ttl">Kap. 02 · Chambolle-Musigny, reiner Kalk</span>
+        </div>
+        <div class="right">
+          <button class="chip-btn">1.0×</button>
+          <button class="chip-btn on">CC</button>
+          <button>⚙</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="b-drawer hidden">
+    <h3>Transkript</h3>
+    <div class="sub">● Synchron mit Video · Claire Moreau</div>
+    <div class="line"><span class="tc">03:58</span><span class="tx">… je weiter nördlich, desto mehr Mergel, desto kräftiger die Weine.</span></div>
+    <div class="line cur"><span class="tc">04:12</span><span class="tx">Jetzt bewegen wir uns nach Süden, nach Chambolle-Musigny. Schauen Sie auf den Boden – sehen Sie den Unterschied?</span></div>
+    <div class="line"><span class="tc">04:48</span><span class="tx">Musigny ist der eleganteste Wein Burgunds. Nicht der stärkste, nicht der dunkelste – der eleganteste.</span></div>
+    <div class="line"><span class="tc">05:24</span><span class="tx">Das Konzept heißt Terroir, und wir benutzen das Wort oft leichtfertig. Aber hier können Sie es mit den Händen anfassen.</span></div>
+    <div class="line"><span class="tc">06:10</span><span class="tx">Bevor wir zur dritten Station weiterfahren, lassen Sie uns kurz die Mineralogie wiederholen …</span></div>
+  </aside>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-lvid-var') || 'a';
+  function setVar(v) { localStorage.setItem('v-lvid-var', v); btns.forEach(b => b.classList.toggle('on', b.dataset.v === v)); vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v)); }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

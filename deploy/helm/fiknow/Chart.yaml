@@ -1,0 +1,17 @@
+apiVersion: v2
+name: fiknow
+description: >-
+  White-Label-Lernplattform (edu-platform / FIKNOW). Liefert das OCI-Image als
+  Kubernetes-Deployment — non-root, OIDC- oder GoTrue-Auth (umschaltbar),
+  externes Postgres. Keycloak und Postgres werden NICHT mitgeliefert (extern,
+  z. B. vom IBM-Umfeld bereitgestellt).
+type: application
+# Chart-Version (SemVer des Charts selbst).
+version: 0.1.0
+# Default-App-Version = Image-Tag (per values.image.tag überschreibbar).
+appVersion: "fiknow"
+home: https://github.com/yves-blaettler/edu-platform
+sources:
+  - https://github.com/yves-blaettler/edu-platform
+maintainers:
+  - name: yves-blaettler

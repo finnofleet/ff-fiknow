@@ -1,0 +1,160 @@
+# ============================================================
+# edu-platform — Helm-Werte (Defaults)
+#
+# Minimal nötig für einen Deploy:
+#   - image.repository / image.tag
+#   - config.AUTH_PROVIDER (+ OIDC_*-Config bei oidc)
+#   - ingress.hosts (öffentlicher Host) bzw. config.OIDC_REDIRECT_BASE
+#   - die Secrets (DATABASE_URL, PAYLOAD_SECRET, …) via existingSecret ODER
+#     secret.create + secret.data
+#
+# Ein einsatzfertiges Beispiel: values-fiknow-oidc.yaml
+# ============================================================
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/finnofleet/ff-fiknow
+  # Tag = Brand/Variante. "fiknow" für die FIKNOW-Variante, "latest" für den
+  # verstande-Default. IMMER explizit pinnen (kein implizites latest).
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# ------------------------------------------------------------
+# Nicht-geheime Konfiguration → landet in einer ConfigMap und wird via
+# envFrom in den Container gereicht. Geheimes gehört in `secret` (s. u.).
+# ------------------------------------------------------------
+config:
+  # Auth-Provider: "gotrue" (Default, verstande/Supabase) oder "oidc" (Keycloak).
+  AUTH_PROVIDER: oidc
+
+  # --- OIDC (nur bei AUTH_PROVIDER=oidc) ---
+  OIDC_ISSUER: ""            # z. B. https://keycloak.example.com/realms/fiknow
+  OIDC_CLIENT_ID: edu-platform
+  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+  OIDC_SCOPES: "openid profile email"
+  # PFLICHT in Prod: öffentliche Basis-URL für die exakte redirect_uri.
+  # Die App leitet sie NICHT aus Request-Headern ab (fail-closed).
+  # Wird, wenn leer, aus ingress.hosts[0] abgeleitet (siehe _helpers).
+  OIDC_REDIRECT_BASE: ""
+  OIDC_SESSION_MAX_AGE_SEC: "28800"
+
+  # --- GoTrue/Supabase (nur bei AUTH_PROVIDER=gotrue) ---
+  NEXT_PUBLIC_SUPABASE_URL: ""
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
+  SUPABASE_URL: ""
+
+  # Beliebige weitere nicht-geheime Env-Vars.
+  extra: {}
+
+# ------------------------------------------------------------
+# Geheime Konfiguration. Zwei Wege:
+#   1. existingSecret: Name eines bereits existierenden Secrets (EMPFOHLEN für
+#      Prod — via Sealed-Secrets / IBM Secrets Manager / External-Secrets
+#      bereitgestellt). Das Chart erzeugt dann KEIN Secret.
+#   2. create: true + data: Das Chart templated ein Secret aus diesen Werten.
+#      Bequem für Dev/Test, aber Klartext in values — in Prod meiden.
+#
+# Erwartete Keys (je nach AUTH_PROVIDER):
+#   DATABASE_URL, PAYLOAD_SECRET                 (immer)
+#   OIDC_CLIENT_SECRET, OIDC_SESSION_SECRET      (oidc; SESSION optional → fällt
+#                                                 sonst auf PAYLOAD_SECRET zurück)
+#   SUPABASE_SERVICE_ROLE_KEY                    (gotrue)
+# ------------------------------------------------------------
+secret:
+  existingSecret: ""
+  create: true
+  data: {}
+    # DATABASE_URL: postgres://user:pass@host:5432/db?sslmode=require
+    # PAYLOAD_SECRET: <32+ random>
+    # OIDC_CLIENT_SECRET: <aus Keycloak>
+    # OIDC_SESSION_SECRET: <32+ random>
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ""              # z. B. app.fiknow.ch
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: edu-platform-tls
+    #   hosts: [app.fiknow.ch]
+
+# ------------------------------------------------------------
+# Security: non-root erzwingen (Image läuft als uid 1001).
+# OpenShift-Hinweis: die restricted-SCC vergibt eine zufällige UID; dann
+# runAsUser entfernen (auf null setzen) und runAsNonRoot:true belassen.
+# ------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false   # Next-Standalone schreibt Cache; true nur mit writable Mounts
+  capabilities:
+    drop: ["ALL"]
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 768Mi
+
+# Probes treffen "/" — Next liefert dort immer ≥200/307 (siehe Dockerfile-HEALTHCHECK).
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Optionales Content-Volume (MDX-Kurse). Für Brand-Images, die Content nicht
+# einbacken. Leer lassen = Image-Default/Brand-Overlay nutzen.
+contentVolume:
+  enabled: false
+  # claimName: edu-platform-content   # bestehender PVC
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

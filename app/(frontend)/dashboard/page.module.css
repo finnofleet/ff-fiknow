@@ -1,0 +1,225 @@
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 48px;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tld {
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.navLinks {
+  display: flex;
+  gap: 28px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.navLinks a {
+  color: var(--ink-3);
+  transition: color var(--dur);
+}
+.navLinks a:hover {
+  color: var(--ink);
+}
+.navActive {
+  color: var(--ink) !important;
+}
+
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 48px 96px;
+}
+
+.greet {
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.greet h1 {
+  font-family: var(--font-display);
+  font-size: 64px;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin: 0;
+  font-weight: 400;
+}
+.greet h1 em {
+  /* Großer Hero-Gruß: bewusst vibrantes --accent (Display-Text >3:1 ok). */
+  color: var(--accent);
+}
+
+.sectionHd {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.sectionHd h3 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: -0.015em;
+  margin: 0;
+  font-weight: 400;
+}
+.sectionMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.empty {
+  color: var(--ink-3);
+}
+
+.continue {
+  margin-bottom: 56px;
+  padding: 32px 36px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+}
+.continueKicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 14px;
+}
+.continueTitle {
+  font-family: var(--font-display);
+  font-size: 40px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 10px;
+  font-weight: 400;
+  color: var(--ink);
+}
+.continueMeta {
+  color: var(--ink-2);
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.progressBar {
+  height: 4px;
+  background: var(--line);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.progressBar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--dur-slow) var(--ease);
+}
+
+.courseList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.courseRow {
+  display: grid;
+  grid-template-columns: 60px 1fr 200px 40px;
+  gap: 32px;
+  align-items: center;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+  transition: background var(--dur);
+}
+.courseRow:hover {
+  background: var(--bg-elev);
+}
+.rowProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rowPb {
+  display: block;
+  height: 3px;
+  background: var(--line);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.rowPb > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.rowPct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  text-align: right;
+}
+.rowNum {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rowCat {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.rowTitle {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.rowSub {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.rowArrow {
+  color: var(--accent-text);
+  font-size: 18px;
+  text-align: right;
+}

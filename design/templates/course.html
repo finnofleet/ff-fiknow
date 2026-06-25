@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Kursdetail</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  /* Variant A – split hero + accordion */
+  .a-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 48px; border-bottom: 1px solid var(--line); }
+  .a-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; }
+  .a-brand .d { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .a-brand .tld { color: var(--ink-3); font-size: 13px; }
+  .a-links { display: flex; gap: 24px; font-size: 14px; color: var(--ink-3); }
+  .a-right { display: flex; gap: 14px; align-items: center; font-size: 13px; }
+  .a-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 14px; }
+
+  .a-crumb { max-width: 1280px; margin: 0 auto; padding: 28px 48px 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .a-crumb a { color: var(--ink-3); }
+  .a-crumb a:hover { color: var(--ink); }
+
+  .a-hero { max-width: 1280px; margin: 0 auto; padding: 32px 48px 64px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 64px; align-items: start; }
+  .a-hero .cat { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+  .a-hero h1 { font-family: var(--font-display); font-weight: 400; font-size: 80px; line-height: 0.98; letter-spacing: -0.03em; margin: 0 0 24px; }
+  .a-hero h1 em { color: var(--accent); }
+  .a-hero .lede { color: var(--ink-2); font-size: 17px; line-height: 1.6; max-width: 52ch; margin: 0 0 32px; }
+  .a-hero .meta-row { display: flex; gap: 32px; font-size: 13px; color: var(--ink-3); padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .a-hero .meta-row .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 4px; }
+  .a-hero .meta-row .v { color: var(--ink); font-size: 14px; }
+
+  .a-enroll { padding: 28px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-lg); position: sticky; top: 88px; }
+  .a-enroll .cover { height: 180px; border-radius: var(--r-md); margin-bottom: 20px; background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2)); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 22px; color: var(--ink-3); }
+  .a-enroll .price { font-family: var(--font-display); font-size: 40px; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .a-enroll .price-note { font-size: 12px; color: var(--ink-3); margin-bottom: 20px; }
+  .a-enroll .btn { width: 100%; justify-content: center; margin-bottom: 10px; }
+  .a-enroll ul { list-style: none; padding: 0; margin: 20px 0 0; border-top: 1px solid var(--line); padding-top: 20px; display: grid; gap: 10px; }
+  .a-enroll li { display: flex; gap: 10px; font-size: 13px; color: var(--ink-2); }
+  .a-enroll li svg { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+
+  .a-body { max-width: 1280px; margin: 0 auto; padding: 0 48px 80px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 64px; }
+  .a-body h2 { font-family: var(--font-display); font-size: 40px; letter-spacing: -0.02em; font-weight: 400; margin: 48px 0 20px; }
+  .a-body h2:first-child { margin-top: 0; }
+  .a-body p { color: var(--ink-2); font-size: 16px; line-height: 1.65; margin: 0 0 16px; }
+
+  /* Curriculum accordion */
+  .curr .sec {
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    margin-bottom: 12px; overflow: hidden; background: var(--bg-elev);
+  }
+  .curr .sec-hd { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; cursor: pointer; }
+  .curr .sec-hd .l { display: flex; gap: 14px; align-items: baseline; }
+  .curr .sec-hd .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; }
+  .curr .sec-hd .t { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.01em; }
+  .curr .sec-hd .m { font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); }
+  .curr .sec-hd .plus { color: var(--ink-3); transition: transform 200ms; }
+  .curr .sec.open .plus { transform: rotate(45deg); color: var(--accent); }
+  .curr .sec-body { padding: 0 20px 16px 20px; display: none; }
+  .curr .sec.open .sec-body { display: block; }
+  .curr .lesson { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 14px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .curr .lesson .ic { color: var(--ink-3); }
+  .curr .lesson .ic svg { width: 16px; height: 16px; }
+  .curr .lesson .t { color: var(--ink-2); }
+  .curr .lesson .t.done { color: var(--ink-3); text-decoration: line-through; }
+  .curr .lesson .dur { font-size: 11px; color: var(--ink-3); font-family: var(--font-mono); }
+  .curr .lesson .st { font-size: 10px; color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase; font-family: var(--font-mono); }
+
+  /* Instructor */
+  .a-instr { display: grid; grid-template-columns: 80px 1fr; gap: 20px; padding: 24px; border: 1px solid var(--line); border-radius: var(--r-lg); margin-top: 24px; }
+  .a-instr .av { width: 80px; height: 80px; border-radius: 50%; background: var(--bg-elev-2); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 36px; color: var(--ink-3); }
+  .a-instr .n { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.01em; }
+  .a-instr .r { font-size: 12px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; font-family: var(--font-mono); margin-top: 4px; }
+  .a-instr p { font-size: 14px; line-height: 1.55; margin: 10px 0 0; color: var(--ink-2); }
+
+  /* Variant B – editorial long-form */
+  #var-b { background: var(--bg); }
+  .b-wrap { max-width: 1120px; margin: 0 auto; padding: 48px; }
+  .b-top { display: flex; justify-content: space-between; margin-bottom: 48px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; }
+  .b-top a { color: var(--ink-3); }
+  .b-hero { margin-bottom: 64px; }
+  .b-hero .cat { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  .b-hero h1 { font-family: var(--font-display); font-weight: 400; font-size: 112px; line-height: 0.92; letter-spacing: -0.035em; margin: 0 0 32px; }
+  .b-hero h1 em { color: var(--accent); }
+  .b-hero .lede { font-family: var(--font-display); font-size: 24px; line-height: 1.4; color: var(--ink-2); max-width: 42ch; }
+  .b-hero .lede::first-letter { font-size: 80px; float: left; line-height: 0.9; margin: 2px 12px 0 0; color: var(--accent); font-style: italic; }
+
+  .b-meta { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; margin-bottom: 64px; }
+  .b-meta .c { padding: 20px; background: var(--bg); }
+  .b-meta .c .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+  .b-meta .c .v { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; }
+
+  .b-sticky {
+    position: sticky; top: 0; background: var(--bg);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 0; border-bottom: 1px solid var(--line); z-index: 10;
+    margin-bottom: 32px;
+  }
+  .b-sticky .t { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.01em; }
+  .b-sticky .t .cat { color: var(--ink-3); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-right: 14px; }
+
+  .b-curr { margin-bottom: 80px; }
+  .b-curr .sec-hd {
+    display: flex; align-items: baseline; gap: 20px; padding: 28px 0 14px; border-bottom: 1px solid var(--line);
+  }
+  .b-curr .sec-hd .n { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; color: var(--accent); }
+  .b-curr .sec-hd .t { font-family: var(--font-display); font-size: 40px; letter-spacing: -0.02em; font-weight: 400; }
+  .b-curr .sec-hd .m { margin-left: auto; color: var(--ink-3); font-family: var(--font-mono); font-size: 12px; }
+  .b-curr .lesson {
+    display: grid; grid-template-columns: 40px 24px 1fr auto; gap: 16px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .b-curr .lesson .n { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+  .b-curr .lesson .ic svg { width: 18px; height: 18px; color: var(--ink-3); }
+  .b-curr .lesson .t { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; }
+  .b-curr .lesson .t.done { color: var(--ink-3); }
+  .b-curr .lesson .dur { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+
+  .b-cta { padding: 64px 48px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; margin-bottom: 64px; }
+  .b-cta h3 { font-family: var(--font-display); font-size: 56px; letter-spacing: -0.025em; margin: 0 0 14px; font-weight: 400; }
+  .b-cta h3 em { color: var(--accent); }
+  .b-cta .price { font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<!-- VARIANT A -->
+<div id="var-a" class="variant active">
+  <nav class="a-nav">
+    <div class="a-brand"><span class="d"></span>verstande<span class="tld">.ch</span></div>
+    <div class="a-links">
+      <a href="dashboard.html">Mein Lernen</a>
+      <a href="catalog.html">Katalog</a>
+    </div>
+    <div class="a-right">
+      <a href="profile.html" class="a-avatar">m</a>
+    </div>
+  </nav>
+
+  <div class="a-crumb"><a href="catalog.html">Katalog</a> / <a href="#">Weinkunde</a> / WSET Level 2</div>
+
+  <section class="a-hero">
+    <div>
+      <div class="cat">Weinkunde · Zertifikat · April 2026</div>
+      <h1>Die <em>Climats</em><br>von Burgund.</h1>
+      <p class="lede">Wie ein Mönch aus dem 12. Jahrhundert noch heute bestimmt, welchen Wein du am Dienstagabend trinkst. Vier Kapitel, 14 Lektionen, ein Prüfungstag. Dein Weg zum WSET Level 2.</p>
+      <div class="meta-row">
+        <div><span class="k">Dauer</span><span class="v">≈ 12 Stunden</span></div>
+        <div><span class="k">Level</span><span class="v">Mittel</span></div>
+        <div><span class="k">Sprache</span><span class="v">Deutsch · EN</span></div>
+        <div><span class="k">Prüfung</span><span class="v">70 % Passing-Score</span></div>
+      </div>
+    </div>
+    <aside class="a-enroll">
+      <div class="cover">Burgund · Côte d'Or</div>
+      <div class="price">CHF 89.<span style="font-size: 24px; color: var(--ink-3);">–</span></div>
+      <div class="price-note">Einmalig. Oder 12.–/Monat im Abo.</div>
+      <a href="lesson-reading.html" class="btn btn-primary">Jetzt einschreiben<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+      <a href="lesson-reading.html" class="btn btn-ghost" style="width: 100%; justify-content: center;">Erste Lektion gratis lesen</a>
+      <ul>
+        <li><svg class="icon" style="width: 16px; height: 16px;"><use href="shared/icons.svg#i-check"/></svg>14 Lektionen · Text &amp; Video</li>
+        <li><svg class="icon" style="width: 16px; height: 16px;"><use href="shared/icons.svg#i-check"/></svg>Offizielles Zertifikat nach 70 %</li>
+        <li><svg class="icon" style="width: 16px; height: 16px;"><use href="shared/icons.svg#i-check"/></svg>Spaced-Repetition-Lernkartei</li>
+        <li><svg class="icon" style="width: 16px; height: 16px;"><use href="shared/icons.svg#i-check"/></svg>Prüfungssimulation mit Zeitlimit</li>
+        <li><svg class="icon" style="width: 16px; height: 16px;"><use href="shared/icons.svg#i-check"/></svg>Unbegrenzter Zugriff &amp; Notizen</li>
+      </ul>
+    </aside>
+  </section>
+
+  <div class="a-body">
+    <div>
+      <h2>Was du lernst</h2>
+      <p>Burgund ist keine Weinregion, sondern ein System aus winzigen Parzellen – „Climats" genannt – deren Grenzen seit dem Mittelalter kaum verändert wurden. Dieser Kurs erklärt, warum.</p>
+      <p>Wir gehen von der Geologie aus (warum Kalkstein hier so besonders ist), über die beiden dominanten Rebsorten (Pinot Noir, Chardonnay), zur Qualitätspyramide (Régionale → Village → Premier Cru → Grand Cru), bis zur Etiketten-Lektüre im Restaurant. Am Ende liest du eine Burgund-Weinkarte wie einen guten Roman.</p>
+
+      <h2>Curriculum</h2>
+      <div class="curr">
+        <div class="sec open">
+          <div class="sec-hd">
+            <div class="l"><span class="n">Kap. 01</span><span class="t">Einführung &amp; Geschichte</span></div>
+            <div style="display:flex; gap: 24px; align-items: center;"><span class="m">3 Lektionen · 42 Min</span><span class="plus">+</span></div>
+          </div>
+          <div class="sec-body">
+            <div class="lesson"><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t done">Warum Burgund?</span><span class="dur">14 Min</span><span class="st">● Erledigt</span></div>
+            <div class="lesson"><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t done">Die Rolle der Zisterzienser</span><span class="dur">16 Min</span><span class="st">● Erledigt</span></div>
+            <div class="lesson"><span class="ic"><svg><use href="shared/icons.svg#i-play"/></svg></span><span class="t">Video: Flug über die Côte d'Or</span><span class="dur">12 Min</span><span class="st">In Arbeit</span></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-hd">
+            <div class="l"><span class="n">Kap. 02</span><span class="t">Geologie &amp; Terroir</span></div>
+            <div style="display:flex; gap: 24px; align-items: center;"><span class="m">4 Lektionen · 64 Min</span><span class="plus">+</span></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-hd">
+            <div class="l"><span class="n">Kap. 03</span><span class="t">Rebsorten &amp; Stile</span></div>
+            <div style="display:flex; gap: 24px; align-items: center;"><span class="m">4 Lektionen · 58 Min</span><span class="plus">+</span></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-hd">
+            <div class="l"><span class="n">Kap. 04</span><span class="t">Die Qualitätspyramide</span></div>
+            <div style="display:flex; gap: 24px; align-items: center;"><span class="m">3 Lektionen + Quiz</span><span class="plus">+</span></div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Dozentin</h2>
+      <div class="a-instr">
+        <div class="av">c</div>
+        <div>
+          <div class="n">Claire Moreau</div>
+          <div class="r">WSET Educator · Paris</div>
+          <p>Claire unterrichtet seit 14 Jahren Weinkunde, davon sieben in Beaune. Sie schreibt für <em>La Revue du Vin</em> und bereitet jedes Jahr rund 200 Kandidaten auf WSET-Prüfungen vor.</p>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <h2 style="font-size: 24px;">Anforderungen</h2>
+      <p style="font-size: 14px;">Keine Vorkenntnisse nötig. Wer WSET Level 1 bestanden hat, startet mit leichtem Vorsprung.</p>
+      <h2 style="font-size: 24px;">Prüfung</h2>
+      <p style="font-size: 14px;">50 Multiple-Choice-Fragen, 60 Minuten, 70 % zum Bestehen. Bei Nicht-Bestehen ein kostenloser zweiter Versuch.</p>
+      <h2 style="font-size: 24px;">FAQ</h2>
+      <p style="font-size: 14px;"><strong>Wie lange Zugriff?</strong><br>Solange dein Abo aktiv ist. Notizen und Fortschritt bleiben dauerhaft erhalten.</p>
+      <p style="font-size: 14px;"><strong>Gilt das Zertifikat offiziell?</strong><br>Ja, verstande.ch ist WSET Approved Programme Provider #3842.</p>
+    </aside>
+  </div>
+</div>
+
+<!-- VARIANT B -->
+<div id="var-b" class="variant">
+  <div class="b-wrap">
+    <div class="b-top">
+      <a href="catalog.html">← Katalog</a>
+      <span>No. 01 · Weinkunde · April 2026</span>
+    </div>
+
+    <div class="b-hero">
+      <div class="cat">Weinkunde · Zertifikat · 12 Stunden</div>
+      <h1>Die <em>Climats</em><br>von Burgund.</h1>
+      <p class="lede">Wie ein Mönch aus dem 12. Jahrhundert noch heute bestimmt, welchen Wein du am Dienstagabend trinkst. Vier Kapitel, 14 Lektionen, ein Prüfungstag.</p>
+    </div>
+
+    <div class="b-meta">
+      <div class="c"><div class="k">Dauer</div><div class="v">12 h</div></div>
+      <div class="c"><div class="k">Lektionen</div><div class="v">14</div></div>
+      <div class="c"><div class="k">Level</div><div class="v">Mittel</div></div>
+      <div class="c"><div class="k">Prüfung</div><div class="v">70 %</div></div>
+      <div class="c"><div class="k">Preis</div><div class="v">CHF 89</div></div>
+    </div>
+
+    <div class="b-sticky">
+      <div class="t"><span class="cat">Kurs · No. 01</span>Die Climats von Burgund</div>
+      <a href="lesson-reading.html" class="btn btn-primary">Einschreiben<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+    </div>
+
+    <div class="b-curr">
+      <div class="sec-hd">
+        <span class="n">Kap. 01</span><span class="t">Einführung &amp; Geschichte.</span><span class="m">3 Lektionen · 42 Min</span>
+      </div>
+      <div class="lesson"><span class="n">01</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t done">Warum Burgund?</span><span class="dur">14 Min</span></div>
+      <div class="lesson"><span class="n">02</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t done">Die Rolle der Zisterzienser</span><span class="dur">16 Min</span></div>
+      <div class="lesson"><span class="n">03</span><span class="ic"><svg><use href="shared/icons.svg#i-play"/></svg></span><span class="t">Video: Flug über die Côte d'Or</span><span class="dur">12 Min</span></div>
+
+      <div class="sec-hd">
+        <span class="n">Kap. 02</span><span class="t">Geologie &amp; Terroir.</span><span class="m">4 Lektionen · 64 Min</span>
+      </div>
+      <div class="lesson"><span class="n">04</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t">Kalk, Mergel, Granit</span><span class="dur">18 Min</span></div>
+      <div class="lesson"><span class="n">05</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t">Mikroklima auf 50 km</span><span class="dur">14 Min</span></div>
+      <div class="lesson"><span class="n">06</span><span class="ic"><svg><use href="shared/icons.svg#i-play"/></svg></span><span class="t">Video: Drei Weinberge, drei Böden</span><span class="dur">16 Min</span></div>
+      <div class="lesson"><span class="n">07</span><span class="ic"><svg><use href="shared/icons.svg#i-quiz"/></svg></span><span class="t">Übung: Terroir-Quiz</span><span class="dur">16 Min</span></div>
+
+      <div class="sec-hd">
+        <span class="n">Kap. 03</span><span class="t">Rebsorten &amp; Stile.</span><span class="m">4 Lektionen · 58 Min</span>
+      </div>
+      <div class="lesson"><span class="n">08</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t">Pinot Noir – die dünne Haut</span><span class="dur">15 Min</span></div>
+      <div class="lesson"><span class="n">09</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t">Chardonnay – weltweit, hier geboren</span><span class="dur">14 Min</span></div>
+      <div class="lesson"><span class="n">10</span><span class="ic"><svg><use href="shared/icons.svg#i-play"/></svg></span><span class="t">Video: Ein Jahr im Weinberg</span><span class="dur">13 Min</span></div>
+      <div class="lesson"><span class="n">11</span><span class="ic"><svg><use href="shared/icons.svg#i-quiz"/></svg></span><span class="t">Lernkartei: Stile zuordnen</span><span class="dur">16 Min</span></div>
+
+      <div class="sec-hd">
+        <span class="n">Kap. 04</span><span class="t">Die Qualitätspyramide.</span><span class="m">3 Lektionen + Prüfung</span>
+      </div>
+      <div class="lesson"><span class="n">12</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t">Régionale bis Grand Cru</span><span class="dur">20 Min</span></div>
+      <div class="lesson"><span class="n">13</span><span class="ic"><svg><use href="shared/icons.svg#i-book"/></svg></span><span class="t">Etiketten lesen lernen</span><span class="dur">18 Min</span></div>
+      <div class="lesson"><span class="n">14</span><span class="ic"><svg><use href="shared/icons.svg#i-quiz"/></svg></span><span class="t">Abschlussprüfung · 50 Fragen</span><span class="dur">60 Min</span></div>
+    </div>
+
+    <div class="b-cta">
+      <h3>Schreib dich <em>ein</em>.</h3>
+      <div class="price">CHF 89 einmalig · oder 12.– / Monat</div>
+      <a href="lesson-reading.html" class="btn btn-primary">Jetzt starten<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-course-var') || 'a';
+  function setVar(v) {
+    localStorage.setItem('v-course-var', v);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v));
+  }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+  document.querySelectorAll('.curr .sec-hd').forEach(hd => hd.addEventListener('click', () => hd.parentElement.classList.toggle('open')));
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

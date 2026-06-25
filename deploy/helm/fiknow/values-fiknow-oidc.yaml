@@ -1,0 +1,54 @@
+# ============================================================
+# Beispiel-Werte: FIKNOW auf IBM Kubernetes mit OIDC (Keycloak)
+#
+#   helm upgrade --install fiknow ./deploy/helm/edu-platform \
+#     -f ./deploy/helm/edu-platform/values-fiknow-oidc.yaml \
+#     --namespace fiknow --create-namespace
+#
+# Secrets NICHT hier committen — in Prod via existingSecret (Sealed-Secrets /
+# IBM Secrets Manager). Die secret.data unten ist nur zur Veranschaulichung.
+# ============================================================
+
+image:
+  repository: ghcr.io/finnofleet/ff-fiknow
+  tag: latest
+
+replicaCount: 2
+
+config:
+  AUTH_PROVIDER: oidc
+  OIDC_ISSUER: https://keycloak.intern.example.com/realms/fiknow
+  OIDC_CLIENT_ID: edu-platform
+  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+  # Leer lassen → wird aus ingress.hosts[0] als https://app.fiknow.example.com
+  # abgeleitet. Hier nur, wenn der öffentliche Host abweicht.
+  OIDC_REDIRECT_BASE: ""
+
+ingress:
+  enabled: true
+  className: public-iks-k8s-nginx     # IBM IKS: ggf. anpassen
+  hosts:
+    - host: app.fiknow.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fiknow-tls
+      hosts:
+        - app.fiknow.example.com
+
+# Prod: stattdessen ein extern verwaltetes Secret referenzieren:
+#   secret:
+#     existingSecret: fiknow-env
+secret:
+  create: true
+  data:
+    DATABASE_URL: "postgres://USER:PASS@HOST:5432/fiknow?sslmode=require"
+    PAYLOAD_SECRET: "CHANGE-ME-32+random"
+    OIDC_CLIENT_SECRET: "CHANGE-ME-from-keycloak"
+    OIDC_SESSION_SECRET: "CHANGE-ME-32+random"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5

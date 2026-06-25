@@ -1,0 +1,95 @@
+.shell {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-10) var(--s-6);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--s-10);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 var(--s-4);
+  font-weight: 400;
+}
+
+.lede {
+  color: var(--ink-2);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  margin: 0 0 var(--s-4);
+}
+
+.hint {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  margin: 0 0 var(--s-6);
+}
+
+.error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  margin: 0 0 var(--s-5);
+}
+
+.actions {
+  display: flex;
+  gap: var(--s-3);
+}
+
+.primary,
+.secondary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: var(--s-3) var(--s-5);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent);
+}
+.primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.secondary {
+  background: transparent;
+  color: var(--ink-3);
+  border: 1px solid var(--line-strong);
+}
+.secondary:hover:not(:disabled) {
+  color: var(--ink-2);
+}
+.secondary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.card code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--ink);
+}

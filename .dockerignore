@@ -1,0 +1,48 @@
+# Build-Output
+.next/
+out/
+build/
+
+# Dependencies (werden im Image neu installiert)
+node_modules/
+
+# Env-Files (Secrets gehören NICHT ins Image — kommen zur Laufzeit aus dem Host)
+.env*
+!.env.example
+
+# Local Supabase
+supabase/.temp/
+supabase/.branches/
+
+# Git
+.git/
+.gitignore
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Claude Code lokale State
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dev-Templates und Design-Quellen
+design/
+
+# Content NICHT ins Image — wird zur Laufzeit als Volume gemountet,
+# damit dasselbe Image für mehrere Apps mit eigenen Inhalten dient
+content/
+
+# Tests / Coverage (falls später hinzukommt)
+coverage/
+.nyc_output/
+
+# README (optional, kann auch drin bleiben — aber spart paar KB)
+README.md
+AGENTS.md
+CLAUDE.md

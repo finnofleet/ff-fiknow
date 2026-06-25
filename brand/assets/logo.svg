@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FIKNOW Wortmarken-Logo (Glühbirne als „O").
+
+  Farb-Konvention:
+    - currentColor (Buchstaben)  → erbt vom Container, theme-tauglich.
+      In Dark-Mode hell, in Light-Mode dunkel.
+    - var(--brand-logo-accent, #99FF33)  → Akzent-Symbol (Glühbirne).
+      Standard: FIKNOW-Grün. Überschreibbar per CSS-Variable, falls
+      Brand- oder Theme-Anpassung gewünscht.
+
+  Hinweis: bewusst KEIN Hintergrund-Rechteck — Logo bleibt transparent
+  und legt sich sauber über beliebige Hintergründe/Themes.
+-->
+<svg width="305" height="87" viewBox="109 167 1617 461" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Buchstaben: "FIK NW" — folgt der Container-color -->
+  <g fill="currentColor">
+    <!-- F  (x 129..271, Balken 142 breit) -->
+    <path d="M129 331 h142 v44 h-96 v40 h84 v44 h-84 v81 h-46 z"/>
+
+    <!-- I  (x 367..413) -->
+    <path d="M367 331 h46 v209 h-46 z"/>
+
+    <!-- K  (x 527..722) -->
+    <path d="M527 331 h46 v79 l84 -79 h66 l-100 95 l108 114 h-62 l-82 -88 -14 13 v75 h-46 z"/>
+
+    <!-- N  (x 796..994, Stämme 46) -->
+    <path d="M796 331 h52 l100 130 v-130 h46 v209 h-52 l-100 -130 v130 h-46 z"/>
+
+    <!-- W  (x 1411..1706, vier Schenkel ~46) -->
+    <path d="M1411 331 h48 l34 138 l40 -138 h44 l40 138 l34 -138 h48 l-58 209 h-46 l-40 -135 l-40 135 h-46 z"/>
+  </g>
+
+  <!-- Glühbirne als "O": FIKNOW-Grün, bleibt konstant über Themes.
+       var(--brand-logo-accent) erlaubt spätere Anpassung per CSS. -->
+  <g fill="none" stroke="var(--brand-logo-accent, #99FF33)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Kolben + birnenförmige Schultern + geschlossener Hals-Boden als EIN durchgehender Pfad -->
+    <path d="M1190 535
+             C 1190 514, 1184.4 486.8, 1162 470
+             A 100 100 0 1 1 1282 470
+             C 1259.6 486.8, 1254 514, 1254 535"/>
+    <!-- Hals-Boden: verbindet die beiden Hals-Enden bündig -->
+    <line x1="1190" y1="535" x2="1254" y2="535"/>
+    <!-- 1 Gewinde-Ring -->
+    <line x1="1186" y1="565" x2="1258" y2="565"/>
+    <!-- Sockel-Spitze (schmaler Boden) -->
+    <line x1="1204" y1="595" x2="1240" y2="595"/>
+    <!-- Strahlen: oben senkrecht, seitlich steil -->
+    <line x1="1222" y1="200" x2="1222" y2="240"/>
+    <line x1="1112" y1="244" x2="1134" y2="279"/>
+    <line x1="1332" y1="244" x2="1310" y2="279"/>
+  </g>
+</svg>

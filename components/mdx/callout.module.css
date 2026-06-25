@@ -1,0 +1,61 @@
+.callout {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  margin: 24px 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.body {
+  flex: 1;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.content > :first-child {
+  margin-top: 0;
+}
+.content > :last-child {
+  margin-bottom: 0;
+}
+
+.info {
+  border-left: 3px solid var(--accent);
+}
+.info .icon {
+  color: var(--accent-text);
+}
+
+.warning {
+  border-left: 3px solid var(--warning);
+}
+.warning .icon {
+  color: var(--warning);
+}
+
+.tip {
+  border-left: 3px solid var(--positive);
+}
+.tip .icon {
+  color: var(--positive);
+}
+
+/* Neutraler Hinweis-Block (ruhiger als die farbigen Varianten). */
+.note {
+  border-left: 3px solid var(--line-strong);
+}
+.note .icon {
+  color: var(--ink-3);
+}

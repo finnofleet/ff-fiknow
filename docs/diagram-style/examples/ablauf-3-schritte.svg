@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 250" role="img" aria-labelledby="t2 d2" font-family="Newsreader, Georgia, serif">
+  <title id="t2">Drei-Schritt-Ablauf</title>
+  <desc id="d2">Linearer Ablauf in drei Schritten: Erfassen, Prüfen, Freigeben.</desc>
+
+  <defs>
+    <filter id="rough2" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <marker id="ah-ink" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" refX="13" refY="8" orient="auto-start-reverse">
+      <g fill="none" stroke="#4E463F" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="2.5" x2="13" y2="8"/>
+        <line x1="3" y1="13.5" x2="13" y2="8"/>
+      </g>
+    </marker>
+  </defs>
+
+  <rect width="800" height="250" fill="#F3EFE6"/>
+
+  <g filter="url(#rough2)" fill="none" stroke="#4E463F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="50"  y="70" width="180" height="110" rx="12" fill="#C8C2B2" fill-opacity="0.35"/>
+    <rect x="310" y="70" width="180" height="110" rx="12" fill="#D9A441" fill-opacity="0.22"/>
+    <rect x="570" y="70" width="180" height="110" rx="12" fill="#C8C2B2" fill-opacity="0.35"/>
+    <line x1="232" y1="125" x2="305" y2="125" marker-end="url(#ah-ink)"/>
+    <line x1="492" y1="125" x2="565" y2="125" marker-end="url(#ah-ink)"/>
+    <circle cx="82"  cy="100" r="14"/>
+    <circle cx="342" cy="100" r="14"/>
+    <circle cx="602" cy="100" r="14"/>
+  </g>
+
+  <g fill="#4E463F">
+    <text x="82"  y="105" text-anchor="middle" font-size="14" font-weight="600">1</text>
+    <text x="342" y="105" text-anchor="middle" font-size="14" font-weight="600">2</text>
+    <text x="602" y="105" text-anchor="middle" font-size="14" font-weight="600">3</text>
+    <text x="108" y="105" font-size="18">Erfassen</text>
+    <text x="368" y="105" font-size="18">Prüfen</text>
+    <text x="628" y="105" font-size="18">Freigeben</text>
+    <text x="72"  y="142" font-size="12.5" fill="#6B6358">Daten aufnehmen,</text>
+    <text x="72"  y="159" font-size="12.5" fill="#6B6358">Quelle notieren.</text>
+    <text x="332" y="142" font-size="12.5" fill="#6B6358">Gegen Kriterien</text>
+    <text x="332" y="159" font-size="12.5" fill="#6B6358">abgleichen.</text>
+    <text x="592" y="142" font-size="12.5" fill="#6B6358">Entscheid</text>
+    <text x="592" y="159" font-size="12.5" fill="#6B6358">dokumentieren.</text>
+  </g>
+</svg>

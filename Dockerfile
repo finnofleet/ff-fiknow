@@ -1,0 +1,94 @@
+# syntax=docker/dockerfile:1.7
+# ============================================================
+# edu-platform — Production-Image
+#
+# Multi-stage Build:
+#   1. deps     → npm ci (nur production-dependencies)
+#   2. builder  → npm run build (Next.js standalone output)
+#   3. runner   → schlankes Alpine-Image, nur Build-Artefakte
+#
+# Result: ~150 MB Image, läuft als non-root, geeignet für
+# Jelastic, Exoscale, Kubernetes, Fly.io, etc.
+#
+# Brand-Konfig (brand/brand.yaml) ist mit verstande als Default im
+# Image. Forks bauen ihr eigenes Image, das dieses hier als Base
+# nutzt und brand/brand.yaml überschreibt:
+#
+#     FROM ghcr.io/<owner>/edu-platform:latest
+#     COPY brand.yaml /app/brand/brand.yaml
+#
+# Siehe docs/BRAND-CONFIG.md
+# ============================================================
+
+# ----- 1. Dependencies -----
+FROM node:22-alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+# ----- 2. Build -----
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# ----- 3. Runtime -----
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+# Non-root user
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
+
+# Build-Artefakte
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Content (MDX-Kurse) ist NICHT im Image — kommt zur Laufzeit als Volume,
+# oder per Brand-Build-Overlay (siehe Brand-Repo-Pattern).
+RUN mkdir -p ./content && chown nextjs:nodejs ./content
+
+# Brand-Konfig: Default (verstande.ch) ist im Image. Brand-Forks bauen
+# ein eigenes Image basierend auf diesem hier und überschreiben /app/brand.
+COPY --from=builder --chown=nextjs:nodejs /app/brand ./brand
+
+# Migrations-Artefakte für Auto-Migrate beim App-Start
+# (siehe lib/db/auto-migrate.ts + instrumentation.ts):
+#   - drizzle/      Drizzle-Migrations für public.*-Tabellen + RLS
+#                   (auth.uid()/role()-Helfer legt der Auto-Migrate selbst an)
+#   - migrations/   Payload-Migrations (payload.*-Tabellen)
+COPY --from=builder --chown=nextjs:nodejs /app/drizzle ./drizzle
+COPY --from=builder --chown=nextjs:nodejs /app/migrations ./migrations
+
+# Ops-Scripts (plain .mjs ohne TS-Toolchain) für manuelle Aktionen via
+# Web-SSH, z.B. `node scripts/promote-admin.mjs <email>` für den ersten
+# Admin einer frischen Brand-DB.
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/promote-admin.mjs ./scripts/promote-admin.mjs
+
+# Full node_modules (statt nur Next.js-Trace) — Payload-Migrations sind
+# .ts-Files mit eigenen package-Imports (@payloadcms/db-postgres etc.),
+# die Next's standalone-Tracer nicht erfasst. Ohne dies bricht
+# auto-migrate beim App-Boot mit ERR_MODULE_NOT_FOUND ab.
+#
+# Trade-off: Image wird ~2-3x grösser. Akzeptabel — Storage ist günstig,
+# komplette manuelle Migrations-Schritte pro Brand-Env sind teuer.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+USER nextjs
+EXPOSE 3000
+
+# Healthcheck — Next.js liefert auf / immer mindestens HTTP 200 oder 307
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:3000/ || exit 1
+
+CMD ["node", "server.js"]

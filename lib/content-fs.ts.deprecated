@@ -1,0 +1,210 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import matter from "gray-matter";
+
+const CONTENT_ROOT = path.join(process.cwd(), "content", "courses");
+
+export type LessonType = "reading" | "video" | "quiz";
+
+export type CourseFrontmatter = {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  category?: string;
+  difficulty?: "einsteiger" | "mittel" | "fortgeschritten";
+  estimated_minutes?: number;
+  status?: "draft" | "published";
+  cover_alt?: string;
+};
+
+export type SectionFrontmatter = {
+  title: string;
+  description?: string;
+};
+
+export type LessonFrontmatter = {
+  title: string;
+  type: LessonType;
+  estimated_minutes?: number;
+  summary?: string;
+  video_url?: string;
+  transcript?: string;
+  passing_score?: number;
+};
+
+export type Course = {
+  slug: string;
+  frontmatter: CourseFrontmatter;
+  body: string;
+  sections: Section[];
+};
+
+export type Section = {
+  slug: string;
+  order: number;
+  frontmatter: SectionFrontmatter;
+  body: string;
+  lessons: LessonRef[];
+};
+
+export type LessonRef = {
+  slug: string;
+  order: number;
+  frontmatter: LessonFrontmatter;
+};
+
+export type Lesson = LessonRef & {
+  body: string;
+  course: Course;
+  section: Section;
+  prev: LessonNeighbor | null;
+  next: LessonNeighbor | null;
+};
+
+export type LessonNeighbor = {
+  courseSlug: string;
+  sectionSlug: string;
+  lessonSlug: string;
+  title: string;
+};
+
+function stripOrderPrefix(name: string) {
+  return name.replace(/^\d+-/, "");
+}
+
+function parseOrder(name: string) {
+  const match = name.match(/^(\d+)-/);
+  return match ? parseInt(match[1], 10) : 999;
+}
+
+async function readMdx<T>(file: string): Promise<{ frontmatter: T; body: string }> {
+  const raw = await fs.readFile(file, "utf8");
+  const parsed = matter(raw);
+  return { frontmatter: parsed.data as T, body: parsed.content };
+}
+
+async function listDirs(dir: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    return entries
+      .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+async function listMdxFiles(dir: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    return entries
+      .filter((e) => e.isFile() && e.name.endsWith(".mdx"))
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+export async function listCourses(): Promise<Course[]> {
+  const slugs = await listDirs(CONTENT_ROOT);
+  const courses = await Promise.all(slugs.map((slug) => getCourse(slug)));
+  return courses.filter((c): c is Course => c !== null);
+}
+
+export async function getCourse(courseSlug: string): Promise<Course | null> {
+  const courseDir = path.join(CONTENT_ROOT, courseSlug);
+  const courseFile = path.join(courseDir, "course.mdx");
+
+  let courseData: { frontmatter: CourseFrontmatter; body: string };
+  try {
+    courseData = await readMdx<CourseFrontmatter>(courseFile);
+  } catch {
+    return null;
+  }
+
+  // Section-Ordner brauchen ein numerisches Präfix ("01-grundlagen").
+  // Andere Ordner (z.B. assets/) werden ignoriert.
+  const sectionDirs = (await listDirs(courseDir)).filter((d) => /^\d+-/.test(d));
+  const sections = await Promise.all(
+    sectionDirs.map(async (dirName) => {
+      const sectionDir = path.join(courseDir, dirName);
+      const sectionFile = path.join(sectionDir, "section.mdx");
+      let sectionData: { frontmatter: SectionFrontmatter; body: string } = {
+        frontmatter: { title: stripOrderPrefix(dirName) },
+        body: "",
+      };
+      try {
+        sectionData = await readMdx<SectionFrontmatter>(sectionFile);
+      } catch {
+        // section.mdx ist optional
+      }
+
+      const lessonFiles = (await listMdxFiles(sectionDir)).filter((f) => f !== "section.mdx");
+      const lessons = await Promise.all(
+        lessonFiles.map(async (fileName): Promise<LessonRef> => {
+          const lessonFile = path.join(sectionDir, fileName);
+          const { frontmatter } = await readMdx<LessonFrontmatter>(lessonFile);
+          const slug = stripOrderPrefix(fileName.replace(/\.mdx$/, ""));
+          return { slug, order: parseOrder(fileName), frontmatter };
+        }),
+      );
+      lessons.sort((a, b) => a.order - b.order);
+
+      return {
+        slug: stripOrderPrefix(dirName),
+        order: parseOrder(dirName),
+        frontmatter: sectionData.frontmatter,
+        body: sectionData.body,
+        lessons,
+      };
+    }),
+  );
+  sections.sort((a, b) => a.order - b.order);
+
+  return {
+    slug: courseSlug,
+    frontmatter: courseData.frontmatter,
+    body: courseData.body,
+    sections,
+  };
+}
+
+export async function getLesson(
+  courseSlug: string,
+  sectionSlug: string,
+  lessonSlug: string,
+): Promise<Lesson | null> {
+  const course = await getCourse(courseSlug);
+  if (!course) return null;
+
+  const section = course.sections.find((s) => s.slug === sectionSlug);
+  if (!section) return null;
+
+  const lessonRef = section.lessons.find((l) => l.slug === lessonSlug);
+  if (!lessonRef) return null;
+
+  const courseDir = path.join(CONTENT_ROOT, courseSlug);
+  const sectionDirName = `${String(section.order).padStart(2, "0")}-${section.slug}`;
+  const lessonFileName = `${String(lessonRef.order).padStart(2, "0")}-${lessonRef.slug}.mdx`;
+  const lessonFile = path.join(courseDir, sectionDirName, lessonFileName);
+
+  const { body } = await readMdx<LessonFrontmatter>(lessonFile);
+
+  const flat = course.sections.flatMap((s) =>
+    s.lessons.map((l) => ({
+      courseSlug,
+      sectionSlug: s.slug,
+      lessonSlug: l.slug,
+      title: l.frontmatter.title,
+    })),
+  );
+  const idx = flat.findIndex(
+    (n) => n.sectionSlug === sectionSlug && n.lessonSlug === lessonSlug,
+  );
+  const prev = idx > 0 ? flat[idx - 1] : null;
+  const next = idx >= 0 && idx < flat.length - 1 ? flat[idx + 1] : null;
+
+  return { ...lessonRef, body, course, section, prev, next };
+}

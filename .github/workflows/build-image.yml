@@ -16,7 +16,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }} # → ghcr.io/yves-blaettler/edu-platform
+  IMAGE_NAME: ${{ github.repository }} # → ghcr.io/finnofleet/ff-fiknow
 
 jobs:
   build-and-push:

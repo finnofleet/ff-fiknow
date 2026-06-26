@@ -52,14 +52,60 @@ jobs:
             type=semver,pattern=v{{version}}
 
       - name: Build & push
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          # Jelastic läuft auf amd64 — multi-arch nicht nötig
+          # Jelastic/IBM läuft auf amd64 — multi-arch (arm64) noch nicht nötig
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # SBOM (SPDX) als Workflow-Artefakt mitliefern — maschinenlesbare Liste
+      # aller Image-Bestandteile (SaaS-Vorgabe B / SHOULD).
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          artifact-name: sbom-spdx.json
+          output-file: sbom-spdx.json
+
+      # Vulnerability-Scan (Grype) — informativ. Das verbindliche Gate läuft
+      # auf der Plattform; hier nur als Früh-Warnung. Blockt den Build NICHT
+      # (fail-build:false), damit ein neuer CVE die Lieferkette nicht stoppt.
+      - name: Vulnerability scan (Grype, informativ)
+        uses: anchore/scan-action@v6
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          fail-build: false
+          severity-cutoff: high
+          output-format: table
+
+  # Helm-Chart als OCI-Artefakt veröffentlichen →
+  #   oci://ghcr.io/<owner>/charts/fiknow:<chart-version>
+  # Install: helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow --version X.Y.Z
+  publish-chart:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Login to GHCR (Helm OCI)
+        run: helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin <<< "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Package & push chart
+        run: |
+          helm package ./deploy/helm/fiknow --destination ./.chart-dist
+          helm push ./.chart-dist/fiknow-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts

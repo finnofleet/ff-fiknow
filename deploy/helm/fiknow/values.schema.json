@@ -58,6 +58,16 @@
       }
     },
     "resources": { "type": "object" },
+    "podDisruptionBudget": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minAvailable": { "type": ["integer", "string"] },
+        "maxUnavailable": { "type": ["integer", "string"] }
+      }
+    },
+    "topologySpreadConstraints": { "type": "array" },
     "autoscaling": {
       "type": "object",
       "additionalProperties": true,

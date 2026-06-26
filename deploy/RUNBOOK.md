@@ -188,10 +188,18 @@ secret:
 # imagePullSecrets: [{ name: ghcr-pull }]   # nur bei privatem Package
 ```
 
-Installieren:
+Installieren (aus dem Repo-Verzeichnis):
 ```bash
 helm upgrade --install fiknow ./deploy/helm/fiknow \
   -f my-values.yaml \
+  --namespace fiknow --create-namespace
+```
+
+Alternativ aus der **OCI-Registry** (die CI veröffentlicht das Chart nach jedem
+main-Build nach `oci://ghcr.io/finnofleet/charts/fiknow`):
+```bash
+helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
+  --version 0.3.0 -f my-values.yaml \
   --namespace fiknow --create-namespace
 ```
 
@@ -319,6 +327,16 @@ alle Replicas muss gelten:
 
 Default (5, 2 Replicas) = 20 Connections. Bei mehr Replicas oder kleiner DB
 `DB_POOL_MAX` senken.
+
+**Hochverfügbarkeit.** Das Chart liefert ein **PodDisruptionBudget**
+(`minAvailable: 1`, ab ≥2 Replicas sinnvoll) und **topologySpreadConstraints**
+(verteilt Pods über Nodes, `ScheduleAnyway` → blockiert Single-Node nicht).
+Beides über `podDisruptionBudget` / `topologySpreadConstraints` in `values.yaml`
+steuerbar.
+
+**Lieferkette.** Die CI hängt dem Image eine **SBOM (SPDX)** als Artefakt an und
+führt einen informativen **Grype-Scan** aus (das verbindliche Gate bleibt eure
+Plattform). Das Helm-Chart wird als **OCI-Artefakt** publiziert (s. Abschnitt 5).
 
 **Graceful Shutdown.** Auf `SIGTERM` schließt der Next-Standalone-Server keine
 neuen Verbindungen mehr an, beendet laufende Requests und fährt dann herunter;

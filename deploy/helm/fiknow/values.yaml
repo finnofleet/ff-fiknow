@@ -200,6 +200,22 @@ autoscaling:
   maxReplicas: 5
   targetCPUUtilizationPercentage: 75
 
+# PodDisruptionBudget: hält bei freiwilligen Disruptions (Node-Drain, Upgrade)
+# mindestens 1 Pod verfügbar. Greift nur bei ≥2 Replicas sinnvoll — bei genau
+# 1 Replica würde minAvailable:1 jede Eviction blockieren, daher dann besser aus.
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable:   # Alternative zu minAvailable (nicht beides setzen)
+
+# Verteilt die Pods über Nodes (und, wenn gelabelt, Zonen). ScheduleAnyway =
+# weiche Regel: blockiert das Scheduling nicht, wenn die Topologie es nicht
+# hergibt (z. B. Single-Node-Cluster).
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+
 podAnnotations: {}
 nodeSelector: {}
 tolerations: []

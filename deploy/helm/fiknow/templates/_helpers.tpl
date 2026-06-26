@@ -77,4 +77,13 @@ dann muss der Wert anderweitig gesetzt werden (Prod fail-closed).
 {{- if and (not .Values.secret.existingSecret) (not .Values.secret.create) -}}
 {{- fail "Keine Secrets konfiguriert: entweder secret.existingSecret setzen oder secret.create=true mit secret.data." -}}
 {{- end -}}
+{{/* MCP/Authoring braucht persistenten Speicher — emptyDir verliert Bundles. */}}
+{{- $mcp := "" -}}
+{{- with .Values.config.extra -}}{{- $mcp = index . "MCP_ENABLED" | default $mcp -}}{{- end -}}
+{{- with .Values.config.MCP_ENABLED -}}{{- $mcp = . -}}{{- end -}}
+{{- if eq (toString $mcp) "true" -}}
+{{- if ne (.Values.dataVolume.type | default "emptyDir") "pvc" -}}
+{{- fail "MCP_ENABLED=true braucht persistenten, geteilten Speicher: dataVolume.type=pvc mit existingClaim (bei >=2 Replicas ReadWriteMany/RWX). Mit emptyDir gehen Kurs-Bundles und Medien bei Pod-Neustart verloren und sind ueber Replicas inkonsistent." -}}
+{{- end -}}
+{{- end -}}
 {{- end -}}

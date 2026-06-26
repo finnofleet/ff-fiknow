@@ -23,6 +23,12 @@ bereitgestellt, nicht vom Chart.
 | 5 | **Ingress-Controller** + DNS-Eintrag auf den öffentlichen Host | `kubectl get ingressclass` |
 | 6 | **TLS-Zertifikat** (cert-manager o. ä.) für den Host | — |
 | 7 | **GHCR-Pull-Zugriff** auf `ghcr.io/finnofleet/ff-fiknow` (public ODER Pull-Secret) | Abschnitt 4 |
+| 8 | **Persistenter Speicher** für `/data`, **falls** Medien-Uploads oder MCP-/Authoring genutzt werden — bei ≥2 Replicas ein **ReadWriteMany-PVC** (RWX). Sonst optional. | Abschnitt 7a |
+
+> **Datentöpfe nicht vergessen:** Kurs-Bundles (MCP/Authoring) und Payload-Medien
+> liegen im Dateisystem unter `/data`. Ohne gemountetes, persistentes Volume
+> gehen sie bei jedem Pod-Neustart verloren und sind über mehrere Replicas
+> inkonsistent. Reine Code-/MDX-Kurse (im Image) brauchen das nicht.
 
 Postgres-Versionsnote: **PG 14+** empfohlen (`gen_random_uuid()` ist Core,
 keine Extension nötig). Der DB-User muss Schemata, Tabellen, Funktionen und
@@ -199,7 +205,7 @@ Alternativ aus der **OCI-Registry** (die CI veröffentlicht das Chart nach jedem
 main-Build nach `oci://ghcr.io/finnofleet/charts/fiknow`):
 ```bash
 helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
-  --version 0.3.0 -f my-values.yaml \
+  --version 0.3.1 -f my-values.yaml \
   --namespace fiknow --create-namespace
 ```
 
@@ -304,18 +310,41 @@ sowie `/data` für Payload-Medien (`MEDIA_STORAGE_DIR`) und Authoring-Bundles
 (`BUNDLE_STORAGE_DIR`). Steuerung über `dataVolume` im Chart:
 
 ```yaml
+# Ephemer (Default) — ok OHNE Medien/Authoring, sonst Datenverlust:
 dataVolume:
-  type: emptyDir        # Default: ephemer & PRO POD
-  # type: pvc           # persistent:
-  # existingClaim: fiknow-data
+  type: emptyDir
+
+# Persistent & geteilt — PFLICHT bei Medien-Uploads oder MCP/Authoring:
+dataVolume:
+  type: pvc
+  existingClaim: fiknow-data    # bei ≥2 Replicas: ReadWriteMany (RWX)
 ```
 
-> ⚠️ **Wichtig bei ≥2 Replicas mit Medien/Authoring:** `emptyDir` ist pro Pod
-> isoliert und geht bei Neustart verloren. Wer Payload-Medien oder hochgeladene
-> Kurs-Bundles nutzt, braucht einen **ReadWriteMany-PVC** (`type: pvc`,
-> `existingClaim`) — sonst sehen die Replicas unterschiedliche Dateien.
-> Wer Medien/Authoring nicht nutzt (reine Code-/MDX-Kurse im Image), kann beim
-> `emptyDir`-Default bleiben.
+> ⚠️ **Binär-Assets liegen im Dateisystem, NICHT in der DB — persistenter
+> Speicher nötig.** In Postgres stehen nur die strukturierten Kursdaten; die
+> eigentlichen Dateien liegen unter `/data`:
+> - **Payload-Medien** (`/data/media`) — Bilder/Uploads aus der Admin-/Kurator-UI,
+>   **unabhängig von MCP**.
+> - **Kurs-Bundles** (`/data/bundles`) — die re-editierbare Quelle, geschrieben
+>   vom Authoring (Web-UI **oder** MCP).
+>
+> Mit dem `emptyDir`-Default sind diese Dateien **pro Pod isoliert**, gehen bei
+> jedem Neustart verloren, und bei ≥2 Replicas sieht jeder Pod andere Dateien.
+> **Sobald irgendetwas zur Laufzeit hochgeladen oder authored wird** (Medien
+> ODER Kurse), MUSS daher `dataVolume.type: pvc` mit einem **ReadWriteMany-PVC**
+> (RWX) gesetzt sein — oder, wenn kein RWX verfügbar ist, `replicaCount: 1` mit
+> einem RWO-PVC (konsistent, aber ohne HA). Nur ein rein statisches Deployment
+> (Kurse als MDX im Image, keine Uploads) kommt beim `emptyDir`-Default aus.
+>
+> Das Chart erzwingt wenigstens den klarsten Fall: Mit `MCP_ENABLED=true` **und**
+> `dataVolume.type` ≠ `pvc` bricht `helm install` ab (fail-fast). Den Medien-Fall
+> kann das Chart nicht erkennen — daher hier explizit dokumentiert.
+>
+> **Spec-Hinweis:** Die SaaS-Vorgabe bevorzugt für persistente Nutzdaten
+> **DB und/oder S3-kompatiblen Objektspeicher** statt lokalem FS/NFS. Ein
+> RWX-PVC erfüllt die Funktion, ist aber die vom Betrieb weniger gewünschte
+> Variante — ein S3-Storage-Adapter für Medien/Bundles wäre die saubere
+> Langfrist-Lösung (offener Punkt, siehe Bericht/COMPLIANCE).
 
 **DB-Connection-Pool.** Pro Pod öffnen Drizzle- **und** Payload-Pool je
 `DB_POOL_MAX` (Default 5) Verbindungen → **2 × `DB_POOL_MAX` pro Pod**. Über

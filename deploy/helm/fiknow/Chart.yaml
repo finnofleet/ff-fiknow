@@ -7,11 +7,11 @@ description: >-
   z. B. vom IBM-Umfeld bereitgestellt).
 type: application
 # Chart-Version (SemVer des Charts selbst).
-version: 0.1.0
+version: 0.2.0
 # Default-App-Version = Image-Tag (per values.image.tag überschreibbar).
 appVersion: "fiknow"
-home: https://github.com/yves-blaettler/edu-platform
+home: https://github.com/finnofleet/ff-fiknow
 sources:
-  - https://github.com/yves-blaettler/edu-platform
+  - https://github.com/finnofleet/ff-fiknow
 maintainers:
-  - name: yves-blaettler
+  - name: finnofleet

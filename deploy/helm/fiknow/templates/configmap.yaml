@@ -37,6 +37,15 @@ data:
   SUPABASE_URL: {{ . | quote }}
   {{- end }}
   {{- end }}
+  {{- with .Values.config.DB_POOL_MAX }}
+  DB_POOL_MAX: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.MEDIA_STORAGE_DIR }}
+  MEDIA_STORAGE_DIR: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.BUNDLE_STORAGE_DIR }}
+  BUNDLE_STORAGE_DIR: {{ . | quote }}
+  {{- end }}
   {{- range $k, $v := .Values.config.extra }}
   {{ $k }}: {{ $v | quote }}
   {{- end }}

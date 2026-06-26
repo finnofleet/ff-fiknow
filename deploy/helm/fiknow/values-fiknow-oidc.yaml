@@ -1,8 +1,8 @@
 # ============================================================
 # Beispiel-Werte: FIKNOW auf IBM Kubernetes mit OIDC (Keycloak)
 #
-#   helm upgrade --install fiknow ./deploy/helm/edu-platform \
-#     -f ./deploy/helm/edu-platform/values-fiknow-oidc.yaml \
+#   helm upgrade --install fiknow ./deploy/helm/fiknow \
+#     -f ./deploy/helm/fiknow/values-fiknow-oidc.yaml \
 #     --namespace fiknow --create-namespace
 #
 # Secrets NICHT hier committen — in Prod via existingSecret (Sealed-Secrets /

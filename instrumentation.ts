@@ -26,6 +26,10 @@ export async function register() {
     );
   }
 
+  // Geordneter Shutdown (DB-Pool-Drain) zusätzlich zu Next's HTTP-Graceful.
+  const { registerGracefulShutdown } = await import("./lib/shutdown");
+  registerGracefulShutdown();
+
   const { runAutoMigrations } = await import("./lib/db/auto-migrate");
   await runAutoMigrations();
 }

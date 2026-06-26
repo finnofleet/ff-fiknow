@@ -261,12 +261,76 @@ Next-Start. Danach:
 | `OIDC_SCOPES` | nein | Default `openid profile email` |
 | `OIDC_SESSION_MAX_AGE_SEC` | nein | Default `28800` (8 h) |
 | `OIDC_ALLOW_INSECURE` | nein | **nur lokal** http-Issuer erlauben; in Prod NIE |
+| `DB_POOL_MAX` | nein | Max. Connections je Pool/Pod (Default `5`); s. 7a |
+| `DB_POOL_IDLE_TIMEOUT_SEC` | nein | Idle-Timeout der Pool-Connections (Default `20`) |
+| `MEDIA_STORAGE_DIR` | nein | Payload-Medien-Pfad (Chart-Default `/data/media`); s. 7a |
+| `BUNDLE_STORAGE_DIR` | nein | Authoring-Bundle-Pfad (Chart-Default `/data/bundles`); s. 7a |
+| `SKIP_MIGRATIONS` | nein | `true` = Auto-Migrate beim Boot überspringen |
 | `LLM_PROVIDER` / `LLM_BASE_URL` / `LLM_MODEL` / `LLM_MAX_TOKENS` | nein | KI-Tutor-LLM (Default Anthropic/claude-haiku-4-5); siehe 5a |
 | `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_BASE_URL` / `RAG_RELEVANCE_THRESHOLD` | nein | RAG-Embeddings (Default Voyage/voyage-3.5-lite); siehe 5a |
 
 **Aus Secret (geheim):** `DATABASE_URL`, `PAYLOAD_SECRET`, `OIDC_CLIENT_SECRET`,
 optional `OIDC_SESSION_SECRET`; für den Tutor optional `LLM_API_KEY` und
 `VOYAGE_API_KEY` (s. Abschnitt 3 + 5a).
+
+---
+
+## 7a. Betrieb: Health-Probes, Storage, Pool & Shutdown
+
+**Health-Probes** (im Chart vorkonfiguriert, `values.yaml`):
+
+| Probe | Pfad | Prüft | DB? |
+|---|---|---|---|
+| Startup | `/api/health/ready` | deckt das Auto-Migrate beim ersten Boot ab (bis 5 min) | ja |
+| Liveness | `/api/health` | „Prozess lebt" | nein |
+| Readiness | `/api/health/ready` | `SELECT 1` gegen Postgres → **503** wenn DB weg | ja |
+
+Liveness greift bewusst **nicht** auf die DB zu (ein DB-Ausfall soll Pods aus
+dem Service nehmen, nicht im Loop neustarten). Beide Endpoints sind öffentlich
+und geben keine Geheimnisse preis.
+
+**Writable Storage / read-only Root-FS.** Der Container läuft mit
+`readOnlyRootFilesystem: true`. Alle Schreibpfade kommen als Volume:
+`/app/.next/cache` und `/tmp` als ephemere `emptyDir` (korrekt — Wegwerf-State),
+sowie `/data` für Payload-Medien (`MEDIA_STORAGE_DIR`) und Authoring-Bundles
+(`BUNDLE_STORAGE_DIR`). Steuerung über `dataVolume` im Chart:
+
+```yaml
+dataVolume:
+  type: emptyDir        # Default: ephemer & PRO POD
+  # type: pvc           # persistent:
+  # existingClaim: fiknow-data
+```
+
+> ⚠️ **Wichtig bei ≥2 Replicas mit Medien/Authoring:** `emptyDir` ist pro Pod
+> isoliert und geht bei Neustart verloren. Wer Payload-Medien oder hochgeladene
+> Kurs-Bundles nutzt, braucht einen **ReadWriteMany-PVC** (`type: pvc`,
+> `existingClaim`) — sonst sehen die Replicas unterschiedliche Dateien.
+> Wer Medien/Authoring nicht nutzt (reine Code-/MDX-Kurse im Image), kann beim
+> `emptyDir`-Default bleiben.
+
+**DB-Connection-Pool.** Pro Pod öffnen Drizzle- **und** Payload-Pool je
+`DB_POOL_MAX` (Default 5) Verbindungen → **2 × `DB_POOL_MAX` pro Pod**. Über
+alle Replicas muss gelten:
+
+```
+2 × DB_POOL_MAX × replicaCount  ≤  max_connections der Managed-DB (mit Reserve)
+```
+
+Default (5, 2 Replicas) = 20 Connections. Bei mehr Replicas oder kleiner DB
+`DB_POOL_MAX` senken.
+
+**Graceful Shutdown.** Auf `SIGTERM` schließt der Next-Standalone-Server keine
+neuen Verbindungen mehr an, beendet laufende Requests und fährt dann herunter;
+zusätzlich drainen wir den DB-Pool (`lib/shutdown.ts`), damit Connection-Slots
+sofort frei werden. Default-`terminationGracePeriodSeconds` (30 s) reicht.
+
+**Betrieb unter Subpfad / Context-Path.** Das Image hat keinen `basePath` —
+jede Instanz läuft auf einem **eigenen Host** (ein Namespace/Host pro
+Kunde/Stage). Hinter dem Reverse-Proxy respektiert die App `X-Forwarded-*`; die
+öffentliche Basis-URL kommt aus `ingress.hosts[0]` bzw. `OIDC_REDIRECT_BASE`.
+Ein gemeinsamer Subpfad-Betrieb mehrerer Instanzen unter einem Host ist nicht
+vorgesehen.
 
 ---
 

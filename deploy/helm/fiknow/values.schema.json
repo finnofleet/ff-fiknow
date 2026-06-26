@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "fiknow Helm values",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["image", "config", "secret"],
+  "properties": {
+    "replicaCount": { "type": "integer", "minimum": 1 },
+    "image": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "AUTH_PROVIDER": { "type": "string", "enum": ["gotrue", "oidc"] },
+        "OIDC_ISSUER": { "type": "string" },
+        "OIDC_CLIENT_ID": { "type": "string" },
+        "OIDC_REDIRECT_BASE": { "type": "string" },
+        "DB_POOL_MAX": { "type": "string", "pattern": "^[0-9]+$" },
+        "MEDIA_STORAGE_DIR": { "type": "string" },
+        "BUNDLE_STORAGE_DIR": { "type": "string" },
+        "extra": { "type": "object" }
+      }
+    },
+    "secret": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "existingSecret": { "type": "string" },
+        "create": { "type": "boolean" },
+        "data": { "type": "object" }
+      }
+    },
+    "dataVolume": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": { "type": "string", "enum": ["emptyDir", "pvc"] },
+        "mountPath": { "type": "string", "pattern": "^/" },
+        "existingClaim": { "type": "string" },
+        "sizeLimit": { "type": "string" }
+      }
+    },
+    "containerSecurityContext": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "readOnlyRootFilesystem": { "type": "boolean" },
+        "allowPrivilegeEscalation": { "type": "boolean" }
+      }
+    },
+    "resources": { "type": "object" },
+    "autoscaling": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

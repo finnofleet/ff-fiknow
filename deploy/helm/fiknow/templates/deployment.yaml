@@ -48,6 +48,10 @@ spec:
                 name: {{ include "fiknow.fullname" . }}-env
             - secretRef:
                 name: {{ include "fiknow.secretName" . }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -58,18 +62,39 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- if .Values.contentVolume.enabled }}
           volumeMounts:
+            # Writable Pfade (nötig wegen readOnlyRootFilesystem).
+            - name: next-cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: {{ .Values.dataVolume.mountPath | default "/data" }}
+            {{- if .Values.contentVolume.enabled }}
             - name: content
               mountPath: /app/content
               readOnly: true
-          {{- end }}
-      {{- if .Values.contentVolume.enabled }}
+            {{- end }}
       volumes:
+        - name: next-cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          {{- if eq .Values.dataVolume.type "pvc" }}
+          persistentVolumeClaim:
+            claimName: {{ required "dataVolume.existingClaim ist Pflicht bei dataVolume.type=pvc" .Values.dataVolume.existingClaim }}
+          {{- else }}
+          emptyDir:
+            {{- with .Values.dataVolume.sizeLimit }}
+            sizeLimit: {{ . }}
+            {{- end }}
+          {{- end }}
+        {{- if .Values.contentVolume.enabled }}
         - name: content
           persistentVolumeClaim:
             claimName: {{ .Values.contentVolume.claimName }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

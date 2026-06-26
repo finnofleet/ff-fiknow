@@ -1,8 +1,27 @@
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "./schema";
 import { sslConfigFromUrl } from "./ssl-config";
+
+/**
+ * Pool-Grösse. Managed-Postgres hat ein hartes `max_connections`-Limit, das
+ * sich ALLE Replicas teilen. Deshalb env-konfigurierbar: pro Pod öffnen
+ * Drizzle- und Payload-Pool je `DB_POOL_MAX` Verbindungen, total also
+ * `2 * DB_POOL_MAX * replicas`. Default 5 (= 10/Pod) ist konservativ.
+ */
+function poolMax(): number {
+  const raw = process.env.DB_POOL_MAX;
+  const n = raw ? Number.parseInt(raw, 10) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : 5;
+}
+
+function poolIdleTimeout(): number {
+  const raw = process.env.DB_POOL_IDLE_TIMEOUT_SEC;
+  const n = raw ? Number.parseInt(raw, 10) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : 20;
+}
 
 /**
  * Lazy-initialisierter Drizzle-Client.
@@ -17,8 +36,10 @@ import { sslConfigFromUrl } from "./ssl-config";
  */
 
 type DB = ReturnType<typeof drizzle<typeof schema>>;
+type Client = ReturnType<typeof postgres>;
 
 let cached: DB | null = null;
+let cachedClient: Client | null = null;
 
 function createDb(): DB {
   const connectionString = process.env.DATABASE_URL;
@@ -31,12 +52,12 @@ function createDb(): DB {
     prepare: false,
     ssl: sslConfigFromUrl(connectionString),
     // Pool-Limits: postgres-js default ist 10 Connections + nie idle-out.
-    // Mit Payload's eigenem Pool (10) + GoTrue + Supabase-Services kommen
-    // wir bei aggressiven Reloads schnell auf >100 = Postgres-Connection-
-    // Exhaustion. 5 max + 20s idle-Timeout hält die Last sauber.
-    max: 5,
-    idle_timeout: 20,
+    // Managed-Postgres teilt sein max_connections-Limit über alle Replicas —
+    // deshalb begrenzt + via DB_POOL_MAX konfigurierbar (Default 5).
+    max: poolMax(),
+    idle_timeout: poolIdleTimeout(),
   });
+  cachedClient = client;
   return drizzle(client, { schema });
 }
 
@@ -46,5 +67,27 @@ export const db: DB = new Proxy({} as DB, {
     return Reflect.get(cached, prop);
   },
 });
+
+/**
+ * Leichtgewichtiger Connectivity-Check für die Readiness-Probe: erzwingt eine
+ * echte Connection aus dem Pool und ein `SELECT 1`. Wirft bei DB-Problemen.
+ */
+export async function pingDb(): Promise<void> {
+  await db.execute(sql`select 1`);
+}
+
+/**
+ * Schliesst den Drizzle-Pool geordnet (für den SIGTERM-Shutdown). postgres-js
+ * `end()` wartet laufende Queries ab und schickt dann Terminate an Postgres,
+ * damit die Connection-Slots auf der Managed-DB sofort frei werden — wichtig
+ * bei Rolling-Deployments mit begrenztem max_connections.
+ */
+export async function closeDb(): Promise<void> {
+  if (!cachedClient) return;
+  const client = cachedClient;
+  cachedClient = null;
+  cached = null;
+  await client.end({ timeout: 5 });
+}
 
 export { schema };

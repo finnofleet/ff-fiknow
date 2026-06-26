@@ -59,12 +59,14 @@ export default buildConfig({
       ssl: process.env.DATABASE_URL
         ? sslConfigFromUrl(process.env.DATABASE_URL)
         : false,
-      // Pool-Limits: pg default ist 10 max + 10s idle. Wir senken auf 5
-      // und kombiniert mit dem Drizzle-Pool (auch 5) bleibt das Total
-      // unter dem typischen Postgres-Limit von ~100, auch wenn
-      // Supabase-Services parallel ihre eigenen Connections halten.
-      max: 5,
-      idleTimeoutMillis: 20000,
+      // Pool-Limits: pg default ist 10 max + 10s idle. Begrenzt + via
+      // DB_POOL_MAX konfigurierbar (Default 5); kombiniert mit dem
+      // Drizzle-Pool (ebenfalls DB_POOL_MAX) bleibt das Total pro Pod bei
+      // 2*DB_POOL_MAX — über alle Replicas unter max_connections halten.
+      max: Number.parseInt(process.env.DB_POOL_MAX ?? "", 10) || 5,
+      idleTimeoutMillis:
+        (Number.parseInt(process.env.DB_POOL_IDLE_TIMEOUT_SEC ?? "", 10) || 20) *
+        1000,
     },
     schemaName: "payload",
   }),

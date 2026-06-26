@@ -49,6 +49,19 @@ config:
   OIDC_REDIRECT_BASE: ""
   OIDC_SESSION_MAX_AGE_SEC: "28800"
 
+  # --- Datenbank-Pool ---
+  # Max. Connections je Pool und Pod. Drizzle- UND Payload-Pool nutzen den
+  # Wert, total also 2*DB_POOL_MAX pro Pod. Über alle Replicas unter dem
+  # max_connections-Limit der Managed-DB halten: 2 * DB_POOL_MAX * replicaCount.
+  DB_POOL_MAX: "5"
+
+  # --- Schreibpfade (bei readOnlyRootFilesystem zwingend auf ein Volume) ---
+  # Defaults zeigen auf das writable dataVolume (s. u.). Medien/Bundles sind
+  # NUR persistent/instanzübergreifend, wenn dataVolume.type=pvc (RWX) ist —
+  # mit emptyDir gehen sie bei Pod-Neustart verloren bzw. sind pro Pod isoliert.
+  MEDIA_STORAGE_DIR: /data/media
+  BUNDLE_STORAGE_DIR: /data/bundles
+
   # --- GoTrue/Supabase (nur bei AUTH_PROVIDER=gotrue) ---
   NEXT_PUBLIC_SUPABASE_URL: ""
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
@@ -113,9 +126,29 @@ podSecurityContext:
 
 containerSecurityContext:
   allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: false   # Next-Standalone schreibt Cache; true nur mit writable Mounts
+  # read-only Root-FS ist aktiv. Alle Schreibpfade kommen als emptyDir/Volume:
+  #   /app/.next/cache  (Next-Standalone ISR-Cache) — emptyDir
+  #   /tmp              (Temp-Uploads etc.)          — emptyDir
+  #   /data             (Medien/Bundles)             — dataVolume (s. u.)
+  # Falls eine Abhängigkeit doch in einen ungemounteten Pfad schreibt, hier
+  # auf false stellen — dann aber Begründung dokumentieren.
+  readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
+
+# ------------------------------------------------------------
+# Writable Volumes (nötig wegen readOnlyRootFilesystem).
+# cache/tmp sind ephemer (emptyDir) — das ist korrekt, beides ist Wegwerf-State.
+# data hält Medien (Payload) + Authoring-Bundles:
+#   - type: emptyDir → ephemer & PRO POD (Default; ok ohne Medien/Authoring)
+#   - type: pvc      → persistent; für Medien/Authoring mit ≥2 Replicas einen
+#                      ReadWriteMany-Claim (RWX) verwenden.
+# ------------------------------------------------------------
+dataVolume:
+  type: emptyDir          # emptyDir | pvc
+  mountPath: /data
+  existingClaim: ""       # bei type=pvc: Name des (idealerweise RWX-)PVC
+  sizeLimit: 1Gi          # nur für type=emptyDir
 
 resources:
   requests:
@@ -124,20 +157,33 @@ resources:
   limits:
     memory: 768Mi
 
-# Probes treffen "/" — Next liefert dort immer ≥200/307 (siehe Dockerfile-HEALTHCHECK).
+# Probes:
+#   Startup   /api/health/ready — deckt das Auto-Migrate beim ersten Boot ab
+#             (bis 60*5s = 5min), bevor Liveness/Readiness greifen.
+#   Liveness  /api/health       — "Prozess lebt", KEIN DB-Zugriff (sonst würde
+#             ein DB-Ausfall Pods unnötig neustarten statt nur aus dem Service
+#             zu nehmen).
+#   Readiness /api/health/ready — echtes SELECT 1 gegen Postgres → 503 wenn DB
+#             weg ist, Pod fällt aus dem Service-Endpoint.
+startupProbe:
+  httpGet:
+    path: /api/health/ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 5
+  failureThreshold: 60
 livenessProbe:
   httpGet:
-    path: /
+    path: /api/health
     port: http
-  initialDelaySeconds: 20
   periodSeconds: 30
   timeoutSeconds: 5
   failureThreshold: 3
 readinessProbe:
   httpGet:
-    path: /
+    path: /api/health/ready
     port: http
-  initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3

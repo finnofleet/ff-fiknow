@@ -5,8 +5,7 @@ metadata:
   labels:
     {{- include "fiknow.labels" . | nindent 4 }}
 data:
-  AUTH_PROVIDER: {{ .Values.config.AUTH_PROVIDER | default "gotrue" | quote }}
-  {{- if eq (.Values.config.AUTH_PROVIDER | default "gotrue") "oidc" }}
+  # FIKNOW ist OIDC-only (Keycloak) — kein AUTH_PROVIDER-Schalter mehr.
   {{- with .Values.config.OIDC_ISSUER }}
   OIDC_ISSUER: {{ . | quote }}
   {{- end }}
@@ -25,17 +24,6 @@ data:
   {{- $redirectBase := include "fiknow.redirectBase" . }}
   {{- if $redirectBase }}
   OIDC_REDIRECT_BASE: {{ $redirectBase | quote }}
-  {{- end }}
-  {{- else }}
-  {{- with .Values.config.NEXT_PUBLIC_SUPABASE_URL }}
-  NEXT_PUBLIC_SUPABASE_URL: {{ . | quote }}
-  {{- end }}
-  {{- with .Values.config.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: {{ . | quote }}
-  {{- end }}
-  {{- with .Values.config.SUPABASE_URL }}
-  SUPABASE_URL: {{ . | quote }}
-  {{- end }}
   {{- end }}
   {{- with .Values.config.DB_POOL_MAX }}
   DB_POOL_MAX: {{ . | quote }}

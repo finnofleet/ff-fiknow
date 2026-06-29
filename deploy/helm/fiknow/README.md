@@ -1,8 +1,8 @@
-# edu-platform — Helm-Chart
+# fiknow — Helm-Chart
 
-Deployt das `edu-platform`-OCI-Image (verstande / FIKNOW) auf Kubernetes.
-Erfüllt die Deployment-Anforderungen: **OCI-Image**, **OIDC** (oder GoTrue,
-umschaltbar), **non-root**, **externes Postgres**.
+Deployt das FIKNOW-OCI-Image (`ghcr.io/finnofleet/ff-fiknow`) auf Kubernetes.
+Erfüllt die Deployment-Anforderungen: **OCI-Image**, **OIDC** (Keycloak),
+**non-root**, **externes Postgres**.
 
 > Postgres und Keycloak liefert das Chart **nicht** mit — sie kommen extern
 > (z. B. managed Postgres + zentrales Keycloak im IBM-Umfeld).
@@ -20,25 +20,24 @@ Das Chart liegt im Repo; alternativ als OCI-Chart paketieren/pushen:
 
 ```bash
 helm package ./deploy/helm/fiknow
-helm push edu-platform-0.1.0.tgz oci://ghcr.io/yves-blaettler/charts
+helm push fiknow-0.3.1.tgz oci://ghcr.io/finnofleet/charts
 ```
 
 ## Wichtige Werte
 
 | Wert | Zweck |
 |---|---|
-| `image.repository` / `image.tag` | Image + Brand (`fiknow` / `latest`) |
-| `config.AUTH_PROVIDER` | `oidc` oder `gotrue` |
-| `config.OIDC_ISSUER` | Keycloak-Realm-URL (Pflicht bei oidc) |
+| `image.repository` / `image.tag` | Image + Tag (`ghcr.io/finnofleet/ff-fiknow` / `latest` — besser ein `main-<sha>`/`v`-Tag pinnen) |
+| `config.OIDC_ISSUER` | Keycloak-Realm-URL (Pflicht) |
 | `config.OIDC_CLIENT_ID` / `OIDC_ROLE_MAP` | Client + Rollen-Mapping |
 | `config.OIDC_REDIRECT_BASE` | öffentliche Basis-URL; leer → aus `ingress.hosts[0]` |
 | `secret.existingSecret` | extern verwaltetes Secret (Prod, empfohlen) |
 | `secret.create` + `secret.data` | Chart erzeugt Secret (Dev/Test) |
 | `ingress.*` | Host/TLS/Class |
 
-**Secret-Keys** (je nach Provider): `DATABASE_URL`, `PAYLOAD_SECRET` (immer);
-`OIDC_CLIENT_SECRET`, `OIDC_SESSION_SECRET` (oidc; SESSION optional → Fallback
-`PAYLOAD_SECRET`); `SUPABASE_SERVICE_ROLE_KEY` (gotrue).
+**Secret-Keys**: `DATABASE_URL`, `PAYLOAD_SECRET` (immer);
+`OIDC_CLIENT_SECRET` (Pflicht), `OIDC_SESSION_SECRET` (optional → Fallback
+`PAYLOAD_SECRET`).
 
 ## Eigenschaften
 

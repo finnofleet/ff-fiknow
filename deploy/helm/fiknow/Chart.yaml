@@ -1,10 +1,9 @@
 apiVersion: v2
 name: fiknow
 description: >-
-  White-Label-Lernplattform (edu-platform / FIKNOW). Liefert das OCI-Image als
-  Kubernetes-Deployment — non-root, OIDC- oder GoTrue-Auth (umschaltbar),
-  externes Postgres. Keycloak und Postgres werden NICHT mitgeliefert (extern,
-  z. B. vom IBM-Umfeld bereitgestellt).
+  FIKNOW-Lernplattform. Liefert das OCI-Image als Kubernetes-Deployment —
+  non-root, OIDC-Auth (Keycloak), externes Postgres. Keycloak und Postgres
+  werden NICHT mitgeliefert (extern, z. B. vom IBM-Umfeld bereitgestellt).
 type: application
 # Chart-Version (SemVer des Charts selbst).
 version: 0.3.1

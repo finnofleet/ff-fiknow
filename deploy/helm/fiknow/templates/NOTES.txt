@@ -1,13 +1,11 @@
-edu-platform ({{ .Values.image.repository }}:{{ .Values.image.tag }}) wurde deployed.
+FIKNOW ({{ .Values.image.repository }}:{{ .Values.image.tag }}) wurde deployed.
 
-Auth-Provider: {{ .Values.config.AUTH_PROVIDER | default "gotrue" }}
-{{- if eq (.Values.config.AUTH_PROVIDER | default "gotrue") "oidc" }}
+Auth: OIDC (Keycloak)
 OIDC-Issuer:   {{ .Values.config.OIDC_ISSUER }}
 Redirect-Base: {{ include "fiknow.redirectBase" . }}
 
 WICHTIG: In Keycloak muss als gültige redirect_uri eingetragen sein:
   {{ include "fiknow.redirectBase" . }}/auth/oidc/callback
-{{- end }}
 
 {{- if .Values.ingress.enabled }}
 {{- range .Values.ingress.hosts }}

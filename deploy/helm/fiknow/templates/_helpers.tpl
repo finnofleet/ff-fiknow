@@ -66,13 +66,12 @@ dann muss der Wert anderweitig gesetzt werden (Prod fail-closed).
 
 {{/* Fail-fast-Validierung kritischer Config (vor dem Apply). */}}
 {{- define "fiknow.validate" -}}
-{{- if eq (.Values.config.AUTH_PROVIDER | default "gotrue") "oidc" -}}
+{{/* FIKNOW ist OIDC-only — diese Prüfungen greifen immer. */}}
 {{- if not .Values.config.OIDC_ISSUER -}}
-{{- fail "config.OIDC_ISSUER muss gesetzt sein, wenn AUTH_PROVIDER=oidc." -}}
+{{- fail "config.OIDC_ISSUER muss gesetzt sein (FIKNOW ist OIDC-only / Keycloak)." -}}
 {{- end -}}
 {{- if not (include "fiknow.redirectBase" .) -}}
-{{- fail "OIDC_REDIRECT_BASE (oder ingress.hosts[0].host) muss bei AUTH_PROVIDER=oidc gesetzt sein — die App leitet die redirect_uri in Prod nicht aus Request-Headern ab (fail-closed)." -}}
-{{- end -}}
+{{- fail "OIDC_REDIRECT_BASE (oder ingress.hosts[0].host) muss gesetzt sein — die App leitet die redirect_uri in Prod nicht aus Request-Headern ab (fail-closed)." -}}
 {{- end -}}
 {{- if and (not .Values.secret.existingSecret) (not .Values.secret.create) -}}
 {{- fail "Keine Secrets konfiguriert: entweder secret.existingSecret setzen oder secret.create=true mit secret.data." -}}

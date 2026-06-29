@@ -20,7 +20,6 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "AUTH_PROVIDER": { "type": "string", "enum": ["gotrue", "oidc"] },
         "OIDC_ISSUER": { "type": "string" },
         "OIDC_CLIENT_ID": { "type": "string" },
         "OIDC_REDIRECT_BASE": { "type": "string" },

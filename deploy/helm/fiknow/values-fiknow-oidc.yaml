@@ -16,7 +16,6 @@ image:
 replicaCount: 2
 
 config:
-  AUTH_PROVIDER: oidc
   OIDC_ISSUER: https://keycloak.intern.example.com/realms/fiknow
   OIDC_CLIENT_ID: edu-platform
   OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"

@@ -1,9 +1,9 @@
 # ============================================================
-# edu-platform — Helm-Werte (Defaults)
+# fiknow — Helm-Werte (Defaults)
 #
 # Minimal nötig für einen Deploy:
 #   - image.repository / image.tag
-#   - config.AUTH_PROVIDER (+ OIDC_*-Config bei oidc)
+#   - config.OIDC_* (Issuer, Client-ID, Rollen-Mapping)
 #   - ingress.hosts (öffentlicher Host) bzw. config.OIDC_REDIRECT_BASE
 #   - die Secrets (DATABASE_URL, PAYLOAD_SECRET, …) via existingSecret ODER
 #     secret.create + secret.data
@@ -15,8 +15,8 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/finnofleet/ff-fiknow
-  # Tag = Brand/Variante. "fiknow" für die FIKNOW-Variante, "latest" für den
-  # verstande-Default. IMMER explizit pinnen (kein implizites latest).
+  # IMMER explizit pinnen (kein implizites latest) — z. B. ein main-<sha>
+  # oder ein v-Tag für reproduzierbare Deploys.
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -35,10 +35,7 @@ serviceAccount:
 # envFrom in den Container gereicht. Geheimes gehört in `secret` (s. u.).
 # ------------------------------------------------------------
 config:
-  # Auth-Provider: "gotrue" (Default, verstande/Supabase) oder "oidc" (Keycloak).
-  AUTH_PROVIDER: oidc
-
-  # --- OIDC (nur bei AUTH_PROVIDER=oidc) ---
+  # --- OIDC (Keycloak) — FIKNOW ist OIDC-only ---
   OIDC_ISSUER: ""            # z. B. https://keycloak.example.com/realms/fiknow
   OIDC_CLIENT_ID: edu-platform
   OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
@@ -62,11 +59,6 @@ config:
   MEDIA_STORAGE_DIR: /data/media
   BUNDLE_STORAGE_DIR: /data/bundles
 
-  # --- GoTrue/Supabase (nur bei AUTH_PROVIDER=gotrue) ---
-  NEXT_PUBLIC_SUPABASE_URL: ""
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
-  SUPABASE_URL: ""
-
   # Beliebige weitere nicht-geheime Env-Vars.
   extra: {}
 
@@ -78,11 +70,11 @@ config:
 #   2. create: true + data: Das Chart templated ein Secret aus diesen Werten.
 #      Bequem für Dev/Test, aber Klartext in values — in Prod meiden.
 #
-# Erwartete Keys (je nach AUTH_PROVIDER):
+# Erwartete Keys:
 #   DATABASE_URL, PAYLOAD_SECRET                 (immer)
-#   OIDC_CLIENT_SECRET, OIDC_SESSION_SECRET      (oidc; SESSION optional → fällt
-#                                                 sonst auf PAYLOAD_SECRET zurück)
-#   SUPABASE_SERVICE_ROLE_KEY                    (gotrue)
+#   OIDC_CLIENT_SECRET                           (Pflicht)
+#   OIDC_SESSION_SECRET                          (optional → fällt sonst auf
+#                                                 PAYLOAD_SECRET zurück)
 # ------------------------------------------------------------
 secret:
   existingSecret: ""
@@ -108,7 +100,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls: []
-    # - secretName: edu-platform-tls
+    # - secretName: fiknow-tls
     #   hosts: [app.fiknow.ch]
 
 # ------------------------------------------------------------
@@ -192,7 +184,7 @@ readinessProbe:
 # einbacken. Leer lassen = Image-Default/Brand-Overlay nutzen.
 contentVolume:
   enabled: false
-  # claimName: edu-platform-content   # bestehender PVC
+  # claimName: fiknow-content   # bestehender PVC
 
 autoscaling:
   enabled: false

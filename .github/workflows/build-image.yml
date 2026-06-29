@@ -1,7 +1,7 @@
 name: Build & push image
 
 # Baut das Production-Image und schiebt es ins GitHub Container Registry.
-# Pull-Ziel für jedes Jelastic-Environment: ghcr.io/<owner>/edu-platform:latest
+# Pull-Ziel für das Kubernetes-Deployment (Helm-Chart): ghcr.io/finnofleet/ff-fiknow:latest
 #
 # Tags pro Push:
 #   - latest                  (immer der jüngste main-Build)
@@ -57,7 +57,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          # Jelastic/IBM läuft auf amd64 — multi-arch (arm64) noch nicht nötig
+          # IBM Cloud (IKS/ROKS) läuft auf amd64 — multi-arch (arm64) noch nicht nötig
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -20,7 +20,7 @@ Das Chart liegt im Repo; alternativ als OCI-Chart paketieren/pushen:
 
 ```bash
 helm package ./deploy/helm/fiknow
-helm push fiknow-0.3.1.tgz oci://ghcr.io/finnofleet/charts
+helm push fiknow-0.3.2.tgz oci://ghcr.io/finnofleet/charts
 ```
 
 ## Wichtige Werte

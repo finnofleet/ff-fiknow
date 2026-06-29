@@ -6,7 +6,7 @@ description: >-
   werden NICHT mitgeliefert (extern, z. B. vom IBM-Umfeld bereitgestellt).
 type: application
 # Chart-Version (SemVer des Charts selbst).
-version: 0.3.1
+version: 0.3.2
 # Default-App-Version = Image-Tag (per values.image.tag überschreibbar).
 appVersion: "fiknow"
 home: https://github.com/finnofleet/ff-fiknow

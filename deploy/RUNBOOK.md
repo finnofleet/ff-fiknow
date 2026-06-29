@@ -205,7 +205,7 @@ Alternativ aus der **OCI-Registry** (die CI veröffentlicht das Chart nach jedem
 main-Build nach `oci://ghcr.io/finnofleet/charts/fiknow`):
 ```bash
 helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
-  --version 0.3.1 -f my-values.yaml \
+  --version 0.3.2 -f my-values.yaml \
   --namespace fiknow --create-namespace
 ```
 

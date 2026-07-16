@@ -66,11 +66,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/brand ./brand
 COPY --from=builder --chown=nextjs:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=nextjs:nodejs /app/migrations ./migrations
 
-# Ops-Scripts (plain .mjs ohne TS-Toolchain) für manuelle Aktionen via
-# Web-SSH, z.B. `node scripts/promote-admin.mjs <email>` für den ersten
-# Admin einer frischen Brand-DB.
-COPY --from=builder --chown=nextjs:nodejs /app/scripts/promote-admin.mjs ./scripts/promote-admin.mjs
-
 # Full node_modules (statt nur Next.js-Trace) — Payload-Migrations sind
 # .ts-Files mit eigenen package-Imports (@payloadcms/db-postgres etc.),
 # die Next's standalone-Tracer nicht erfasst. Ohne dies bricht

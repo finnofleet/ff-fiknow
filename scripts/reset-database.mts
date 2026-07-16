@@ -63,7 +63,7 @@ await sql.end();
 console.log(`\nDB '${target}' ist frisch und leer.`);
 if (newPw) {
   console.log(
-    "\n⚠️  PW geändert. Container-Env-Vars (App + GoTrue) in Jelastic " +
-      "jetzt updaten, sonst connecten die Container weiter mit dem alten PW.",
+    "\n⚠️  PW geändert. DATABASE_URL der App-Container jetzt updaten, " +
+      "sonst connecten die Container weiter mit dem alten PW.",
   );
 }

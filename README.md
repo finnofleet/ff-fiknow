@@ -136,7 +136,7 @@ payload/
   collections/          Payload-Collections (courses, sections, lessons,
                         learning-paths, media, users)
   access/               Rollen-basierte Zugriffskontrolle
-scripts/                Ops-Skripte (promote-admin.mjs, bootstrap-db.mjs)
+scripts/                Ops-Skripte (bootstrap-db.mjs u.a.)
 tooling/
   course-plugin/        KI-Kurs-Plugin (client.mjs, Beispiel-Kurs, Skills)
   keycloak/             Referenz-Realm (fiknow-realm.json) für lokalen Test
@@ -157,8 +157,11 @@ proxy.ts                Auth-Middleware (Session-Check + Protected Routes)
 | `npm run db:migrate` | Drizzle-Migrationen anwenden |
 | `npm run db:push` | Schema direkt pushen (Dev-Notfall; s. Warnung oben) |
 | `npm run db:studio` | Drizzle Studio öffnen |
-| `npm run admin:bootstrap` | Ersten Admin in frischer DB anlegen |
 | `npm run db:bootstrap` | DB-Bootstrap-Skript |
+
+> **Ersten Admin anlegen:** Rollen kommen aus Keycloak (Source of Truth), nicht
+> aus der DB — weise dem User im Realm die Rolle `fiknow-admin` zu (wird via
+> `OIDC_ROLE_MAP` beim Login auf die App-Rolle `admin` gemappt).
 
 ## Inhalte schreiben
 

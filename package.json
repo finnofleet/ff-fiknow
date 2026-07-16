@@ -14,7 +14,6 @@
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
-    "admin:bootstrap": "dotenv -e .env.local -- node scripts/promote-admin.mjs",
     "db:bootstrap": "node scripts/bootstrap-db.mjs",
     "test:e2e": "playwright test"
   },
@@ -34,7 +33,7 @@
     "jsdom": "^29.1.1",
     "lucide-react": "^1.8.0",
     "mcp-handler": "^1.1.0",
-    "next": "16.2.4",
+    "next": "16.2.10",
     "next-mdx-remote": "^6.0.0",
     "oauth4webapi": "^3.8.6",
     "payload": "^3.84.1",
@@ -56,9 +55,13 @@
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.4",
+    "eslint-config-next": "16.2.10",
     "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "undici": "7.28.0",
+    "ws": "8.21.0"
   }
 }

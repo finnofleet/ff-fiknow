@@ -1,0 +1,85 @@
+# ============================================================
+# FIKNOW — Helm-Werte für IBM Cloud (IKS, eu-de) — VORLAGE
+#
+# Das ist die committete Vorlage. Für den echten Deploy kopieren und die
+# <CLUSTER-ID>-Platzhalter durch den eigenen Cluster-Ingress-Host ersetzen:
+#   cp values-ibm-production.example.yaml values-ibm-production.yaml
+# Die reale values-ibm-production.yaml ist gitignored (bleibt lokal).
+#
+# Install:
+#   helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
+#     --version 0.3.2 -f deploy/helm/fiknow/values-ibm-production.yaml \
+#     --namespace fiknow
+#
+# Voraussetzungen (siehe deploy/RUNBOOK.md):
+#   - Secret  'fiknow-env'  (DATABASE_URL, PAYLOAD_SECRET, OIDC_CLIENT_SECRET,
+#                            OIDC_SESSION_SECRET) im Namespace fiknow
+#   - Secret  'ghcr-pull'   (docker-registry, GHCR) im Namespace fiknow
+#   - Secret  'fiknow-tls'  (Wildcard-Zert in den NS fiknow gebracht) im NS fiknow
+#   - PVC     'fiknow-data' (ReadWriteMany) im Namespace fiknow
+#   - Keycloak: confidential Client 'edu-platform' + Rollen-Claim-Mapper
+# ============================================================
+
+image:
+  repository: ghcr.io/finnofleet/ff-fiknow
+  # Gepinnt auf einen unveränderlichen main-<sha>-Tag (kein floating 'latest').
+  # Bei einem Update auf den neuen main-<sha> ziehen.
+  tag: main-c24e8b4
+
+# Package ist privat → Pull-Secret nötig.
+imagePullSecrets:
+  - name: ghcr-pull
+
+config:
+  # >>> TODO: Issuer-URL des zentralen Keycloak-Realms eintragen <<<
+  # Format: https://<keycloak-host>/realms/<realm>
+  OIDC_ISSUER: "https://keycloak.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud/realms/fiknow"
+
+  # Muss mit der Keycloak-Client-ID übereinstimmen (Chart-/RUNBOOK-Default).
+  OIDC_CLIENT_ID: edu-platform
+
+  # Keycloak-Rolle → App-Rolle. Alles ohne Treffer = learner.
+  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+
+  # Leer lassen → wird aus ingress.hosts[0] (https) abgeleitet:
+  # https://fiknow.bm-production-cluster-...-0000.eu-de.containers.appdomain.cloud
+  OIDC_REDIRECT_BASE: ""
+
+ingress:
+  enabled: true
+  className: public-iks-k8s-nginx
+  hosts:
+    - host: fiknow.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fiknow-tls
+      hosts:
+        - fiknow.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud
+
+# Secret wird extern verwaltet (NICHT vom Chart erzeugt).
+secret:
+  existingSecret: fiknow-env
+  create: false
+
+# Persistenter, geteilter Speicher für Payload-Medien (/data/media) und
+# Authoring-Bundles (/data/bundles). Bei ≥2 Replicas MUSS der PVC RWX sein.
+#
+# ┌─ IBM VPC File + non-root: PVC MUSS über eine uid/gid-StorageClass kommen ─┐
+# │ Der VPC-File-Share wird per root_squash als root:root gemountet (Anzeige  │
+# │ 65534:65534). Ein non-root-Pod (uid 1001) kann NICHT hineinschreiben, und │
+# │ es hilft KEIN SecurityContext-Trick: fsGroup wird bei RWX übersprungen    │
+# │ (CSI fsGroupPolicy=ReadWriteOnceWithFSType), und supplemental/primäre GID  │
+# │ greifen wegen root_squash nicht (empirisch verifiziert).                   │
+# │ Lösung: Share mit initial_owner uid=1001/gid=1001 provisionieren → er      │
+# │ gehört real 1001:1001, die Chart-Default-Identität (uid/gid 1001) passt.   │
+# │ StorageClass-Manifest: deploy/ibmcloud/storageclass-fiknow.yaml            │
+# │ Reprovisionierung + Details: deploy/RUNBOOK.md.                            │
+# └────────────────────────────────────────────────────────────────────────┘
+dataVolume:
+  type: pvc
+  existingClaim: fiknow-data    # PVC über die uid/gid-StorageClass (s. RUNBOOK)
+
+# Kein podSecurityContext-Override nötig: Die Chart-Defaults (runAsUser 1001,
+# runAsGroup 1001, fsGroup 1001) passen exakt zum Share-Owner 1001:1001.

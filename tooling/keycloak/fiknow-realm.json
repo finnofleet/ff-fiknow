@@ -1,0 +1,105 @@
+{
+  "realm": "fiknow",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "fiknow-curator", "description": "Kurator:in (→ App-Rolle curator)" },
+      { "name": "fiknow-admin", "description": "Admin (→ App-Rolle admin)" }
+    ]
+  },
+  "groups": [
+    {
+      "name": "FIKNOW",
+      "subGroups": [
+        { "name": "Curators", "realmRoles": ["fiknow-curator"] },
+        { "name": "Admins", "realmRoles": ["fiknow-admin"] }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "edu-platform",
+      "name": "edu-platform (FIKNOW)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "local-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3000/auth/oidc/callback"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm-roles-into-id-token",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "groups-into-id-token",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "curator@fiknow.test",
+      "email": "curator@fiknow.test",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Carla",
+      "lastName": "Curator",
+      "credentials": [
+        { "type": "password", "value": "curator@fiknow.test", "temporary": false }
+      ],
+      "realmRoles": ["fiknow-curator"]
+    },
+    {
+      "username": "admin@fiknow.test",
+      "email": "admin@fiknow.test",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Adam",
+      "lastName": "Admin",
+      "credentials": [
+        { "type": "password", "value": "admin@fiknow.test", "temporary": false }
+      ],
+      "realmRoles": ["fiknow-admin"]
+    },
+    {
+      "username": "learner@fiknow.test",
+      "email": "learner@fiknow.test",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Lea",
+      "lastName": "Learner",
+      "credentials": [
+        { "type": "password", "value": "learner@fiknow.test", "temporary": false }
+      ]
+    }
+  ]
+}

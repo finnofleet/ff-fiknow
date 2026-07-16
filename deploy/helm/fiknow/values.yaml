@@ -1,0 +1,214 @@
+# ============================================================
+# fiknow — Helm-Werte (Defaults)
+#
+# Minimal nötig für einen Deploy:
+#   - image.repository / image.tag
+#   - config.OIDC_* (Issuer, Client-ID, Rollen-Mapping)
+#   - ingress.hosts (öffentlicher Host) bzw. config.OIDC_REDIRECT_BASE
+#   - die Secrets (DATABASE_URL, PAYLOAD_SECRET, …) via existingSecret ODER
+#     secret.create + secret.data
+#
+# Ein einsatzfertiges Beispiel: values-fiknow-oidc.yaml
+# ============================================================
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/finnofleet/ff-fiknow
+  # IMMER explizit pinnen (kein implizites latest) — z. B. ein main-<sha>
+  # oder ein v-Tag für reproduzierbare Deploys.
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# ------------------------------------------------------------
+# Nicht-geheime Konfiguration → landet in einer ConfigMap und wird via
+# envFrom in den Container gereicht. Geheimes gehört in `secret` (s. u.).
+# ------------------------------------------------------------
+config:
+  # --- OIDC (Keycloak) — FIKNOW ist OIDC-only ---
+  OIDC_ISSUER: ""            # z. B. https://keycloak.example.com/realms/fiknow
+  OIDC_CLIENT_ID: edu-platform
+  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+  OIDC_SCOPES: "openid profile email"
+  # PFLICHT in Prod: öffentliche Basis-URL für die exakte redirect_uri.
+  # Die App leitet sie NICHT aus Request-Headern ab (fail-closed).
+  # Wird, wenn leer, aus ingress.hosts[0] abgeleitet (siehe _helpers).
+  OIDC_REDIRECT_BASE: ""
+  OIDC_SESSION_MAX_AGE_SEC: "28800"
+
+  # --- Datenbank-Pool ---
+  # Max. Connections je Pool und Pod. Drizzle- UND Payload-Pool nutzen den
+  # Wert, total also 2*DB_POOL_MAX pro Pod. Über alle Replicas unter dem
+  # max_connections-Limit der Managed-DB halten: 2 * DB_POOL_MAX * replicaCount.
+  DB_POOL_MAX: "5"
+
+  # --- Schreibpfade (bei readOnlyRootFilesystem zwingend auf ein Volume) ---
+  # Defaults zeigen auf das writable dataVolume (s. u.). Medien/Bundles sind
+  # NUR persistent/instanzübergreifend, wenn dataVolume.type=pvc (RWX) ist —
+  # mit emptyDir gehen sie bei Pod-Neustart verloren bzw. sind pro Pod isoliert.
+  MEDIA_STORAGE_DIR: /data/media
+  BUNDLE_STORAGE_DIR: /data/bundles
+
+  # Beliebige weitere nicht-geheime Env-Vars.
+  extra: {}
+
+# ------------------------------------------------------------
+# Geheime Konfiguration. Zwei Wege:
+#   1. existingSecret: Name eines bereits existierenden Secrets (EMPFOHLEN für
+#      Prod — via Sealed-Secrets / IBM Secrets Manager / External-Secrets
+#      bereitgestellt). Das Chart erzeugt dann KEIN Secret.
+#   2. create: true + data: Das Chart templated ein Secret aus diesen Werten.
+#      Bequem für Dev/Test, aber Klartext in values — in Prod meiden.
+#
+# Erwartete Keys:
+#   DATABASE_URL, PAYLOAD_SECRET                 (immer)
+#   OIDC_CLIENT_SECRET                           (Pflicht)
+#   OIDC_SESSION_SECRET                          (optional → fällt sonst auf
+#                                                 PAYLOAD_SECRET zurück)
+# ------------------------------------------------------------
+secret:
+  existingSecret: ""
+  create: true
+  data: {}
+    # DATABASE_URL: postgres://user:pass@host:5432/db?sslmode=require
+    # PAYLOAD_SECRET: <32+ random>
+    # OIDC_CLIENT_SECRET: <aus Keycloak>
+    # OIDC_SESSION_SECRET: <32+ random>
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ""              # z. B. app.fiknow.ch
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: fiknow-tls
+    #   hosts: [app.fiknow.ch]
+
+# ------------------------------------------------------------
+# Security: non-root erzwingen (Image läuft als uid 1001).
+# OpenShift-Hinweis: die restricted-SCC vergibt eine zufällige UID; dann
+# runAsUser entfernen (auf null setzen) und runAsNonRoot:true belassen.
+# ------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  # read-only Root-FS ist aktiv. Alle Schreibpfade kommen als emptyDir/Volume:
+  #   /app/.next/cache  (Next-Standalone ISR-Cache) — emptyDir
+  #   /tmp              (Temp-Uploads etc.)          — emptyDir
+  #   /data             (Medien/Bundles)             — dataVolume (s. u.)
+  # Falls eine Abhängigkeit doch in einen ungemounteten Pfad schreibt, hier
+  # auf false stellen — dann aber Begründung dokumentieren.
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# ------------------------------------------------------------
+# Writable Volumes (nötig wegen readOnlyRootFilesystem).
+# cache/tmp sind ephemer (emptyDir) — das ist korrekt, beides ist Wegwerf-State.
+# data hält Medien (Payload) + Authoring-Bundles:
+#   - type: emptyDir → ephemer & PRO POD (Default; ok ohne Medien/Authoring)
+#   - type: pvc      → persistent; für Medien/Authoring mit ≥2 Replicas einen
+#                      ReadWriteMany-Claim (RWX) verwenden.
+# ------------------------------------------------------------
+dataVolume:
+  type: emptyDir          # emptyDir | pvc
+  mountPath: /data
+  existingClaim: ""       # bei type=pvc: Name des (idealerweise RWX-)PVC
+  sizeLimit: 1Gi          # nur für type=emptyDir
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 768Mi
+
+# Probes:
+#   Startup   /api/health/ready — deckt das Auto-Migrate beim ersten Boot ab
+#             (bis 60*5s = 5min), bevor Liveness/Readiness greifen.
+#   Liveness  /api/health       — "Prozess lebt", KEIN DB-Zugriff (sonst würde
+#             ein DB-Ausfall Pods unnötig neustarten statt nur aus dem Service
+#             zu nehmen).
+#   Readiness /api/health/ready — echtes SELECT 1 gegen Postgres → 503 wenn DB
+#             weg ist, Pod fällt aus dem Service-Endpoint.
+startupProbe:
+  httpGet:
+    path: /api/health/ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 5
+  failureThreshold: 60
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /api/health/ready
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Optionales Content-Volume (MDX-Kurse). Für Brand-Images, die Content nicht
+# einbacken. Leer lassen = Image-Default/Brand-Overlay nutzen.
+contentVolume:
+  enabled: false
+  # claimName: fiknow-content   # bestehender PVC
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+# PodDisruptionBudget: hält bei freiwilligen Disruptions (Node-Drain, Upgrade)
+# mindestens 1 Pod verfügbar. Greift nur bei ≥2 Replicas sinnvoll — bei genau
+# 1 Replica würde minAvailable:1 jede Eviction blockieren, daher dann besser aus.
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable:   # Alternative zu minAvailable (nicht beides setzen)
+
+# Verteilt die Pods über Nodes (und, wenn gelabelt, Zonen). ScheduleAnyway =
+# weiche Regel: blockiert das Scheduling nicht, wenn die Topologie es nicht
+# hergibt (z. B. Single-Node-Cluster).
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

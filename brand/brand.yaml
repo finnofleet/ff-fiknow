@@ -1,0 +1,40 @@
+# ============================================================
+# FIKNOW — Brand-Konfiguration
+#
+# White-Label-Instanz der edu-platform für FINNOFLEET — geführte
+# Wissensvermittlung (Onboarding, Tool-Schulungen, interne Zertifizierungen,
+# Nutzerschulungen). Wird beim Container-Start gelesen und überschreibt
+# den verstande-Default aus dem Image.
+#
+# Schema-Doku: siehe edu-platform-Repo, docs/BRAND-CONFIG.md
+# ============================================================
+
+identity:
+  # FIKNOW ist einteilig (ohne Punkt) — wird daher in Primärfarbe
+  # uniform gerendert, kein dezent abgesetzter TLD-Teil.
+  name: FIKNOW
+  # FIKNOWs eigener Claim (deutsch, interne Zielgruppe). "Kurs" =
+  # zugleich Schiffsrichtung, Lernkurs und Idiom "Kurs geben"; das
+  # maritime Motiv knüpft bewusst an das Navigations-Thema der Gruppe an.
+  tagline: mit Wissen auf Kurs
+  description: Die Lernplattform von FINNOFLEET für geführte Wissensvermittlung — Onboarding, Tool-Schulungen, interne Zertifizierungen und mehr.
+  domain: fiknow-test.jcloud.ik-server.com
+  markLetter: F
+
+design:
+  # Sora ist die FINNOFLEET-Hausschrift Web (Brandbook 02.2.)
+  fontSet: sora
+  # FINNOFLEET-Grün #99FF33 als OKLCH (Pantone 375 C)
+  accent: 0.92 0.25 130
+  # Dunkelgrau aus Brandbook (#333333) — gibt ≈ 11:1 Kontrast auf Akzent
+  accentInk: 0.20 0.005 130
+
+hero:
+  intro: |
+    Geführte Wissensvermittlung statt loser Dokumentlinks —
+    kompakt aufbereitet, damit Teammitglieder neue Themen schnell
+    verstehen und Wissen leicht nachschlagen können.
+
+  # Hinweis: Die „Wo du anfangen kannst"-Kacheln auf der Landing
+  # werden ab edu-platform v0.x automatisch aus dem Kurs-Katalog
+  # (Payload) gezogen — keine statische Tile-Konfig mehr nötig.

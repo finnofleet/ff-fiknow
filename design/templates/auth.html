@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Anmelden</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  /* Variant A – split screen, editorial left */
+  #var-a { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+  .a-left {
+    padding: 48px; background: var(--bg-elev);
+    display: flex; flex-direction: column; justify-content: space-between;
+    border-right: 1px solid var(--line);
+    position: relative; overflow: hidden;
+  }
+  .a-left::after {
+    content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, var(--accent-soft), transparent 60%); opacity: 0.5; pointer-events: none;
+  }
+  .a-left > * { position: relative; }
+  .a-brand { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-size: 28px; letter-spacing: -0.015em; }
+  .a-brand .mk { width: 40px; height: 40px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-style: italic; font-weight: 500; font-size: 26px; }
+  .a-brand .tld { color: var(--ink-3); }
+
+  .a-quote { }
+  .a-quote .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; }
+  .a-quote blockquote { font-family: var(--font-display); font-size: 52px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 24px; max-width: 22ch; }
+  .a-quote blockquote em { color: var(--accent); }
+  .a-quote .attr { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+
+  .a-meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; display: flex; justify-content: space-between; }
+
+  .a-right { padding: 48px; display: flex; flex-direction: column; align-items: stretch; justify-content: center; }
+  .a-form-wrap { max-width: 400px; width: 100%; margin: 0 auto; }
+  .a-tabs { display: flex; gap: 2px; padding: 3px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 999px; margin-bottom: 40px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .a-tabs button { padding: 8px 16px; border-radius: 999px; color: var(--ink-3); flex: 1; transition: background 200ms, color 200ms; }
+  .a-tabs button.on { background: var(--ink); color: var(--bg); }
+
+  .a-form-head { margin-bottom: 32px; }
+  .a-form-head h1 { font-family: var(--font-display); font-size: 48px; letter-spacing: -0.02em; line-height: 1; margin: 0 0 10px; font-weight: 400; }
+  .a-form-head h1 em { color: var(--accent); }
+  .a-form-head p { color: var(--ink-3); font-size: 14px; margin: 0; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .field input {
+    width: 100%; padding: 14px 16px; background: var(--bg); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    font: inherit; font-size: 15px;
+    transition: border-color 200ms;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .field .hint { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+  .field .hint a { color: var(--accent); }
+
+  .submit { width: 100%; justify-content: center; margin-top: 12px; padding: 14px; }
+
+  .a-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+  .a-divider::before, .a-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .a-oauth { display: grid; gap: 8px; }
+  .a-oauth .btn { justify-content: center; padding: 12px; }
+
+  .a-foot { margin-top: 40px; font-size: 12px; color: var(--ink-3); text-align: center; }
+  .a-foot a { color: var(--ink-2); }
+
+  .form-state { display: none; }
+  .form-state.active { display: block; }
+
+  /* Variant B – centered card, editorial */
+  #var-b { min-height: 100vh; background: var(--bg); display: grid; place-items: center; padding: 48px; }
+  .b-card {
+    max-width: 480px; width: 100%;
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-xl);
+    padding: 48px; box-shadow: var(--shadow-lg);
+  }
+  .b-top { text-align: center; margin-bottom: 40px; }
+  .b-top .mk { width: 56px; height: 56px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 36px; margin: 0 auto 20px; }
+  .b-top h1 { font-family: var(--font-display); font-size: 40px; letter-spacing: -0.02em; line-height: 1; margin: 0 0 8px; font-weight: 400; }
+  .b-top h1 em { color: var(--accent); }
+  .b-top p { color: var(--ink-3); font-size: 14px; margin: 0; font-family: var(--font-display); font-style: italic; font-size: 16px; }
+
+  .b-modes { display: flex; justify-content: center; gap: 24px; margin-bottom: 40px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .b-modes button { color: var(--ink-3); padding-bottom: 8px; border-bottom: 2px solid transparent; transition: color 200ms, border-color 200ms; }
+  .b-modes button.on { color: var(--ink); border-color: var(--accent); }
+
+  .b-oauth { display: grid; gap: 10px; margin-bottom: 28px; }
+  .b-oauth .btn { justify-content: center; padding: 12px; }
+
+  .b-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+  .b-divider::before, .b-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .b-foot-note { margin-top: 24px; text-align: center; font-size: 13px; color: var(--ink-3); }
+  .b-foot-note a { color: var(--accent); }
+
+  .b-fine { margin-top: 24px; text-align: center; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink-4); text-transform: uppercase; }
+
+  /* Mode switch for Auth states */
+  .mode-switch {
+    position: fixed; top: 16px; right: 140px;
+    z-index: 999;
+    display: flex; gap: 2px; padding: 3px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 999px; box-shadow: var(--shadow-sm);
+    font-family: var(--font-mono); font-size: 10px;
+  }
+  .mode-switch button { padding: 6px 12px; border-radius: 999px; color: var(--ink-3); letter-spacing: 0.1em; text-transform: uppercase; }
+  .mode-switch button.on { background: var(--ink); color: var(--bg); }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+<div class="mode-switch">
+  <button data-m="login" class="on">Login</button>
+  <button data-m="register">Register</button>
+  <button data-m="forgot">Passwort</button>
+</div>
+
+<!-- VARIANT A -->
+<div id="var-a" class="variant active">
+  <aside class="a-left">
+    <div class="a-brand"><span class="mk">v</span>verstande<span class="tld">.ch</span></div>
+    <div class="a-quote">
+      <div class="k">● Manifest</div>
+      <blockquote>Nicht nur<br>gewusst.<br><em>Verstande.</em></blockquote>
+      <div class="attr">— verstande.ch</div>
+    </div>
+    <div class="a-meta">
+      <span>© 2026 verstande AG</span>
+      <span>Zürich · Bern · Paris</span>
+    </div>
+  </aside>
+
+  <main class="a-right">
+    <div class="a-form-wrap">
+
+      <div class="form-state active" data-state="login">
+        <div class="a-form-head">
+          <h1>Willkommen <em>zurück</em>.</h1>
+          <p>Weiter, wo du gestern warst.</p>
+        </div>
+        <div class="field"><label>E-Mail</label><input type="email" placeholder="marie@example.ch" value=""></div>
+        <div class="field">
+          <label>Passwort</label>
+          <input type="password" placeholder="••••••••">
+          <div class="hint" style="display: flex; justify-content: space-between;"><span>Mindestens 8 Zeichen</span><a href="#" onclick="setMode('forgot')">Vergessen?</a></div>
+        </div>
+        <a href="dashboard.html" class="btn btn-primary submit">Anmelden<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+        <div class="a-divider">Oder</div>
+        <div class="a-oauth">
+          <button class="btn btn-ghost">Weiter mit Google</button>
+          <button class="btn btn-ghost">Weiter mit Apple</button>
+        </div>
+        <div class="a-foot">Noch kein Konto? <a href="#" onclick="setMode('register')">Registrieren →</a></div>
+      </div>
+
+      <div class="form-state" data-state="register">
+        <div class="a-form-head">
+          <h1>Fang <em>an</em>.</h1>
+          <p>Drei Lektionen gratis. Keine Kreditkarte.</p>
+        </div>
+        <div class="field"><label>Name</label><input placeholder="Marie Krüger"></div>
+        <div class="field"><label>E-Mail</label><input type="email" placeholder="marie@example.ch"></div>
+        <div class="field">
+          <label>Passwort</label>
+          <input type="password" placeholder="Mindestens 8 Zeichen">
+          <div class="hint">Mindestens 8 Zeichen, ein Sonderzeichen.</div>
+        </div>
+        <a href="dashboard.html" class="btn btn-primary submit">Konto erstellen<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+        <div class="a-foot">Bereits Mitglied? <a href="#" onclick="setMode('login')">Anmelden →</a></div>
+      </div>
+
+      <div class="form-state" data-state="forgot">
+        <div class="a-form-head">
+          <h1>Passwort <em>vergessen</em>.</h1>
+          <p>Wir schicken dir einen Link zum Zurücksetzen.</p>
+        </div>
+        <div class="field"><label>E-Mail</label><input type="email" placeholder="marie@example.ch"></div>
+        <a href="#" class="btn btn-primary submit">Link anfordern<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+        <div class="a-foot"><a href="#" onclick="setMode('login')">← Zurück zur Anmeldung</a></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- VARIANT B -->
+<div id="var-b" class="variant">
+  <div class="b-card">
+    <div class="b-top">
+      <div class="mk">v</div>
+      <h1>verstande<em>.ch</em></h1>
+      <p>Nöd nur gwüsst. Verstande.</p>
+    </div>
+
+    <div class="b-modes">
+      <button data-m="login" class="on" onclick="setMode('login')">Anmelden</button>
+      <button data-m="register" onclick="setMode('register')">Registrieren</button>
+      <button data-m="forgot" onclick="setMode('forgot')">Passwort</button>
+    </div>
+
+    <div class="form-state active" data-state="login">
+      <div class="b-oauth">
+        <button class="btn btn-ghost">Weiter mit Google</button>
+        <button class="btn btn-ghost">Weiter mit Apple</button>
+      </div>
+      <div class="b-divider">Oder mit E-Mail</div>
+      <div class="field"><label>E-Mail</label><input type="email" placeholder="marie@example.ch"></div>
+      <div class="field"><label>Passwort</label><input type="password" placeholder="••••••••"></div>
+      <a href="dashboard.html" class="btn btn-primary submit">Anmelden<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+      <div class="b-foot-note"><a href="#" onclick="setMode('forgot')">Passwort vergessen?</a></div>
+    </div>
+
+    <div class="form-state" data-state="register">
+      <div class="b-oauth">
+        <button class="btn btn-ghost">Mit Google registrieren</button>
+        <button class="btn btn-ghost">Mit Apple registrieren</button>
+      </div>
+      <div class="b-divider">Oder mit E-Mail</div>
+      <div class="field"><label>Name</label><input placeholder="Marie Krüger"></div>
+      <div class="field"><label>E-Mail</label><input type="email" placeholder="marie@example.ch"></div>
+      <div class="field"><label>Passwort</label><input type="password" placeholder="Mindestens 8 Zeichen"></div>
+      <a href="dashboard.html" class="btn btn-primary submit">Konto erstellen<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+    </div>
+
+    <div class="form-state" data-state="forgot">
+      <p style="color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0 0 24px;">Trag deine E-Mail ein, wir schicken dir einen Link zum Zurücksetzen deines Passworts.</p>
+      <div class="field"><label>E-Mail</label><input type="email" placeholder="marie@example.ch"></div>
+      <a href="#" class="btn btn-primary submit">Link anfordern<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+      <div class="b-foot-note"><a href="#" onclick="setMode('login')">← Zurück</a></div>
+    </div>
+
+    <div class="b-fine">Durch die Nutzung akzeptierst du unsere AGB und Datenschutz.</div>
+  </div>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-auth-var') || 'a';
+  function setVar(v) {
+    localStorage.setItem('v-auth-var', v);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v));
+  }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+
+  const mBtns = document.querySelectorAll('.mode-switch button, .b-modes button');
+  function setMode(m) {
+    document.querySelectorAll('.mode-switch button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    document.querySelectorAll('.b-modes button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    document.querySelectorAll('.form-state').forEach(el => el.classList.toggle('active', el.dataset.state === m));
+  }
+  document.querySelectorAll('.mode-switch button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

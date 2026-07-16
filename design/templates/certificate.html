@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Zertifikat</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  body { min-height: 100vh; }
+  .page { max-width: 1120px; margin: 0 auto; padding: 48px; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  .topbar .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .topbar .brand .tld { color: var(--ink-3); font-size: 12px; }
+  .topbar .actions { display: flex; gap: 8px; }
+
+  /* Common hero banner */
+  .hero-banner {
+    padding: 28px 32px; margin-bottom: 32px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2));
+    border: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  }
+  .hero-banner .left { display: flex; gap: 18px; align-items: center; }
+  .hero-banner .seal {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    display: grid; place-items: center;
+    font-family: var(--font-display); font-style: italic; font-size: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .hero-banner .kicker {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 6px;
+  }
+  .hero-banner h1 { font-family: var(--font-display); font-size: 26px; margin: 0; letter-spacing: -0.01em; font-weight: 400; }
+  .hero-banner h1 em { color: var(--accent); }
+
+  /* ==================== VARIANT A – Certificate document ==================== */
+  .cert-doc {
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    aspect-ratio: 1.414 / 1; /* A4 landscape */
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    padding: 72px 88px;
+    display: grid; grid-template-rows: auto 1fr auto;
+  }
+  .cert-doc::before {
+    content: ''; position: absolute; inset: 28px;
+    border: 1px solid var(--line); border-radius: var(--r-lg);
+    pointer-events: none;
+  }
+  .cert-doc::after {
+    content: ''; position: absolute; inset: 34px;
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    pointer-events: none; opacity: 0.5;
+  }
+
+  .cert-head { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; }
+  .cert-head .brand-lg { display: flex; align-items: center; gap: 14px; }
+  .cert-head .brand-lg .mark {
+    width: 44px; height: 44px; border-radius: var(--r-md);
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-display); font-style: italic;
+    font-size: 28px; display: grid; place-items: center; line-height: 1;
+  }
+  .cert-head .brand-lg .tx { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; }
+  .cert-head .brand-lg .tx .tld { color: var(--ink-3); }
+  .cert-head .issued {
+    text-align: right;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .cert-head .issued .lg { font-family: var(--font-display); font-size: 15px; color: var(--ink); text-transform: none; letter-spacing: -0.01em; margin-top: 4px; }
+
+  .cert-body { display: grid; place-items: center; text-align: center; position: relative; z-index: 2; }
+  .cert-body .eyebrow {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .cert-body .this {
+    font-family: var(--font-display); font-style: italic;
+    font-size: 20px; color: var(--ink-3); margin-bottom: 20px;
+  }
+  .cert-body .name {
+    font-family: var(--font-display); font-size: 88px;
+    letter-spacing: -0.03em; line-height: 1; margin: 0 0 24px;
+    font-weight: 400;
+  }
+  .cert-body .body-copy {
+    font-family: var(--font-display); font-size: 20px; line-height: 1.5;
+    max-width: 60ch; color: var(--ink-2); margin: 0 0 20px;
+  }
+  .cert-body .course {
+    font-family: var(--font-display); font-style: italic;
+    font-size: 26px; color: var(--accent);
+  }
+  .cert-body .grade {
+    display: inline-flex; gap: 24px; margin-top: 24px;
+    padding: 12px 24px; border: 1px solid var(--line); border-radius: var(--r-full);
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .cert-body .grade strong { color: var(--positive); font-family: var(--font-mono); font-weight: 600; }
+
+  .cert-foot { display: grid; grid-template-columns: 1fr auto 1fr; gap: 48px; align-items: end; position: relative; z-index: 2; }
+  .cert-foot .sig { text-align: center; }
+  .cert-foot .sig .line {
+    font-family: 'Newsreader', serif; font-style: italic; font-size: 28px;
+    color: var(--accent); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cert-foot .sig .label {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .cert-foot .sig .name { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+
+  .cert-foot .medallion {
+    width: 84px; height: 84px; border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: grid; place-items: center;
+    color: var(--accent); position: relative;
+  }
+  .cert-foot .medallion::before {
+    content: ''; position: absolute; inset: 4px; border-radius: 50%;
+    border: 1px solid var(--accent); opacity: 0.4;
+  }
+  .cert-foot .medallion .v {
+    font-family: var(--font-display); font-style: italic; font-size: 36px; line-height: 1;
+  }
+
+  /* Verify strip below */
+  .verify-strip {
+    margin-top: 20px; padding: 18px 24px;
+    background: var(--bg-inset); border: 1px solid var(--line); border-radius: var(--r-md);
+    display: grid; grid-template-columns: 1fr auto auto auto; gap: 24px; align-items: center;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em;
+  }
+  .verify-strip .url { color: var(--ink); font-size: 12px; }
+  .verify-strip .hash { color: var(--ink-2); font-size: 11px; }
+
+  /* ==================== VARIANT B – Editorial recap + share cards ==================== */
+  .recap-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+
+  .recap-story { padding: 48px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-xl); }
+  .recap-story .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  .recap-story h2 { font-family: var(--font-display); font-size: 56px; letter-spacing: -0.025em; line-height: 1.05; margin: 0 0 24px; font-weight: 400; }
+  .recap-story h2 em { color: var(--accent); }
+  .recap-story p { font-family: var(--font-display); font-size: 19px; line-height: 1.55; color: var(--ink-2); margin: 0 0 16px; }
+  .recap-story p.small { font-family: var(--font-sans); font-size: 14px; color: var(--ink-3); }
+  .recap-story .divider {
+    height: 1px; background: var(--line); margin: 32px 0;
+    position: relative;
+  }
+  .recap-story .divider::before {
+    content: '✦'; position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-elev); padding: 0 12px; color: var(--accent); font-size: 14px;
+  }
+  .recap-story .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border-radius: var(--r-md); overflow: hidden; margin: 24px 0; }
+  .recap-story .stats .c { background: var(--bg-elev); padding: 18px; text-align: center; }
+  .recap-story .stats .n { font-family: var(--font-display); font-size: 32px; letter-spacing: -0.02em; }
+  .recap-story .stats .l { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-top: 4px; }
+
+  .recap-aside { display: flex; flex-direction: column; gap: 20px; }
+  .recap-ticket {
+    padding: 36px 32px; border-radius: var(--r-lg);
+    background: var(--ink); color: var(--bg);
+    position: relative;
+  }
+  [data-theme="light"] .recap-ticket { background: oklch(0.18 0.010 60); color: oklch(0.985 0.006 80); }
+  .recap-ticket::before, .recap-ticket::after {
+    content: ''; position: absolute; width: 24px; height: 24px;
+    background: var(--bg); border-radius: 50%;
+    top: 50%; transform: translateY(-50%);
+  }
+  .recap-ticket::before { left: -12px; }
+  .recap-ticket::after { right: -12px; }
+  .recap-ticket .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  .recap-ticket h3 { font-family: var(--font-display); font-size: 36px; letter-spacing: -0.02em; margin: 0 0 12px; font-weight: 400; }
+  .recap-ticket h3 em { color: var(--accent); }
+  .recap-ticket .row { display: grid; grid-template-columns: auto 1fr; gap: 14px 18px; margin-top: 24px; padding-top: 20px; border-top: 1px dashed rgba(255,255,255,0.15); font-size: 13px; }
+  [data-theme="light"] .recap-ticket .row { border-top-color: rgba(255,255,255,0.2); }
+  .recap-ticket .row .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.6; align-self: center; }
+  .recap-ticket .row .val { font-family: var(--font-display); font-size: 16px; }
+
+  .share-card {
+    padding: 28px; border: 1px solid var(--line); border-radius: var(--r-lg);
+    background: var(--bg-elev);
+  }
+  .share-card h4 { font-family: var(--font-display); font-size: 20px; margin: 0 0 6px; letter-spacing: -0.01em; font-weight: 400; }
+  .share-card p { color: var(--ink-3); font-size: 13px; margin: 0 0 18px; line-height: 1.5; }
+  .share-card .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .share-card .btns .btn { padding: 8px 14px; font-size: 12px; }
+
+  /* Variant switching */
+  .variant { display: none; }
+  .variant.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<div class="page">
+
+  <div class="topbar">
+    <a href="index.html" class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+    <div class="actions">
+      <a href="profile.html" class="btn btn-ghost">← Profil</a>
+      <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-share"/></svg>Teilen</button>
+      <button class="btn btn-primary"><svg class="icon"><use href="shared/icons.svg#i-download"/></svg>PDF herunterladen</button>
+    </div>
+  </div>
+
+  <div class="hero-banner">
+    <div class="left">
+      <div class="seal">✓</div>
+      <div>
+        <div class="kicker">Zertifikat · ausgestellt am 12. November 2024</div>
+        <h1>WSET Level 2 – <em>bestanden</em> mit 84 % (Merit)</h1>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-linkedin"/></svg>Zu LinkedIn</button>
+    </div>
+  </div>
+
+  <!-- VARIANT A – Classic certificate document -->
+  <div id="var-a" class="variant active">
+    <div class="cert-doc">
+      <div class="cert-head">
+        <div class="brand-lg">
+          <div class="mark">v</div>
+          <div class="tx">verstande<span class="tld">.ch</span></div>
+        </div>
+        <div class="issued">
+          Zertifikat № VS-2024-11-0847
+          <div class="lg">Ausgestellt am 12. November 2024</div>
+        </div>
+      </div>
+
+      <div class="cert-body">
+        <div>
+          <div class="eyebrow">● Zertifikat über den Abschluss</div>
+          <div class="this">Hiermit wird bestätigt, dass</div>
+          <h2 class="name">Marie <em>Hirschi</em></h2>
+          <p class="body-copy">
+            den Kurs erfolgreich absolviert und die Abschlussprüfung bestanden hat:
+          </p>
+          <div class="course">WSET Level 2 – Wines &amp; Spirits</div>
+          <div class="grade">
+            <span>Note · <strong>84 %</strong></span>
+            <span>Prädikat · <strong>Merit</strong></span>
+            <span>Dauer · <strong>28 h</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cert-foot">
+        <div class="sig">
+          <div class="line">Elena Caduff</div>
+          <div class="label">Lead Instructor · Sensorik</div>
+          <div class="name">Sommelière ASI</div>
+        </div>
+        <div class="medallion">
+          <div class="v">v</div>
+        </div>
+        <div class="sig">
+          <div class="line">Dr. Lukas Brändli</div>
+          <div class="label">Akademischer Direktor</div>
+          <div class="name">verstande.ch</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verify-strip">
+      <div>
+        <span style="text-transform: uppercase; letter-spacing: 0.16em;">Verifizieren ·</span>
+        <span class="url">verstande.ch/verify/VS-2024-11-0847</span>
+      </div>
+      <div class="hash">SHA-256 · a7f4···b2c9</div>
+      <div>Issued · 2024-11-12</div>
+      <div>Blockchain · Ethereum Mainnet</div>
+    </div>
+  </div>
+
+  <!-- VARIANT B – Editorial recap with story + shareable ticket -->
+  <div id="var-b" class="variant">
+    <div class="recap-wrap">
+      <div class="recap-story">
+        <div class="k">● Kursabschluss · Rückblick</div>
+        <h2>In 6&nbsp;Wochen<br>von 0 auf <em>Merit</em>.</h2>
+        <p>Marie, du hast am 1.&nbsp;Oktober mit Lektion 01 begonnen und am 11.&nbsp;November die Abschlussprüfung mit 84&nbsp;% absolviert. Das entspricht einem <em>Merit</em> – der zweithöchsten Auszeichnung im WSET-System.</p>
+        <div class="stats">
+          <div class="c"><div class="n">28 h</div><div class="l">Lernzeit</div></div>
+          <div class="c"><div class="n" style="color: var(--positive);">42/50</div><div class="l">Prüfung</div></div>
+          <div class="c"><div class="n">12</div><div class="l">Module</div></div>
+        </div>
+        <div class="divider"></div>
+        <p class="small">Ausgestellt am 12. November 2024. Zertifikat-Nr. <span class="mono">VS-2024-11-0847</span>. Öffentlich verifizierbar unter verstande.ch/verify.</p>
+      </div>
+
+      <div class="recap-aside">
+        <div class="recap-ticket">
+          <div class="k">● Share-Ticket für LinkedIn, Instagram, Print</div>
+          <h3>WSET <em>Level 2</em><br>bestanden.</h3>
+          <div class="row">
+            <span class="lbl">Name</span><span class="val">Marie Hirschi</span>
+            <span class="lbl">Kurs</span><span class="val">Wines &amp; Spirits</span>
+            <span class="lbl">Note</span><span class="val" style="color: var(--accent);">84 % · Merit</span>
+            <span class="lbl">Institut</span><span class="val">verstande.ch</span>
+            <span class="lbl">Datum</span><span class="val">12.&nbsp;11.&nbsp;2024</span>
+          </div>
+        </div>
+
+        <div class="share-card">
+          <h4>Öffentlich teilen</h4>
+          <p>Kopiere den öffentlichen Link oder poste direkt auf eine Plattform – das Zertifikat ist extern verifizierbar.</p>
+          <div class="btns">
+            <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-linkedin"/></svg>LinkedIn</button>
+            <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-share"/></svg>Instagram Story</button>
+            <button class="btn btn-ghost"><svg class="icon"><use href="shared/icons.svg#i-link"/></svg>Link kopieren</button>
+          </div>
+        </div>
+
+        <div class="share-card">
+          <h4>Nächste Schritte</h4>
+          <p>WSET Level 3 startet am 6. Januar 2025. Als Level-2-Absolventin erhältst du 15&nbsp;% Frühbucher-Rabatt.</p>
+          <div class="btns">
+            <a href="catalog.html" class="btn btn-primary">Zum Kurs<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-cert') || 'a';
+  function setVar(v) {
+    localStorage.setItem('v-cert', v);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v));
+  }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

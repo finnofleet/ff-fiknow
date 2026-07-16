@@ -1,0 +1,51 @@
+# ============================================================
+# FIKNOW — Custom StorageClass für IBM VPC File Storage (non-root)
+#
+# WARUM: Der Standard-Treiber legt Shares mit uid=0/gid=0 an → der Share-Root
+# gehört root:root und wird per NFS-root_squash als 65534:65534 gemountet. Ein
+# non-root-Pod (uid 1001) kann NICHT hineinschreiben; fsGroup wird bei RWX
+# übersprungen (CSI-fsGroupPolicy=ReadWriteOnceWithFSType) und Group-Tricks
+# greifen wegen root_squash nicht (alles empirisch verifiziert).
+#
+# LÖSUNG (IBM-dokumentiert): Der VPC-File-CSI-Treiber setzt über die
+# StorageClass-Parameter `uid`/`gid` den initial_owner des Shares beim Anlegen
+# — server-seitig, am root_squash vorbei. Mit uid=1001/gid=1001 gehört der
+# Share real 1001:1001, passend zur Chart-Default-Identität des Pods.
+#
+# Erlaubte Ranges (IBM): uid 1000–10000 = App-Bereich (1001 ok),
+# gid 100+ verfügbar (1001 ok).
+#
+# Diese Klasse ist eine 1:1-Kopie von `ibmc-vpc-file-retain-500-iops` —
+# GEÄNDERT sind ausschließlich `uid` und `gid` (0 → 1001).
+# ============================================================
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ibmc-vpc-file-fiknow-1001
+provisioner: vpc.file.csi.ibm.io
+mountOptions:
+  - hard
+  - nfsvers=4.1
+  - sec=sys
+parameters:
+  profile: dp2
+  iops: "500"
+  billingType: hourly
+  classVersion: "1"
+  encrypted: "false"
+  encryptionKey: ""
+  isENIEnabled: "true"
+  primaryIPAddress: ""
+  primaryIPID: ""
+  region: ""
+  resourceGroup: ""
+  securityGroupIDs: ""
+  subnetID: ""
+  tags: ""
+  zone: ""
+  # --- der eigentliche Fix: Share-Owner beim Provisionieren festnageln ---
+  uid: "1001"   # war "0" (root) → jetzt App-User
+  gid: "1001"   # war "0" (root) → jetzt App-Gruppe
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: true

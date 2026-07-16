@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Design-System</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 48px 120px; }
+  .topnav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 32px; margin-bottom: 64px; border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .topnav .brand-wm { display: flex; align-items: center; gap: 10px; }
+  .topnav .wm-mark {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--accent);
+    color: var(--accent-ink); display: grid; place-items: center;
+    font-family: var(--font-display); font-style: italic; font-weight: 500;
+  }
+  .topnav .wm-name { font-family: var(--font-display); letter-spacing: -0.01em; font-size: 20px; }
+  .topnav .wm-name .tld { color: var(--ink-3); }
+  .topnav a { color: var(--ink-3); transition: color 200ms; }
+  .topnav a:hover { color: var(--ink); }
+
+  /* Intro */
+  .intro {
+    display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 80px;
+    margin-bottom: 96px; align-items: start;
+  }
+  .intro h1 {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 72px; line-height: 1.02; letter-spacing: -0.025em;
+    margin: 24px 0 32px;
+  }
+  .intro .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent);
+  }
+  .intro p { color: var(--ink-2); font-size: 17px; line-height: 1.6; max-width: 44ch; }
+  .intro .side {
+    padding: 28px; border: 1px solid var(--line); border-radius: var(--r-lg);
+    background: var(--bg-elev);
+  }
+  .intro .side-card { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .intro .side-mark {
+    width: 56px; height: 56px; border-radius: var(--r-md);
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-display); font-style: italic; font-weight: 500;
+    font-size: 36px; display: grid; place-items: center; line-height: 1;
+  }
+  .intro .side-name { font-family: var(--font-display); font-size: 28px; letter-spacing: -0.02em; }
+  .intro .side-name .tld { color: var(--ink-3); }
+  .intro .side-tag { font-family: var(--font-display); font-style: italic; color: var(--ink-2); font-size: 16px; }
+  .intro .side dl { margin: 0; font-size: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .intro .side dt { color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.14em; font-size: 10px; font-family: var(--font-mono); margin-bottom: 4px; }
+  .intro .side dd { margin: 0; color: var(--ink); }
+
+  /* Section headers */
+  .sec { margin-top: 96px; }
+  .sec-hd {
+    display: flex; align-items: baseline; gap: 24px;
+    margin-bottom: 40px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
+  }
+  .sec-hd .num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; color: var(--ink-3); }
+  .sec-hd h2 { font-family: var(--font-display); font-weight: 400; font-size: 40px; letter-spacing: -0.02em; margin: 0; }
+  .sec-hd .desc { margin-left: auto; color: var(--ink-3); font-size: 14px; max-width: 36ch; }
+
+  /* Type specimens */
+  .specimens { display: grid; gap: 28px; }
+  .spec {
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 32px; padding: 28px 0; border-top: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .spec:first-child { border-top: none; }
+  .spec .label { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+  .spec .label small { display: block; margin-top: 4px; color: var(--ink-4); }
+
+  .t-display-xl { font-family: var(--font-display); font-weight: 400; font-size: 112px; line-height: 0.95; letter-spacing: -0.03em; }
+  .t-display-l  { font-family: var(--font-display); font-weight: 400; font-size: 72px;  line-height: 1;    letter-spacing: -0.025em; }
+  .t-display-m  { font-family: var(--font-display); font-weight: 400; font-size: 48px;  line-height: 1.05; letter-spacing: -0.02em; }
+  .t-prose      { font-size: 17px; line-height: 1.65; color: var(--ink-2); max-width: 56ch; }
+  .t-body       { font-size: 15px; line-height: 1.55; color: var(--ink); }
+  .t-caption    { font-size: 13px; color: var(--ink-3); }
+  .t-mono       { font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: -0.02em; }
+
+  /* Color swatches */
+  .swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .sw { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--bg-elev); }
+  .sw-color { height: 100px; }
+  .sw-meta { padding: 12px 14px; font-family: var(--font-mono); font-size: 11px; }
+  .sw-meta .name { color: var(--ink); letter-spacing: 0.04em; text-transform: uppercase; }
+  .sw-meta .val { color: var(--ink-3); margin-top: 4px; }
+
+  /* Palette rows */
+  .palette-row { display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center; padding: 16px 0; border-top: 1px solid var(--line); }
+  .palette-row:first-child { border-top: none; }
+  .palette-row .n { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+  .palette-bar { display: flex; gap: 4px; }
+  .palette-bar .c { flex: 1; height: 48px; border-radius: var(--r-sm); border: 1px solid var(--line); }
+
+  /* Tile grid */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .four-col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .demo-card {
+    padding: 24px; border: 1px solid var(--line); border-radius: var(--r-lg);
+    background: var(--bg-elev);
+  }
+  .demo-card .d-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 18px; }
+
+  /* Badges showcase */
+  .badge-showcase { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+  .ach-badge {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .ach-ring {
+    width: 80px; height: 80px; border-radius: 50%;
+    display: grid; place-items: center; position: relative;
+    background: var(--bg-elev-2); color: var(--accent);
+  }
+  .ach-ring.earned { background: var(--accent); color: var(--accent-ink); }
+  .ach-ring.locked { background: transparent; border: 2px dashed var(--line-strong); color: var(--ink-4); }
+  .ach-ring.progress { background: var(--bg-elev-2); color: var(--accent); }
+  .ach-ring svg.icon { width: 32px; height: 32px; }
+  .ach-ring .ring-svg {
+    position: absolute; inset: -4px; transform: rotate(-90deg);
+  }
+  .ach-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); font-family: var(--font-mono); }
+  .ach-label strong { color: var(--ink); display: block; font-weight: 600; }
+
+  /* Progress ring */
+  .ring-demo { display: flex; gap: 32px; align-items: center; }
+  .ring-demo svg { width: 72px; height: 72px; }
+
+  /* MDX components */
+  .callout {
+    display: flex; gap: 14px; padding: 16px 20px; border-radius: var(--r-md);
+    border: 1px solid var(--line); background: var(--bg-elev);
+    font-size: 14px; line-height: 1.55; color: var(--ink-2);
+    margin-bottom: 16px;
+  }
+  .callout .c-icon { color: var(--ink-3); flex-shrink: 0; margin-top: 2px; }
+  .callout.info { border-left: 3px solid var(--accent); }
+  .callout.info .c-icon { color: var(--accent); }
+  .callout.warning { border-left: 3px solid var(--warning); }
+  .callout.warning .c-icon { color: var(--warning); }
+  .callout.tip { border-left: 3px solid var(--positive); }
+  .callout.tip .c-icon { color: var(--positive); }
+  .callout .c-title { font-family: var(--font-display); font-size: 17px; color: var(--ink); margin-bottom: 4px; letter-spacing: -0.01em; }
+
+  .takeaways {
+    padding: 24px 28px; border-radius: var(--r-lg);
+    background: var(--bg-inset); border: 1px solid var(--line);
+  }
+  .takeaways .kx { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .takeaways h4 { font-family: var(--font-display); font-size: 22px; margin: 0 0 14px; letter-spacing: -0.01em; font-weight: 400; }
+  .takeaways ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .takeaways li { display: flex; gap: 10px; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+  .takeaways li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin-top: 10px; flex-shrink: 0; }
+
+  .question {
+    padding: 24px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-elev);
+  }
+  .question .q-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+  .question .q-text { font-family: var(--font-display); font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 18px; }
+  .q-opts { display: grid; gap: 8px; }
+  .q-opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--r-md);
+    font-size: 14px; color: var(--ink-2); cursor: pointer;
+    transition: border-color 200ms, background 200ms;
+  }
+  .q-opt:hover { border-color: var(--line-strong); }
+  .q-opt.correct { border-color: var(--positive); background: color-mix(in oklch, var(--positive) 12%, transparent); color: var(--ink); }
+  .q-opt .dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--line-strong); flex-shrink: 0; }
+  .q-opt.correct .dot { border-color: var(--positive); background: var(--positive); }
+
+  .figure {
+    border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
+    background: var(--bg-elev);
+  }
+  .figure .fig-body {
+    height: 200px; display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2));
+    color: var(--ink-3); font-family: var(--font-display); font-style: italic; font-size: 20px;
+  }
+  .figure .fig-cap {
+    padding: 14px 20px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--ink-3); line-height: 1.5;
+  }
+
+  .def-list dl { margin: 0; }
+  .def-list dt { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.01em; margin-top: 14px; }
+  .def-list dt:first-child { margin-top: 0; }
+  .def-list dd { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.55; }
+
+  .steps ol { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  .steps li {
+    counter-increment: step;
+    display: grid; grid-template-columns: 32px 1fr; gap: 14px; align-items: start;
+    padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  }
+  .steps li:last-child { border-bottom: none; padding-bottom: 0; }
+  .steps li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+    padding-top: 2px; letter-spacing: 0.04em;
+  }
+  .steps .s-t { font-family: var(--font-display); font-size: 17px; letter-spacing: -0.01em; }
+  .steps .s-b { color: var(--ink-3); font-size: 13px; line-height: 1.5; margin-top: 4px; }
+
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
+  .comparison .col { padding: 20px 24px; }
+  .comparison .col + .col { border-left: 1px solid var(--line); }
+  .comparison .col h5 { font-family: var(--font-display); font-size: 18px; margin: 0 0 10px; letter-spacing: -0.01em; font-weight: 400; }
+  .comparison .col .ticks { font-size: 13px; color: var(--ink-2); display: grid; gap: 6px; }
+  .comparison .col .ticks div { display: flex; gap: 8px; }
+
+  /* Icons showcase */
+  .icon-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .icon-grid .cell {
+    aspect-ratio: 1; display: grid; place-items: center;
+    background: var(--bg-elev); font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); gap: 6px; padding: 10px;
+    position: relative;
+  }
+  .icon-grid .cell svg.icon { width: 22px; height: 22px; color: var(--ink); }
+  .icon-grid .cell .n { text-align: center; letter-spacing: 0.04em; }
+
+  /* Button showcase */
+  .buttons { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+  /* Footer */
+  footer {
+    margin-top: 120px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="topnav">
+    <a href="index.html" class="brand-wm">
+      <span class="wm-mark">v</span>
+      <span class="wm-name">verstande<span class="tld">.ch</span></span>
+    </a>
+    <a href="index.html">← Alle Templates</a>
+  </div>
+
+  <section class="intro">
+    <div>
+      <div class="eyebrow"><span>●</span> Design-System · v0.2 · April 2026</div>
+      <h1>Ein ruhiger Raum,<br>um <em>tief</em> zu lernen.</h1>
+      <p>verstande.ch ist eine Schweizer Lernplattform für neugierige Erwachsene, die echte Prüfungen bestehen wollen – von Drohnen-Recht bis Wein-Theorie. Dieses Dokument beschreibt das visuelle und interaktive Fundament: Farben, Typografie, MDX-Bausteine, Icons, Badges.</p>
+    </div>
+    <div class="side">
+      <div class="side-card">
+        <div class="side-mark">v</div>
+        <div>
+          <div class="side-name">verstande<span class="tld">.ch</span></div>
+          <div class="side-tag">Nöd nur gwüsst. Verstande.</div>
+        </div>
+      </div>
+      <dl>
+        <div><dt>Sprache</dt><dd>Deutsch (CH)</dd></div>
+        <div><dt>Display</dt><dd>Newsreader</dd></div>
+        <div><dt>UI-Sans</dt><dd>Manrope</dd></div>
+        <div><dt>Mono</dt><dd>JetBrains Mono</dd></div>
+        <div><dt>Accent</dt><dd>Amber · OKLCH</dd></div>
+        <div><dt>Modus</dt><dd>Dunkel / Hell</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Typography -->
+  <section class="sec">
+    <div class="sec-hd">
+      <span class="num">01 / TYPE</span>
+      <h2>Typografie</h2>
+      <div class="desc">Newsreader für Display &amp; Ausdruck, Manrope für UI, JetBrains Mono für Meta.</div>
+    </div>
+    <div class="specimens">
+      <div class="spec"><div class="label">Display XL<small>Newsreader 112 / -0.03em</small></div><div class="t-display-xl">Verstande.</div></div>
+      <div class="spec"><div class="label">Display L<small>Newsreader 72 / -0.025em</small></div><div class="t-display-l">Echter <em>Wein</em>.</div></div>
+      <div class="spec"><div class="label">Display M<small>Newsreader 48 / -0.02em</small></div><div class="t-display-m">Kapitel vier · Frankreich</div></div>
+      <div class="spec"><div class="label">Prose<small>Manrope 17 / 1.65</small></div><div class="t-prose">Burgund ist keine Weinregion, sondern ein System aus winzigen Parzellen – „Climats" genannt – deren Grenzen seit dem Mittelalter kaum verändert wurden.</div></div>
+      <div class="spec"><div class="label">UI Body<small>Manrope 15 / 1.55</small></div><div class="t-body">Du hast 12 Tage in Folge gelernt. Mach einfach weiter.</div></div>
+      <div class="spec"><div class="label">Caption<small>Manrope 13</small></div><div class="t-caption">Zuletzt bearbeitet vor 2 Minuten · automatisch gespeichert</div></div>
+      <div class="spec"><div class="label">Mono<small>JetBrains Mono 13</small></div><div class="t-mono">courses/wset-l2/04-frankreich/02-burgund.mdx</div></div>
+    </div>
+  </section>
+
+  <!-- Colors -->
+  <section class="sec">
+    <div class="sec-hd">
+      <span class="num">02 / COLOR</span>
+      <h2>Farben</h2>
+      <div class="desc">OKLCH-basiert, zwei Themes. Accent (Amber) und Warning (Gelb) bewusst auseinandergehalten.</div>
+    </div>
+
+    <div class="palette-row">
+      <div class="n">Surfaces</div>
+      <div class="palette-bar">
+        <div class="c" style="background: var(--bg);" title="--bg"></div>
+        <div class="c" style="background: var(--bg-elev);" title="--bg-elev"></div>
+        <div class="c" style="background: var(--bg-elev-2);" title="--bg-elev-2"></div>
+        <div class="c" style="background: var(--bg-inset);" title="--bg-inset"></div>
+      </div>
+    </div>
+    <div class="palette-row">
+      <div class="n">Ink</div>
+      <div class="palette-bar">
+        <div class="c" style="background: var(--ink);"></div>
+        <div class="c" style="background: var(--ink-2);"></div>
+        <div class="c" style="background: var(--ink-3);"></div>
+        <div class="c" style="background: var(--ink-4);"></div>
+      </div>
+    </div>
+    <div class="palette-row">
+      <div class="n">Lines</div>
+      <div class="palette-bar">
+        <div class="c" style="background: var(--line);"></div>
+        <div class="c" style="background: var(--line-strong);"></div>
+      </div>
+    </div>
+    <div class="palette-row">
+      <div class="n">Status</div>
+      <div class="palette-bar">
+        <div class="c" style="background: var(--accent);" title="Accent · Amber · 70"></div>
+        <div class="c" style="background: var(--positive);" title="Positive · Grün · 150"></div>
+        <div class="c" style="background: var(--warning);" title="Warning · Gelb · 95"></div>
+        <div class="c" style="background: var(--danger);" title="Danger · Rot · 25"></div>
+      </div>
+    </div>
+
+    <div class="swatch-grid" style="margin-top: 40px;">
+      <div class="sw"><div class="sw-color" style="background: var(--accent);"></div><div class="sw-meta"><div class="name">Accent</div><div class="val">Amber · Hue 70</div></div></div>
+      <div class="sw"><div class="sw-color" style="background: var(--positive);"></div><div class="sw-meta"><div class="name">Positive</div><div class="val">Grün · Hue 150</div></div></div>
+      <div class="sw"><div class="sw-color" style="background: var(--warning);"></div><div class="sw-meta"><div class="name">Warning</div><div class="val">Gelb · Hue 95</div></div></div>
+      <div class="sw"><div class="sw-color" style="background: var(--danger);"></div><div class="sw-meta"><div class="name">Danger</div><div class="val">Rot · Hue 25</div></div></div>
+    </div>
+  </section>
+
+  <!-- Icons -->
+  <section class="sec">
+    <div class="sec-hd">
+      <span class="num">03 / ICONS</span>
+      <h2>Icons</h2>
+      <div class="desc">Line-Icons · Stroke 1.5 · 24 px Grid · currentColor.</div>
+    </div>
+    <div class="icon-grid">
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-book"/></svg><span class="n">book</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-play"/></svg><span class="n">play</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-quiz"/></svg><span class="n">quiz</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-check"/></svg><span class="n">check</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-lock"/></svg><span class="n">lock</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-flame"/></svg><span class="n">flame</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-award"/></svg><span class="n">award</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-compass"/></svg><span class="n">compass</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-clock"/></svg><span class="n">clock</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-note"/></svg><span class="n">note</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-search"/></svg><span class="n">search</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-user"/></svg><span class="n">user</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-filter"/></svg><span class="n">filter</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-star"/></svg><span class="n">star</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-target"/></svg><span class="n">target</span></div>
+      <div class="cell"><svg class="icon"><use href="shared/icons.svg#i-spark"/></svg><span class="n">spark</span></div>
+    </div>
+  </section>
+
+  <!-- Badges & Progress -->
+  <section class="sec">
+    <div class="sec-hd">
+      <span class="num">04 / BADGES</span>
+      <h2>Badges &amp; Fortschritt</h2>
+      <div class="desc">Spielerisch, aber ruhig. Drei Zustände: locked, in progress, earned.</div>
+    </div>
+    <div class="badge-showcase">
+      <div class="ach-badge">
+        <div class="ach-ring earned">
+          <svg class="icon"><use href="shared/icons.svg#i-flame"/></svg>
+        </div>
+        <div class="ach-label"><strong>12-Tage-Streak</strong>Earned</div>
+      </div>
+      <div class="ach-badge">
+        <div class="ach-ring progress">
+          <svg class="icon"><use href="shared/icons.svg#i-award"/></svg>
+          <svg class="ring-svg" viewBox="0 0 88 88"><circle cx="44" cy="44" r="42" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="264" stroke-dashoffset="66" stroke-linecap="round"/></svg>
+        </div>
+        <div class="ach-label"><strong>Erstes Zertifikat</strong>75 %</div>
+      </div>
+      <div class="ach-badge">
+        <div class="ach-ring">
+          <svg class="icon"><use href="shared/icons.svg#i-target"/></svg>
+        </div>
+        <div class="ach-label"><strong>Fokus-Woche</strong>Aktiv</div>
+      </div>
+      <div class="ach-badge">
+        <div class="ach-ring locked">
+          <svg class="icon"><use href="shared/icons.svg#i-lock"/></svg>
+        </div>
+        <div class="ach-label"><strong>Marathonläufer</strong>Locked</div>
+      </div>
+    </div>
+
+    <div class="ring-demo" style="margin-top: 40px;">
+      <!-- Ring progress small -->
+      <svg viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="32" fill="none" stroke="var(--line)" stroke-width="4"/>
+        <circle cx="36" cy="36" r="32" fill="none" stroke="var(--accent)" stroke-width="4" stroke-dasharray="201" stroke-dashoffset="56" stroke-linecap="round" transform="rotate(-90 36 36)"/>
+        <text x="36" y="40" text-anchor="middle" font-family="var(--font-mono)" font-size="14" fill="var(--ink)">72%</text>
+      </svg>
+      <div>
+        <div style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em;">Ring-Progress</div>
+        <div style="color: var(--ink-3); font-size: 13px; margin-top: 4px;">Für Kurs-Fortschritt auf Cards, wo eine Linear-Bar zu laut wäre.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MDX Components -->
+  <section class="sec">
+    <div class="sec-hd">
+      <span class="num">05 / MDX</span>
+      <h2>MDX-Bausteine</h2>
+      <div class="desc">Die Komponenten, die in jedem Reading-Content zur Verfügung stehen.</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px;">Callout · info</div>
+        <div class="callout info">
+          <svg class="icon c-icon" style="width:20px; height:20px;"><use href="shared/icons.svg#i-spark"/></svg>
+          <div>
+            <div class="c-title">Climats sind keine Rebsorten.</div>
+            Sie bezeichnen einzelne Weinberg-Parzellen mit eigenem Mikroklima und eigenen Böden.
+          </div>
+        </div>
+
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin: 24px 0 16px;">Callout · warning</div>
+        <div class="callout warning">
+          <svg class="icon c-icon" style="width:20px; height:20px;"><use href="shared/icons.svg#i-target"/></svg>
+          <div>
+            <div class="c-title">Häufige Prüfungsfalle</div>
+            Pommard ist eine Gemeinde, kein Grand Cru. Merk dir: In Burgund gibt's keine Grand Crus auf Gemeinde-Ebene.
+          </div>
+        </div>
+
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin: 24px 0 16px;">Callout · tip</div>
+        <div class="callout tip">
+          <svg class="icon c-icon" style="width:20px; height:20px;"><use href="shared/icons.svg#i-compass"/></svg>
+          <div>
+            <div class="c-title">Gedächtnishaken</div>
+            Von Nord nach Süd: <strong>C</strong>hablis · <strong>C</strong>ôte de Nuits · <strong>C</strong>ôte de Beaune · <strong>C</strong>halonnaise · <strong>M</strong>âconnais – alle mit „C" außer dem letzten.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px;">KeyTakeaways</div>
+        <div class="takeaways">
+          <div class="kx">● Das Wichtigste</div>
+          <h4>Burgund in drei Sätzen.</h4>
+          <ul>
+            <li>Eine einzige rote (Pinot Noir) und eine einzige weiße (Chardonnay) Rebsorte dominieren die Region.</li>
+            <li>Vier Qualitätsstufen: Régionale, Village, Premier Cru, Grand Cru.</li>
+            <li>Climats – Einzellagen – sind das entscheidende Konzept.</li>
+          </ul>
+        </div>
+
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin: 32px 0 16px;">Question</div>
+        <div class="question">
+          <div class="q-eyebrow">Inline · Single Choice</div>
+          <div class="q-text">Welche Rebsorte dominiert die <em>roten</em> Weine Burgunds?</div>
+          <div class="q-opts">
+            <div class="q-opt"><span class="dot"></span>Merlot</div>
+            <div class="q-opt correct"><span class="dot"></span>Pinot Noir</div>
+            <div class="q-opt"><span class="dot"></span>Gamay</div>
+            <div class="q-opt"><span class="dot"></span>Cabernet Franc</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top: 40px;">
+      <div>
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px;">Figure</div>
+        <div class="figure">
+          <div class="fig-body">Karte · Côte d'Or</div>
+          <div class="fig-cap">Abb. 1 – Die Côte d'Or zieht sich 50 km von Dijon bis Santenay, ein schmales Kalkstein-Band im Osten.</div>
+        </div>
+
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin: 32px 0 16px;">Steps</div>
+        <div class="steps demo-card" style="padding: 24px;">
+          <ol>
+            <li><div><div class="s-t">Region &amp; Klima</div><div class="s-b">Wo liegt Burgund, warum genau dort.</div></div></li>
+            <li><div><div class="s-t">Rebsorten &amp; Terroir</div><div class="s-b">Pinot Noir, Chardonnay und die Rolle des Kalksteins.</div></div></li>
+            <li><div><div class="s-t">Die Qualitätspyramide</div><div class="s-b">Régionale → Village → Premier Cru → Grand Cru.</div></div></li>
+            <li><div><div class="s-t">Kurzes Quiz</div><div class="s-b">Fünf Fragen, drei Minuten.</div></div></li>
+          </ol>
+        </div>
+      </div>
+      <div>
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px;">DefinitionList</div>
+        <div class="def-list demo-card">
+          <dl>
+            <dt>Climat</dt>
+            <dd>Eine exakt abgegrenzte Weinberg-Parzelle mit eigener Identität. Seit 2015 UNESCO-Welterbe.</dd>
+            <dt>Monopole</dt>
+            <dd>Ein Climat, das einem einzigen Weingut gehört – z. B. Romanée-Conti.</dd>
+            <dt>Négociant</dt>
+            <dd>Handelshaus, das Trauben oder Most zukauft und unter eigenem Namen ausbaut.</dd>
+          </dl>
+        </div>
+
+        <div class="d-label" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin: 32px 0 16px;">Comparison</div>
+        <div class="comparison">
+          <div class="col">
+            <h5>Côte de Nuits</h5>
+            <div class="ticks">
+              <div>Fokus: Pinot Noir</div>
+              <div>24 Grand Crus (fast alle rot)</div>
+              <div>Struktur, Eleganz, Langlebigkeit</div>
+            </div>
+          </div>
+          <div class="col">
+            <h5>Côte de Beaune</h5>
+            <div class="ticks">
+              <div>Fokus: Chardonnay</div>
+              <div>8 Grand Crus (7 weiß, 1 rot)</div>
+              <div>Cremig, mineralisch, offen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Buttons & Atoms -->
+  <section class="sec">
+    <div class="sec-hd">
+      <span class="num">06 / ATOMS</span>
+      <h2>Atome</h2>
+      <div class="desc">Buttons, Chips, Badges, Progress-Bars. Die kleinsten gemeinsamen Teile.</div>
+    </div>
+    <div class="three-col">
+      <div class="demo-card">
+        <div class="d-label">Buttons</div>
+        <div class="buttons">
+          <button class="btn btn-primary">Jetzt einschreiben</button>
+          <button class="btn btn-ghost">Vorschau</button>
+          <button class="btn btn-primary"><svg class="icon" style="width:14px;height:14px;"><use href="shared/icons.svg#i-play"/></svg>Weiterlernen</button>
+        </div>
+      </div>
+      <div class="demo-card">
+        <div class="d-label">Chips</div>
+        <div class="buttons">
+          <span class="chip">Weinkunde</span>
+          <span class="chip"><svg class="icon" style="width:12px;height:12px;"><use href="shared/icons.svg#i-clock"/></svg>45 Min</span>
+          <span class="chip">Mittel</span>
+          <span class="chip">Deutsch · EN</span>
+        </div>
+      </div>
+      <div class="demo-card">
+        <div class="d-label">Badges</div>
+        <div class="buttons">
+          <span class="badge badge-soft">Kapitel 04</span>
+          <span class="badge badge-accent">Neu</span>
+          <span class="badge badge-positive">Bestanden</span>
+        </div>
+      </div>
+    </div>
+    <div class="demo-card" style="margin-top: 20px;">
+      <div class="d-label">Progress-Bar</div>
+      <div class="progress-bar" style="max-width: 400px; margin-bottom: 14px;"><span style="width: 65%;"></span></div>
+      <div class="mono" style="color: var(--ink-3); font-size: 12px;">65 % · 13 von 20 Lektionen</div>
+    </div>
+  </section>
+
+  <footer>
+    <div>verstande.ch Design-System · 0.2 · April 2026</div>
+    <div class="mono">~/design-system</div>
+  </footer>
+
+</div>
+
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

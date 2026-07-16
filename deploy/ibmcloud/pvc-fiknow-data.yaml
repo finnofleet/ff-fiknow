@@ -1,0 +1,23 @@
+# ============================================================
+# FIKNOW — PVC für /data (Payload-Medien + Authoring-Bundles)
+#
+# Nutzt die uid/gid-StorageClass (ibmc-vpc-file-fiknow-1001), damit der
+# Share-Root real 1001:1001 gehört und der non-root-Pod schreiben kann.
+# RWX ist Pflicht, weil ≥2 Replicas denselben Speicher teilen.
+#
+# Anlegen NUR nach `kubectl apply -f storageclass-fiknow.yaml` und nachdem der
+# alte PVC `fiknow-data` entfernt wurde (siehe RUNBOOK). Bei leerem /data ohne
+# Datenverlust.
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fiknow-data
+  namespace: fiknow
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ibmc-vpc-file-fiknow-1001
+  resources:
+    requests:
+      storage: 20Gi

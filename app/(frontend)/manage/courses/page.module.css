@@ -1,0 +1,261 @@
+/* ------------------------------------------------------------------ */
+/* Shared structural classes — analog manage/users/page.module.css     */
+/* ------------------------------------------------------------------ */
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--ink);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kicker {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.lede {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Course list                                                          */
+/* ------------------------------------------------------------------ */
+
+.courseList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-2);
+  font-size: 14px;
+  border: 1px dashed var(--ink-3);
+  border-radius: 10px;
+}
+
+.emptyLink {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.emptyLink:hover {
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------ */
+/* Course row                                                           */
+/* ------------------------------------------------------------------ */
+
+.courseRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border: 1px solid var(--ink-3);
+  border-radius: 10px;
+  background: var(--bg-2);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .courseRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.courseMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.courseIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.courseTitle {
+  font-weight: 500;
+}
+
+.courseSlug {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+}
+
+.courseMeta {
+  font-size: 11px;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+}
+
+/* ------------------------------------------------------------------ */
+/* Actions bar                                                          */
+/* ------------------------------------------------------------------ */
+
+.courseActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* Status badge                                                         */
+/* ------------------------------------------------------------------ */
+
+.statusBadge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--ink-3);
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+.statusPublished {
+  background: color-mix(in oklch, var(--accent) 20%, var(--bg));
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.statusDraft {
+  background: var(--bg-2);
+  border-color: var(--ink-3);
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                              */
+/* ------------------------------------------------------------------ */
+
+.publishBtn,
+.unpublishBtn,
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--ink-3);
+  background: var(--bg);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.publishBtn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.unpublishBtn:hover:not(:disabled) {
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+.deleteBtn:hover:not(:disabled) {
+  border-color: rgba(220, 80, 80, 0.5);
+  color: rgb(180, 60, 60);
+  background: rgba(220, 80, 80, 0.05);
+}
+
+.publishBtn:disabled,
+.unpublishBtn:disabled,
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tutor toggle                                                         */
+/* ------------------------------------------------------------------ */
+
+.tutorLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.tutorCheckbox {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.tutorCheckbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------------------ */
+/* Error feedback                                                       */
+/* ------------------------------------------------------------------ */
+
+.rowError {
+  grid-column: 1 / -1;
+  padding: 8px 12px;
+  background: rgba(220, 80, 80, 0.1);
+  border-radius: 6px;
+  color: rgb(180, 60, 60);
+  font-size: 12px;
+}

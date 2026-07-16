@@ -1,0 +1,511 @@
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ----- Top bar ----- */
+.topNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 20;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+  /* Höhe des Brand-Logo-SVGs im Logo-Mode (kompakt für Lesson-Header). */
+  --brand-logo-h: 24px;
+}
+.mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 1;
+}
+.name {
+  display: inline-flex;
+  align-items: baseline;
+}
+.tld {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.crumb {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crumb a {
+  color: var(--ink-3);
+  transition: color var(--dur);
+}
+.crumb a:hover {
+  color: var(--ink-2);
+}
+.crumbSep {
+  margin: 0 8px;
+  opacity: 0.5;
+}
+.crumbCurrent {
+  color: var(--ink);
+}
+.topMeta {
+  font-size: 12px;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+.topProgress {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--line);
+}
+.topProgress > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--dur-slow) var(--ease);
+}
+
+.draftStrip {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 12.5px;
+  line-height: 1.4;
+  text-align: center;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.draftStrip strong {
+  font-weight: 700;
+}
+
+/* ----- Three-column layout ----- */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 340px;
+  min-height: calc(100vh - 57px);
+}
+
+/* ----- Sidebar ----- */
+.sidebar {
+  border-right: 1px solid var(--line);
+  padding: 32px 24px;
+  overflow-y: auto;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+}
+.courseHead {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+.courseKicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+.courseTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.courseProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.pb {
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pb > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.chap {
+  margin-bottom: 20px;
+}
+.chap h5 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 8px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.chap ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chap li a {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.35;
+  transition: background var(--dur), color var(--dur);
+}
+.chap li a:hover {
+  background: var(--bg-elev);
+  color: var(--ink);
+}
+/* Status-Indikator als lucide-Icon (Circle / CircleDot / CircleCheck) — kein
+   handgezeichneter Dot mehr. Farbe via currentColor pro Status; Größe kommt
+   vom size-Prop. */
+.lessonIcon {
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: var(--line-strong);
+  transition: color var(--dur);
+}
+.cur {
+  background: var(--bg-elev-2);
+  color: var(--ink) !important;
+  border-left: 2px solid var(--accent);
+  padding-left: 12px !important;
+  margin-left: -12px !important;
+}
+/* Aktuell: „du bist hier" — CircleDot in Akzentfarbe. Die Zeile selbst ist
+   zusätzlich durch Rahmen + Highlight + Ink-Text markiert, deshalb genügt für
+   das Icon die Farbe (kein !important nötig: die direkte Icon-Regel schlägt
+   den geerbten Link-Color). */
+.cur .lessonIcon {
+  color: var(--accent);
+}
+.done {
+  color: var(--ink-3) !important;
+}
+/* Erledigt + gestartet nutzen den Brand-Akzent (nicht --positive), sonst
+   beissen sich auf grünen Brands zwei Grüntöne (Lime-Accent vs See-Grün-
+   Positive). CircleCheck (erledigt) vs CircleDot (gestartet/aktuell) trennt
+   die Zustände über die Icon-Form. */
+.done .lessonIcon,
+.started .lessonIcon {
+  color: var(--accent);
+}
+
+/* ----- Reading column ----- */
+.read {
+  padding: 72px 88px 120px;
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 20px;
+}
+
+/* ----- Prose styles for MDX output ----- */
+.prose h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 64px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+}
+.prose h1 em {
+  color: var(--accent-text);
+}
+.prose h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  margin: 56px 0 20px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+.prose h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  margin: 40px 0 14px;
+  font-weight: 400;
+}
+.prose p {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+.prose p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.prose ul,
+.prose ol {
+  margin: 0 0 24px;
+  padding-left: 24px;
+}
+.prose li {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 6px 0;
+}
+.prose a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--bg-inset);
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+}
+.prose blockquote {
+  margin: 32px 0;
+  padding: 0 0 0 24px;
+  border-left: 2px solid var(--accent);
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+/* ----- Tabellen (Markdown/GFM) ----- */
+/* Brandbook-Konvention: nur horizontale Linien, keine vertikalen; Zahlen
+   rechtsbündig (via `---:`); gefettete Zellen = Summen. Tokens passen
+   automatisch zu beiden Brands + Light/Dark. */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 28px 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.prose thead th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 11px 16px;
+  border-bottom: 2px solid var(--line-strong);
+}
+.prose tbody td {
+  padding: 11px 16px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+}
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+.prose tbody tr:hover td {
+  background: var(--bg-elev);
+}
+.prose tbody td strong {
+  color: var(--ink);
+}
+/* GFM-Spaltenausrichtung (Fallback, falls align-Attribut statt inline-style) */
+.prose th[align="right"],
+.prose td[align="right"] {
+  text-align: right;
+}
+.prose th[align="center"],
+.prose td[align="center"] {
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    font-size: 13.5px;
+  }
+}
+
+/* ----- Bottom nav ----- */
+.bottomNav {
+  margin: 80px 0 0;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: stretch;
+}
+.bottomLink {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  display: block;
+  transition: border-color var(--dur);
+}
+.bottomLink:hover {
+  border-color: var(--accent);
+}
+.bottomNext {
+  text-align: right;
+}
+.bottomKicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+}
+.bottomTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.completeForm {
+  display: flex;
+  align-items: stretch;
+}
+.completeBtn {
+  padding: 18px 24px;
+  font-size: 14px;
+  border-radius: var(--r-md);
+  width: 100%;
+  justify-content: center;
+}
+
+.lessonFoot {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+.lessonFootSep {
+  opacity: 0.5;
+}
+
+/* ----- Tools rail ----- */
+.tools {
+  border-left: 1px solid var(--line);
+  padding: 72px 20px;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toolsHeading {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+.toolBtn {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  color: var(--ink-3);
+  font-size: 12px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  transition: background var(--dur), color var(--dur);
+}
+.toolBtn:not(:disabled):hover {
+  background: var(--bg-elev);
+  color: var(--ink);
+}
+.toolBtn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 260px 1fr;
+  }
+  .tools {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none;
+  }
+  .read {
+    padding: 40px 24px 80px;
+  }
+  .prose h1 {
+    font-size: 40px;
+  }
+  .prose h2 {
+    font-size: 26px;
+  }
+}

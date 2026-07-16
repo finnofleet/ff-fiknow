@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Lesson · Quiz</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  .lsn-top { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 20; }
+  .lsn-top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  .lsn-top .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .lsn-top .brand .tld { color: var(--ink-3); font-size: 12px; }
+  .lsn-top .crumb { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+  .lsn-top .crumb .cur { color: var(--ink); }
+  .lsn-top .right { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-3); }
+  .lsn-top .progress-bar { position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--line); }
+  .lsn-top .progress-bar span { height: 2px; background: var(--accent); }
+
+  /* Variant A – sidebar + question-by-question */
+  .a-layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 57px); }
+  .a-side { border-right: 1px solid var(--line); padding: 32px 24px; background: var(--bg-elev); }
+  .a-side .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .a-side h2 { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.01em; margin: 0 0 32px; font-weight: 400; }
+  .a-side .step-track { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 32px; }
+  .a-side .step { aspect-ratio: 1; border-radius: var(--r-sm); border: 1.5px solid var(--line); display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+  .a-side .step.done { background: var(--positive); border-color: var(--positive); color: var(--bg); }
+  .a-side .step.wrong { background: var(--danger); border-color: var(--danger); color: var(--bg); }
+  .a-side .step.cur { border-color: var(--accent); color: var(--accent); }
+  .a-side .meta-line { padding: 14px 0; border-top: 1px solid var(--line); font-size: 13px; display: flex; justify-content: space-between; color: var(--ink-3); }
+  .a-side .meta-line .v { color: var(--ink); font-family: var(--font-mono); }
+
+  .a-main { max-width: 760px; margin: 0 auto; padding: 72px 48px 120px; width: 100%; }
+  .a-eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: flex; gap: 16px; align-items: center; }
+  .a-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .a-question { font-family: var(--font-display); font-size: 48px; letter-spacing: -0.02em; line-height: 1.05; font-weight: 400; margin: 0 0 40px; }
+  .a-question em { color: var(--accent); }
+
+  .a-opts { display: grid; gap: 12px; margin-bottom: 32px; }
+  .a-opt {
+    display: flex; gap: 18px; padding: 20px 24px;
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    background: var(--bg-elev); cursor: pointer;
+    transition: border-color 200ms, background 200ms;
+  }
+  .a-opt:hover { border-color: var(--line-strong); }
+  .a-opt .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-3); min-width: 24px; padding-top: 2px; }
+  .a-opt .t { font-size: 17px; color: var(--ink); line-height: 1.45; }
+  .a-opt .ic { margin-left: auto; color: var(--ink-3); align-self: center; }
+  .a-opt.selected { border-color: var(--accent); background: var(--bg-elev-2); }
+  .a-opt.correct { border-color: var(--positive); background: color-mix(in oklch, var(--positive) 10%, var(--bg-elev)); }
+  .a-opt.correct .ic { color: var(--positive); }
+  .a-opt.wrong { border-color: var(--danger); background: color-mix(in oklch, var(--danger) 10%, var(--bg-elev)); }
+  .a-opt.wrong .ic { color: var(--danger); }
+
+  .a-explain {
+    padding: 24px 28px; border-radius: var(--r-lg);
+    background: var(--bg-inset); border: 1px solid var(--line);
+    border-left: 3px solid var(--positive);
+    margin-bottom: 32px;
+  }
+  .a-explain .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--positive); margin-bottom: 10px; }
+  .a-explain h4 { font-family: var(--font-display); font-size: 22px; margin: 0 0 10px; letter-spacing: -0.01em; font-weight: 400; }
+  .a-explain p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+
+  .a-nav-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 1px solid var(--line); }
+  .a-nav-bottom .skip { color: var(--ink-3); font-size: 13px; }
+
+  /* Variant B – minimal flashcard, centered */
+  #var-b { min-height: 100vh; display: flex; flex-direction: column; }
+  .b-top { display: flex; justify-content: space-between; align-items: center; padding: 24px 40px; border-bottom: 1px solid var(--line); }
+  .b-top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  .b-top .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .b-top .step-dots { display: flex; gap: 6px; }
+  .b-top .step-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .b-top .step-dots span.done { background: var(--positive); }
+  .b-top .step-dots span.cur { background: var(--accent); width: 24px; border-radius: 999px; }
+  .b-top .score { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+  .b-top .score strong { color: var(--positive); font-weight: 600; }
+
+  .b-stage { flex: 1; display: grid; place-items: center; padding: 48px; }
+  .b-card {
+    max-width: 720px; width: 100%;
+    padding: 56px; border: 1px solid var(--line); border-radius: var(--r-xl);
+    background: var(--bg-elev); box-shadow: var(--shadow-lg);
+    text-align: center; position: relative;
+  }
+  .b-card .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; }
+  .b-card h2 { font-family: var(--font-display); font-size: 44px; letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 40px; font-weight: 400; }
+  .b-card h2 em { color: var(--accent); }
+
+  .b-card .fig {
+    height: 180px; border-radius: var(--r-md); margin-bottom: 32px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2));
+    display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-display); font-style: italic; font-size: 20px;
+  }
+
+  .b-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .b-opt {
+    padding: 20px; border: 1px solid var(--line); border-radius: var(--r-md);
+    background: var(--bg); cursor: pointer;
+    display: flex; gap: 14px; align-items: center; text-align: left;
+    transition: all 200ms;
+  }
+  .b-opt:hover { border-color: var(--line-strong); }
+  .b-opt .k { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.12em; width: 20px; }
+  .b-opt .t { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.01em; }
+  .b-opt.correct { border-color: var(--positive); background: color-mix(in oklch, var(--positive) 12%, var(--bg)); }
+  .b-opt.wrong { border-color: var(--danger); background: color-mix(in oklch, var(--danger) 12%, var(--bg)); }
+
+  .b-foot { padding: 24px 40px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .b-foot .tips { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .b-foot .tips kbd { padding: 2px 6px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 4px; color: var(--ink-2); margin: 0 2px; }
+
+  /* Results mode */
+  .result-hero { text-align: center; }
+  .result-hero .big-n { font-family: var(--font-display); font-size: 160px; letter-spacing: -0.04em; line-height: 1; color: var(--positive); margin: 0; }
+  .result-hero .big-n em { color: var(--ink-3); font-size: 80px; }
+  .result-hero .state {
+    display: inline-block; padding: 6px 14px; border-radius: 999px;
+    background: var(--positive); color: var(--bg); font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .result-hero h1 { font-family: var(--font-display); font-size: 56px; letter-spacing: -0.025em; margin: 0 0 12px; font-weight: 400; }
+  .result-hero p { color: var(--ink-2); font-size: 16px; line-height: 1.6; max-width: 52ch; margin: 0 auto; }
+
+  .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; margin: 40px 0; }
+  .result-stats .c { padding: 24px; background: var(--bg-elev); text-align: center; }
+  .result-stats .c .n { font-family: var(--font-display); font-size: 40px; letter-spacing: -0.02em; }
+  .result-stats .c .l { font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; font-family: var(--font-mono); margin-top: 6px; }
+
+  /* Mode switch */
+  .mode-switch { position: fixed; top: 16px; right: 140px; z-index: 999; display: flex; gap: 2px; padding: 3px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow-sm); font-family: var(--font-mono); font-size: 10px; }
+  .mode-switch button { padding: 6px 12px; border-radius: 999px; color: var(--ink-3); letter-spacing: 0.1em; text-transform: uppercase; }
+  .mode-switch button.on { background: var(--ink); color: var(--bg); }
+
+  .form-state { display: none; }
+  .form-state.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+<div class="mode-switch">
+  <button data-m="q" class="on">Frage</button>
+  <button data-m="a">Antwort</button>
+  <button data-m="r">Resultat</button>
+</div>
+
+<!-- VARIANT A -->
+<div id="var-a" class="variant active">
+  <header class="lsn-top">
+    <div class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></div>
+    <div class="crumb">WSET Level 2 · <span class="cur">Abschlussprüfung · 50 Fragen</span></div>
+    <div class="right"><span>Frage 05 / 50</span></div>
+    <div class="progress-bar"><span style="width: 10%;"></span></div>
+  </header>
+
+  <div class="a-layout">
+    <aside class="a-side">
+      <div class="k">● Abschlussprüfung</div>
+      <h2>WSET Level 2<br>Final Assessment</h2>
+      <div class="step-track">
+        <div class="step done">01</div><div class="step done">02</div><div class="step wrong">03</div><div class="step done">04</div><div class="step cur">05</div>
+        <div class="step">06</div><div class="step">07</div><div class="step">08</div><div class="step">09</div><div class="step">10</div>
+      </div>
+      <div class="meta-line"><span>Korrekt</span><span class="v" style="color: var(--positive);">3</span></div>
+      <div class="meta-line"><span>Falsch</span><span class="v" style="color: var(--danger);">1</span></div>
+      <div class="meta-line"><span>Bestehen ab</span><span class="v">70 %</span></div>
+      <div class="meta-line"><span>Zeit</span><span class="v">42:18</span></div>
+    </aside>
+
+    <main class="a-main">
+      <div class="form-state active" data-state="q">
+        <div class="a-eyebrow">● Frage 05 · Single Choice</div>
+        <h2 class="a-question">Welche Rebsorte dominiert die <em>roten</em> Weine Burgunds?</h2>
+        <div class="a-opts">
+          <div class="a-opt"><span class="k">A</span><span class="t">Merlot</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+          <div class="a-opt selected"><span class="k">B</span><span class="t">Pinot Noir</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+          <div class="a-opt"><span class="k">C</span><span class="t">Gamay</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+          <div class="a-opt"><span class="k">D</span><span class="t">Cabernet Franc</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+        </div>
+        <div class="a-nav-bottom">
+          <button class="btn btn-ghost">← Zurück</button>
+          <a href="#" class="skip">Frage überspringen</a>
+          <button class="btn btn-primary" onclick="setMode('a')">Antwort prüfen<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></button>
+        </div>
+      </div>
+
+      <div class="form-state" data-state="a">
+        <div class="a-eyebrow">● Frage 05 · Antwort</div>
+        <h2 class="a-question">Welche Rebsorte dominiert die <em>roten</em> Weine Burgunds?</h2>
+        <div class="a-opts">
+          <div class="a-opt"><span class="k">A</span><span class="t">Merlot</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+          <div class="a-opt correct"><span class="k">B</span><span class="t">Pinot Noir</span><svg class="icon ic" style="width:16px;height:16px;"><use href="shared/icons.svg#i-check"/></svg></div>
+          <div class="a-opt"><span class="k">C</span><span class="t">Gamay</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+          <div class="a-opt"><span class="k">D</span><span class="t">Cabernet Franc</span><svg class="icon ic" style="width:16px;height:16px;"></svg></div>
+        </div>
+        <div class="a-explain">
+          <div class="k">✓ Richtig · Erklärung</div>
+          <h4>Pinot Noir ist in Burgund Gesetz.</h4>
+          <p>Burgund schreibt – mit wenigen Ausnahmen wie Passetoutgrains – ausschließlich Pinot Noir für rote Appellation-Weine vor. Gamay hat eigene Region (Beaujolais), Merlot und Cabernet sind Bordeaux-Rebsorten.</p>
+        </div>
+        <div class="a-nav-bottom">
+          <button class="btn btn-ghost" onclick="setMode('q')">Zurück zur Frage</button>
+          <button class="btn btn-primary">Nächste Frage<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></button>
+        </div>
+      </div>
+
+      <div class="form-state" data-state="r">
+        <div class="result-hero">
+          <span class="state">Bestanden · 84 %</span>
+          <div class="big-n">42<em>/50</em></div>
+          <h1>Gut gemacht,<br><em>Marie</em>.</h1>
+          <p>Du hast 42 von 50 Fragen richtig beantwortet. Die Bestehens-Grenze liegt bei 35 Punkten (70 %). Dein Zertifikat wurde ausgestellt und ist bereits in deinem Profil hinterlegt.</p>
+        </div>
+        <div class="result-stats">
+          <div class="c"><div class="n" style="color: var(--positive);">42</div><div class="l">Richtig</div></div>
+          <div class="c"><div class="n" style="color: var(--danger);">8</div><div class="l">Falsch</div></div>
+          <div class="c"><div class="n">47:12</div><div class="l">Gebraucht</div></div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <a href="certificate.html" class="btn btn-primary"><svg class="icon"><use href="shared/icons.svg#i-award"/></svg>Zertifikat ansehen</a>
+          <a href="#" class="btn btn-ghost">Falsche Antworten prüfen</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- VARIANT B -->
+<div id="var-b" class="variant">
+  <header class="b-top">
+    <a href="index.html" class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+    <div class="step-dots">
+      <span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="cur"></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="score">Score · <strong>4 / 5</strong> · 80 %</div>
+  </header>
+
+  <div class="b-stage">
+    <div class="form-state active" data-state="q">
+      <div class="b-card">
+        <div class="eyebrow">● Frage 05 von 10 · Lernkartei</div>
+        <h2>Welche Rebsorte<br>dominiert die<br><em>roten</em> Weine Burgunds?</h2>
+        <div class="b-opts">
+          <button class="b-opt"><span class="k">A</span><span class="t">Merlot</span></button>
+          <button class="b-opt"><span class="k">B</span><span class="t">Pinot Noir</span></button>
+          <button class="b-opt"><span class="k">C</span><span class="t">Gamay</span></button>
+          <button class="b-opt"><span class="k">D</span><span class="t">Cabernet Franc</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-state" data-state="a">
+      <div class="b-card">
+        <div class="eyebrow" style="color: var(--positive);">✓ Richtig</div>
+        <h2 style="font-size: 36px;">Welche Rebsorte dominiert die <em>roten</em> Weine Burgunds?</h2>
+        <div class="b-opts">
+          <button class="b-opt"><span class="k">A</span><span class="t">Merlot</span></button>
+          <button class="b-opt correct"><span class="k">B</span><span class="t">Pinot Noir ✓</span></button>
+          <button class="b-opt"><span class="k">C</span><span class="t">Gamay</span></button>
+          <button class="b-opt"><span class="k">D</span><span class="t">Cabernet Franc</span></button>
+        </div>
+        <div style="padding: 20px; background: var(--bg-inset); border-radius: var(--r-md); text-align: left; border-left: 3px solid var(--positive);">
+          <div style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--positive); margin-bottom: 8px;">Merke dir</div>
+          <p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-2);">Burgund &amp; Rot = Pinot Noir. Punkt. Die einzige Ausnahme ist der obskure Passetoutgrains.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-state" data-state="r">
+      <div class="b-card">
+        <div class="result-hero">
+          <span class="state">Bestanden · 84 %</span>
+          <div class="big-n">42<em>/50</em></div>
+          <h1 style="font-size: 48px;">Gut gemacht,<br><em>Marie</em>.</h1>
+          <p>Bestehens-Grenze bei 70 %. Zertifikat ist ausgestellt.</p>
+          <div style="display: flex; gap: 12px; justify-content: center; margin-top: 32px;">
+            <a href="certificate.html" class="btn btn-primary">Zertifikat ansehen<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="b-foot">
+    <div class="tips"><kbd>A</kbd><kbd>B</kbd><kbd>C</kbd><kbd>D</kbd> wählen · <kbd>Enter</kbd> prüfen · <kbd>→</kbd> weiter</div>
+    <button class="btn btn-ghost" onclick="setMode(nextMode())">Nächste Aktion →</button>
+  </footer>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-lqz-var') || 'a';
+  function setVar(v) { localStorage.setItem('v-lqz-var', v); btns.forEach(b => b.classList.toggle('on', b.dataset.v === v)); vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v)); }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+
+  const order = ['q','a','r'];
+  let cur = 'q';
+  function setMode(m) {
+    cur = m;
+    document.querySelectorAll('.mode-switch button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    document.querySelectorAll('.form-state').forEach(el => el.classList.toggle('active', el.dataset.state === m));
+  }
+  function nextMode() { return order[(order.indexOf(cur) + 1) % order.length]; }
+  document.querySelectorAll('.mode-switch button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

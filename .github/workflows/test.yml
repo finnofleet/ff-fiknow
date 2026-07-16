@@ -1,0 +1,30 @@
+name: Tests
+
+# Unit-Test-Gate (Vitest). Bewusst NUR die Test-Suite — kein Lint/Typecheck-
+# Gate hier, damit der Check nicht an vorbestehender Repo-Schuld rot wird.
+# Läuft schnell (kein DB/Build nötig), auf jedem Push und PR.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test

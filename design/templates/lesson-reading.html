@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Lesson · Reading</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  /* Shared lesson layout */
+  .lsn-top { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 20; }
+  .lsn-top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  .lsn-top .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .lsn-top .brand .tld { color: var(--ink-3); font-size: 12px; }
+  .lsn-top .crumb { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+  .lsn-top .crumb .cur { color: var(--ink); }
+  .lsn-top .right { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-3); }
+  .lsn-top .progress-bar { position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--line); border-radius: 0; }
+  .lsn-top .progress-bar span { height: 2px; background: var(--accent); }
+
+  /* Variant A – sidebar + wide prose */
+  .a-layout { display: grid; grid-template-columns: 300px 1fr 220px; min-height: calc(100vh - 57px); }
+  .a-sidebar { border-right: 1px solid var(--line); padding: 32px 24px; overflow-y: auto; position: sticky; top: 57px; height: calc(100vh - 57px); }
+  .a-sidebar .course-head { padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .a-sidebar .course-head .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+  .a-sidebar .course-head .t { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; line-height: 1.15; }
+  .a-sidebar .course-head .prog { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+  .a-sidebar .course-head .pb { flex: 1; height: 2px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .a-sidebar .course-head .pb span { display: block; height: 100%; background: var(--accent); }
+
+  .a-sidebar .chap { margin-bottom: 20px; }
+  .a-sidebar .chap h5 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; display: flex; justify-content: space-between; }
+  .a-sidebar .chap ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+  .a-sidebar .chap li a { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; margin: 0 -10px; border-radius: var(--r-sm); color: var(--ink-2); font-size: 13px; line-height: 1.35; }
+  .a-sidebar .chap li a:hover { background: var(--bg-elev); color: var(--ink); }
+  .a-sidebar .chap li a.done .dot { background: var(--line-strong); }
+  .a-sidebar .chap li a.cur { background: var(--bg-elev-2); color: var(--ink); border-left: 2px solid var(--accent); padding-left: 12px; margin-left: -12px; }
+  .a-sidebar .chap li a.cur .dot { background: var(--accent); }
+  .a-sidebar .chap li a .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); margin-top: 6px; flex-shrink: 0; }
+
+  .a-read { padding: 72px 88px 120px; max-width: 780px; margin: 0 auto; }
+  .a-eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  .a-read h1 { font-family: var(--font-display); font-weight: 400; font-size: 72px; line-height: 1; letter-spacing: -0.025em; margin: 0 0 16px; }
+  .a-read h1 em { color: var(--accent); }
+  .a-read .deck { font-family: var(--font-display); font-size: 22px; color: var(--ink-2); line-height: 1.4; margin-bottom: 40px; font-style: italic; }
+  .a-read h2 { font-family: var(--font-display); font-size: 36px; letter-spacing: -0.02em; margin: 56px 0 20px; font-weight: 400; }
+  .a-read h3 { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.01em; margin: 40px 0 14px; font-weight: 400; }
+  .a-read p { font-size: 17px; line-height: 1.75; color: var(--ink); margin: 0 0 20px; }
+  .a-read p em { font-style: italic; }
+  .a-read p strong { color: var(--ink); font-weight: 600; }
+  .a-read p.dropcap::first-letter { font-family: var(--font-display); font-size: 84px; float: left; line-height: 0.85; margin: 4px 12px 0 0; color: var(--accent); font-style: italic; }
+  .a-read blockquote { margin: 32px 0; padding: 0 0 0 24px; border-left: 2px solid var(--accent); font-family: var(--font-display); font-size: 22px; font-style: italic; color: var(--ink-2); line-height: 1.4; }
+
+  /* MDX components inside reading */
+  .callout { display: flex; gap: 14px; padding: 16px 20px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg-elev); margin: 24px 0; font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+  .callout .c-icon { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+  .callout.tip { border-left: 3px solid var(--positive); }
+  .callout.tip .c-icon { color: var(--positive); }
+  .callout .c-title { font-family: var(--font-display); font-size: 17px; color: var(--ink); margin-bottom: 4px; letter-spacing: -0.01em; }
+
+  .figure { margin: 32px 0; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--bg-elev); }
+  .figure .fig-body { height: 260px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2)); color: var(--ink-3); font-family: var(--font-display); font-style: italic; font-size: 22px; }
+  .figure .fig-cap { padding: 14px 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+
+  .takeaways { padding: 24px 28px; border-radius: var(--r-lg); background: var(--bg-inset); border: 1px solid var(--line); margin: 32px 0; }
+  .takeaways .kx { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .takeaways h4 { font-family: var(--font-display); font-size: 22px; margin: 0 0 14px; letter-spacing: -0.01em; font-weight: 400; }
+  .takeaways ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .takeaways li { display: flex; gap: 10px; color: var(--ink-2); font-size: 15px; line-height: 1.55; }
+  .takeaways li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin-top: 10px; flex-shrink: 0; }
+
+  /* Next/Prev */
+  .a-nav-bottom { margin: 80px 0 0; padding-top: 28px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .a-nav-bottom a { padding: 20px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-elev); display: block; }
+  .a-nav-bottom a:hover { border-color: var(--accent); }
+  .a-nav-bottom .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+  .a-nav-bottom .t { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.01em; }
+  .a-nav-bottom .prev { text-align: right; }
+
+  /* Right sidebar – TOC / Notes */
+  .a-right-rail { border-left: 1px solid var(--line); padding: 72px 20px; position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto; }
+  .a-right-rail h5 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
+  .a-right-rail .toc { display: flex; flex-direction: column; gap: 6px; margin-bottom: 32px; }
+  .a-right-rail .toc a { font-size: 12px; color: var(--ink-3); line-height: 1.4; padding: 3px 0; }
+  .a-right-rail .toc a.cur { color: var(--accent); }
+
+  .a-tools { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .a-tools button { display: flex; gap: 10px; align-items: center; padding: 8px; color: var(--ink-3); font-size: 12px; border-radius: var(--r-sm); background: transparent; }
+  .a-tools button:hover { background: var(--bg-elev); color: var(--ink); }
+  .a-tools button svg { width: 14px; height: 14px; }
+
+  /* Variant B – narrow centered column, drop sidebar into drawer */
+  #var-b .b-top { padding: 16px 32px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg); z-index: 20; }
+  #var-b .b-top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; }
+  #var-b .b-top .brand .d { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  #var-b .b-top .menu-btn { display: flex; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; }
+  #var-b .b-top .progress-bar { position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--line); }
+  #var-b .b-top .progress-bar span { height: 2px; background: var(--accent); }
+
+  .b-read { max-width: 680px; margin: 0 auto; padding: 96px 32px 160px; }
+  .b-kicker { text-align: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; }
+  .b-read h1 { font-family: var(--font-display); font-size: 64px; letter-spacing: -0.025em; line-height: 1.02; text-align: center; margin: 0 0 20px; font-weight: 400; }
+  .b-read h1 em { color: var(--accent); }
+  .b-read .deck { text-align: center; font-family: var(--font-display); font-style: italic; font-size: 22px; line-height: 1.4; color: var(--ink-2); max-width: 40ch; margin: 0 auto 8px; }
+  .b-meta-line { text-align: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin: 32px 0 56px; display: flex; justify-content: center; gap: 20px; }
+  .b-meta-line::before, .b-meta-line::after { content: ''; flex: 0 0 40px; height: 1px; background: var(--line); align-self: center; }
+  .b-read h2 { font-family: var(--font-display); font-size: 36px; letter-spacing: -0.02em; margin: 56px 0 20px; font-weight: 400; }
+  .b-read p { font-size: 18px; line-height: 1.8; color: var(--ink); margin: 0 0 20px; }
+  .b-read p.dropcap::first-letter { font-family: var(--font-display); font-size: 96px; float: left; line-height: 0.85; margin: 6px 14px 0 0; color: var(--accent); font-style: italic; }
+
+  .b-pullquote { margin: 48px -48px; padding: 48px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-family: var(--font-display); font-style: italic; font-size: 32px; line-height: 1.25; letter-spacing: -0.01em; text-align: center; }
+  .b-pullquote::before { content: '"'; color: var(--accent); }
+  .b-pullquote::after { content: '"'; color: var(--accent); }
+
+  .b-end { margin-top: 96px; padding: 32px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 32px; font-size: 14px; }
+  .b-end .prev { text-align: left; }
+  .b-end .next { text-align: right; }
+  .b-end .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+  .b-end .t { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.01em; }
+
+  .b-floating {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; padding: 8px; background: var(--bg-elev);
+    border: 1px solid var(--line); border-radius: 999px;
+    box-shadow: var(--shadow-lg); z-index: 30;
+  }
+  .b-floating button { padding: 8px 14px; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--ink-2); border-radius: 999px; }
+  .b-floating button:hover { background: var(--bg-elev-2); }
+  .b-floating button svg { width: 14px; height: 14px; }
+  .b-floating .primary { background: var(--accent); color: var(--accent-ink); }
+  .b-floating .primary:hover { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<!-- VARIANT A -->
+<div id="var-a" class="variant active">
+  <header class="lsn-top">
+    <div class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></div>
+    <div class="crumb">WSET Level 2 · Kap. 02 · <span class="cur">Lekt. 04 · Mikroklima auf 50 km</span></div>
+    <div class="right">
+      <span>34 % · 5 / 14</span>
+      <a href="course.html" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Kursübersicht</a>
+    </div>
+    <div class="progress-bar"><span style="width: 34%;"></span></div>
+  </header>
+
+  <div class="a-layout">
+    <aside class="a-sidebar">
+      <div class="course-head">
+        <div class="k">Kurs</div>
+        <div class="t">Die Climats von Burgund</div>
+        <div class="prog"><div class="pb"><span style="width: 34%;"></span></div><span>34%</span></div>
+      </div>
+
+      <div class="chap">
+        <h5>Kap. 01 · Einführung<span>42 Min</span></h5>
+        <ul>
+          <li><a href="#" class="done"><span class="dot"></span>Warum Burgund?</a></li>
+          <li><a href="#" class="done"><span class="dot"></span>Die Rolle der Zisterzienser</a></li>
+          <li><a href="#" class="done"><span class="dot"></span>Video: Flug über die Côte d'Or</a></li>
+        </ul>
+      </div>
+      <div class="chap">
+        <h5>Kap. 02 · Terroir<span>64 Min</span></h5>
+        <ul>
+          <li><a href="#" class="done"><span class="dot"></span>Kalk, Mergel, Granit</a></li>
+          <li><a href="#" class="cur"><span class="dot"></span>Mikroklima auf 50 km</a></li>
+          <li><a href="#"><span class="dot"></span>Video: Drei Weinberge, drei Böden</a></li>
+          <li><a href="#"><span class="dot"></span>Übung: Terroir-Quiz</a></li>
+        </ul>
+      </div>
+      <div class="chap">
+        <h5>Kap. 03 · Rebsorten<span>58 Min</span></h5>
+        <ul>
+          <li><a href="#"><span class="dot"></span>Pinot Noir – die dünne Haut</a></li>
+          <li><a href="#"><span class="dot"></span>Chardonnay – weltweit, hier geboren</a></li>
+          <li><a href="#"><span class="dot"></span>Video: Ein Jahr im Weinberg</a></li>
+          <li><a href="#"><span class="dot"></span>Lernkartei: Stile zuordnen</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="a-read">
+      <div class="a-eyebrow">● Kapitel 02 · Lektion 04 · 14 Min Lesezeit</div>
+      <h1>Mikroklima<br>auf <em>50 km</em>.</h1>
+      <div class="deck">Wie ein schmales Kalksteinband zwischen Dijon und Santenay auf nur 50 Kilometern Länge ein halbes Dutzend Klimazonen beherbergt – und warum das im Glas schmeckt.</div>
+
+      <p class="dropcap">Stell dir vor, du fährst mit dem Velo von Dijon Richtung Süden. Links von dir, die Ebene der Saône. Rechts, eine sanfte Steilstufe – kaum 100 Meter hoch, aber geologisch eine Grenze zwischen zwei Welten. Dieses Band, die <em>Côte d'Or</em>, ist gerade mal 50 Kilometer lang und an der breitesten Stelle nicht mehr als zwei Kilometer tief.</p>
+
+      <p>Und doch: Auf diesen 50 Kilometern unterscheidet die Lehrbücher zwischen mindestens sechs signifikant unterschiedlichen <strong>Mikroklimata</strong>. Nicht weil die Meteorologen hier übertreiben – sondern weil die Winzer seit acht Jahrhunderten gelernt haben, dass ein Südhang am Morgen anders reift als ein Osthang am Abend.</p>
+
+      <h2>Die Geometrie des Hangs</h2>
+      <p>Das erste, was die Klimaunterschiede auf der Côte d'Or erklärt, ist schlicht <em>Geometrie</em>. Der Hang fällt nach Osten ab. Die Sonne geht also genau dort auf, wo die Reben stehen – und das ist wichtiger, als es klingt: Morgensonne verdampft den Tau schnell, reduziert Pilzdruck und verlängert die Photosynthese-Zeit um etwa 40 Minuten pro Tag.</p>
+
+      <div class="figure">
+        <div class="fig-body">Topografischer Schnitt · Côte d'Or</div>
+        <div class="fig-cap">Abb. 1 – Querschnitt durch die Côte d'Or bei Meursault. Unten: Saône-Ebene (~240 m), oben: Plateau (~400 m). Die besten Lagen liegen immer im mittleren Drittel, zwischen 260 und 320 m.</div>
+      </div>
+
+      <h2>Warum gerade das mittlere Drittel?</h2>
+      <p>Die Antwort ist eine Mischung aus Klima, Boden und Wasser. Ganz unten, in der Ebene, sammelt sich kalte Luft in den Nachtstunden – schlecht für Frostempfindlichkeit, schlecht für reife Trauben. Ganz oben, auf dem Plateau, ist es windig und kühl, die Böden sind dünn und der Kalkstein liegt roh.</p>
+
+      <p>Im mittleren Drittel stimmt alles: die Frostluft zieht ab, die Böden sind tiefgründig genug für Wasser, aber dünn genug für mineralische Spannung, und die Reben bekommen ihre entscheidenden zwei bis drei Extragrad pro Tag.</p>
+
+      <blockquote>„Ein Grand Cru ist nie oben, nie unten – immer in der Mitte."<br>– ein burgundisches Sprichwort, dem niemand widersprechen kann.</blockquote>
+
+      <div class="callout tip">
+        <svg class="icon c-icon"><use href="shared/icons.svg#i-compass"/></svg>
+        <div>
+          <div class="c-title">Gedächtnishaken</div>
+          Grand Crus liegen in Burgund immer im mittleren Drittel des Hangs. Wenn du eine Weinkarte liest und dir unsicher bist, ob eine Lage „gut" ist, frag dich: Wie hoch ist sie gelegen?
+        </div>
+      </div>
+
+      <h2>Die kleinen Senken</h2>
+      <p>Neben der Höhe ist die dritte Variable die <em>Form</em> des Hangs. Die Côte d'Or ist nicht glatt – sie ist durch kleine Quertäler (die <em>combes</em>) zerfurcht. Diese Täler funktionieren wie Windkanäle: kühle Luft zieht aus dem Plateau nach unten und beeinflusst die Rebflächen zu beiden Seiten.</p>
+
+      <p>Das Resultat: Selbst innerhalb einer einzigen Gemeinde wie Vosne-Romanée gibt es Lagen, die 0.5 °C wärmer sind als andere. In kühlen Jahren entscheidet das über reif oder nicht reif.</p>
+
+      <div class="takeaways">
+        <div class="kx">● Das Wichtigste</div>
+        <h4>Drei Variablen, ein Terroir.</h4>
+        <ul>
+          <li>Die Côte d'Or ist nur 50 km lang, beherbergt aber sechs unterscheidbare Mikroklimata.</li>
+          <li>Grand Crus liegen fast ausschließlich im mittleren Drittel des Hangs, zwischen 260 und 320 m.</li>
+          <li>Die <em>combes</em> – kleine Quertäler – schaffen Temperaturunterschiede von bis zu 0.5 °C zwischen benachbarten Parzellen.</li>
+        </ul>
+      </div>
+
+      <nav class="a-nav-bottom">
+        <a href="#" class="prev">
+          <div class="k">← Vorherige Lektion</div>
+          <div class="t">Kalk, Mergel, Granit</div>
+        </a>
+        <a href="lesson-video.html">
+          <div class="k">Nächste Lektion →</div>
+          <div class="t">Video: Drei Weinberge, drei Böden</div>
+        </a>
+      </nav>
+    </main>
+
+    <aside class="a-right-rail">
+      <h5>In dieser Lektion</h5>
+      <div class="toc">
+        <a href="#" class="cur">— Die Geometrie des Hangs</a>
+        <a href="#">— Warum mittleres Drittel?</a>
+        <a href="#">— Die kleinen Senken</a>
+        <a href="#">— Kernbotschaft</a>
+      </div>
+      <div class="a-tools">
+        <button><svg class="icon"><use href="shared/icons.svg#i-note"/></svg>Notiz hinzufügen</button>
+        <button><svg class="icon"><use href="shared/icons.svg#i-star"/></svg>Markieren</button>
+        <button><svg class="icon"><use href="shared/icons.svg#i-book"/></svg>Lesezeichen</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- VARIANT B -->
+<div id="var-b" class="variant">
+  <header class="b-top">
+    <a href="index.html" class="brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+    <button class="menu-btn"><svg class="icon" style="width:12px;height:12px;"><use href="shared/icons.svg#i-book"/></svg>Kap. 02 · Lekt. 04 / 14</button>
+    <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em;">14 Min · 34 %</div>
+    <div class="progress-bar"><span style="width:34%;"></span></div>
+  </header>
+
+  <main class="b-read">
+    <div class="b-kicker">● WSET Level 2 · Die Climats von Burgund</div>
+    <h1>Mikroklima auf<br><em>50 km</em>.</h1>
+    <div class="deck">Wie ein schmales Kalksteinband auf 50 km Länge ein halbes Dutzend Klimazonen beherbergt.</div>
+    <div class="b-meta-line">Von Claire Moreau · 14 Min Lesezeit · April 2026</div>
+
+    <p class="dropcap">Stell dir vor, du fährst mit dem Velo von Dijon Richtung Süden. Links von dir, die Ebene der Saône. Rechts, eine sanfte Steilstufe – kaum 100 Meter hoch, aber geologisch eine Grenze zwischen zwei Welten. Dieses Band, die Côte d'Or, ist gerade mal 50 Kilometer lang und an der breitesten Stelle nicht mehr als zwei Kilometer tief.</p>
+
+    <p>Und doch: Auf diesen 50 Kilometern unterscheiden die Lehrbücher zwischen mindestens sechs signifikant unterschiedlichen Mikroklimata. Nicht weil die Meteorologen hier übertreiben – sondern weil die Winzer seit acht Jahrhunderten gelernt haben, dass ein Südhang am Morgen anders reift als ein Osthang am Abend.</p>
+
+    <h2>Die Geometrie des Hangs</h2>
+    <p>Das erste, was die Klimaunterschiede auf der Côte d'Or erklärt, ist schlicht Geometrie. Der Hang fällt nach Osten ab. Die Sonne geht also genau dort auf, wo die Reben stehen – und das ist wichtiger, als es klingt.</p>
+
+    <div class="b-pullquote">Ein Grand Cru ist nie oben, nie unten – immer in der Mitte.</div>
+
+    <h2>Die kleinen Senken</h2>
+    <p>Neben der Höhe ist die dritte Variable die Form des Hangs. Die Côte d'Or ist nicht glatt – sie ist durch kleine Quertäler, die combes, zerfurcht. Diese Täler funktionieren wie Windkanäle: kühle Luft zieht aus dem Plateau nach unten und beeinflusst die Rebflächen zu beiden Seiten.</p>
+
+    <p>Das Resultat: Selbst innerhalb einer einzigen Gemeinde wie Vosne-Romanée gibt es Lagen, die 0.5 °C wärmer sind als andere. In kühlen Jahren entscheidet das über reif oder nicht reif.</p>
+
+    <nav class="b-end">
+      <div class="prev">
+        <div class="k">← Vorher</div>
+        <div class="t">Kalk, Mergel, Granit</div>
+      </div>
+      <div class="next">
+        <div class="k">Als Nächstes →</div>
+        <div class="t">Video: Drei Weinberge, drei Böden</div>
+      </div>
+    </nav>
+  </main>
+
+  <div class="b-floating">
+    <button><svg><use href="shared/icons.svg#i-note"/></svg>Notiz</button>
+    <button><svg><use href="shared/icons.svg#i-star"/></svg>Markieren</button>
+    <button class="primary" onclick="window.location='lesson-video.html'"><svg><use href="shared/icons.svg#i-arrow-right"/></svg>Weiter</button>
+  </div>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-lread-var') || 'a';
+  function setVar(v) { localStorage.setItem('v-lread-var', v); btns.forEach(b => b.classList.toggle('on', b.dataset.v === v)); vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v)); }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

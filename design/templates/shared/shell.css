@@ -1,0 +1,78 @@
+/* ============================================================
+   Shared navigation + variant-switch + screen shell
+   Loaded after tokens.css on every screen
+   ============================================================ */
+
+/* Variant switch at top center (per-screen, a/b) */
+.var-switch {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 999;
+  display: flex; gap: 2px; padding: 3px;
+  background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 999px; box-shadow: var(--shadow-sm);
+  font-family: var(--font-mono); font-size: 10px;
+}
+.var-switch button {
+  padding: 6px 14px; border-radius: 999px;
+  color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase;
+  transition: background 200ms, color 200ms;
+}
+.var-switch button.on { background: var(--ink); color: var(--bg); }
+
+/* Per-variant container — only .active is visible */
+.variant { display: none; }
+.variant.active { display: block; }
+
+/* Top navigation (used by home/catalog/course/profile) */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 48px; border-bottom: 1px solid var(--line);
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em;
+}
+.nav-brand .v-mark {
+  font-style: italic; font-weight: 500; color: var(--accent);
+}
+.nav-brand .dot-ch { color: var(--ink-3); font-family: var(--font-sans); font-size: 13px; letter-spacing: 0; }
+.nav-links { display: flex; gap: 28px; font-size: 14px; }
+.nav-links a { color: var(--ink-3); transition: color 200ms; }
+.nav-links a:hover, .nav-links a.active { color: var(--ink); }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px;
+  color: var(--ink-3); font-size: 13px;
+}
+.nav-avatar {
+  width: 32px; height: 32px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent);
+  display: grid; place-items: center; font-size: 13px; font-weight: 600;
+  font-family: var(--font-display); font-style: italic;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.badge-soft { background: var(--bg-elev-2); color: var(--ink-2); }
+.badge-accent { background: var(--accent-soft); color: var(--accent); }
+.badge-positive { background: color-mix(in oklch, var(--positive) 20%, transparent); color: var(--positive); }
+
+/* Cards */
+.card {
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 24px; transition: border-color 200ms, transform 200ms;
+}
+.card:hover { border-color: var(--line-strong); }
+
+/* Chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+  font-size: 12px; color: var(--ink-2);
+}

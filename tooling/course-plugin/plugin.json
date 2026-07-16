@@ -1,0 +1,59 @@
+{
+  "name": "course-authoring",
+  "displayName": "Course Authoring (EDU-Platform)",
+  "version": "0.5.0",
+  "description": "Skills für das Erstellen und Publishen von Online-Kursen auf einer EDU-Platform-Instanz (verstande.ch, fiknow.ch etc.) via Claude Cowork. v0.2: authentifizierter Direkt-Client gegen die Plattform-HTTP-API. v0.3: Visual-Authoring — SVG-Diagramme (course-diagram) und Raster-Bilder (course-image) mit proaktiven Vorschlägen und brand-spezifischen Idiomen (verstande Sketch / fiknow Clean). v0.4: Zwei-Stufen-Modell (upload → publish) — Review als Draft in der echten Learner-Shell (Kuratoren sehen Drafts); Preview-Endpoint entfernt. v0.5: Vollständiger Edit-Loop für bestehende Kurse — checkout (Download inkl. Version-Token) → edit → upload → publish.",
+  "author": "Yves Blättler",
+  "license": "Proprietary",
+  "homepage": "https://github.com/yves-blaettler/edu-platform",
+  "_comment": "Generisches Manifest — beim Port ins jeweilige Marketplace-Format (Anthropic Skills, FINNOFLEET-internal etc.) ggf. anpassen. Plugin spricht direkt mit der Plattform-API (Bearer-Token), siehe ADR 0001 Decision 6.",
+  "permissions": {
+    "filesystem": "user-folder",
+    "network": [
+      "https://*.verstande.ch",
+      "https://*.fiknow.ch",
+      "https://verstande.ch",
+      "https://fiknow.ch"
+    ]
+  },
+  "config": {
+    "schema": {
+      "platformBaseUrl": {
+        "type": "string",
+        "description": "Base-URL der Plattform (z.B. https://verstande.ch oder https://fiknow.ch). Wird vom Plugin für upload/publish-Calls gegen /api/authoring/* genutzt.",
+        "required": true
+      },
+      "authoringToken": {
+        "type": "string",
+        "secret": true,
+        "description": "Scoped Authoring-Token (Format cat_…), gemintet im Browser via POST /api/authoring/tokens. Eigenschaften: nur Authoring-Scope, kurze TTL (Default 12 h, max. 7 Tage), serverseitig widerrufbar. Wird NIE geloggt oder in Output ausgegeben. Bei 401 invalid_token neu minten.",
+        "required": true
+      }
+    }
+  },
+  "systemPrompt": "system-prompt.md",
+  "skills": [
+    { "file": "skills/course-init.md" },
+    { "file": "skills/course-validate.md" },
+    { "file": "skills/course-diagram.md" },
+    { "file": "skills/course-image.md" },
+    { "file": "skills/course-checkout.md" },
+    { "file": "skills/course-upload.md" },
+    { "file": "skills/course-publish.md" }
+  ],
+  "scripts": [
+    {
+      "name": "bundle",
+      "file": "scripts/publish.mjs",
+      "interpreter": "node"
+    },
+    {
+      "name": "client",
+      "file": "scripts/client.mjs",
+      "interpreter": "node"
+    }
+  ],
+  "dependencies": {
+    "adm-zip": "^0.5.17"
+  }
+}

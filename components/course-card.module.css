@@ -1,0 +1,109 @@
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 200ms, transform 200ms;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.cover {
+  height: 160px;
+  position: relative;
+  display: grid;
+  place-items: end start;
+  padding: 16px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--ink-3);
+  background: var(--bg-elev-2);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.coverImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.coverKicker {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.coverTitle {
+  align-self: end;
+}
+/* Nur für Kuratoren sichtbar (Draft-Kurse erscheinen nur in deren Katalog). */
+.draftBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 400;
+  color: var(--ink);
+}
+.sub {
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 1.5;
+  flex: 1;
+  margin: 0;
+}
+.foot {
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.chips {
+  display: flex;
+  gap: 6px;
+}
+.chips :global(.chip) {
+  padding: 3px 9px;
+  font-size: 11px;
+}
+.lessonCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}

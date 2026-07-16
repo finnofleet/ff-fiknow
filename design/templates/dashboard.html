@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>verstande.ch – Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/shell.css">
+<style>
+  .a-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 48px; border-bottom: 1px solid var(--line); }
+  .a-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; }
+  .a-brand .d { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .a-brand .tld { color: var(--ink-3); font-size: 13px; }
+  .a-links { display: flex; gap: 24px; font-size: 14px; color: var(--ink-3); }
+  .a-links a.active { color: var(--ink); }
+  .a-right { display: flex; gap: 14px; align-items: center; }
+  .a-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 14px; }
+
+  /* Variant A – focus-driven */
+  .a-wrap { max-width: 1280px; margin: 0 auto; padding: 56px 48px 96px; }
+  .a-greet { display: flex; justify-content: space-between; align-items: end; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
+  .a-greet h1 { font-family: var(--font-display); font-size: 72px; letter-spacing: -0.025em; line-height: 1; margin: 0; font-weight: 400; }
+  .a-greet h1 em { color: var(--accent); }
+  .a-greet .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
+
+  .a-streak { display: flex; gap: 28px; align-items: center; }
+  .a-streak .flame { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+  .a-streak .flame svg { width: 26px; height: 26px; }
+  .a-streak .n { font-family: var(--font-display); font-size: 40px; line-height: 1; }
+  .a-streak .l { font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; font-family: var(--font-mono); }
+
+  .a-main { display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; }
+
+  /* Continue lesson – big hero card */
+  .a-cont { padding: 36px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-xl); position: relative; overflow: hidden; }
+  .a-cont::before {
+    content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--accent-soft) 0%, transparent 50%); opacity: 0.6; pointer-events: none;
+  }
+  .a-cont > * { position: relative; }
+  .a-cont .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .a-cont h2 { font-family: var(--font-display); font-size: 48px; letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 12px; font-weight: 400; }
+  .a-cont h2 em { color: var(--accent); }
+  .a-cont .sub { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin-bottom: 24px; max-width: 48ch; }
+  .a-cont .progress { margin-bottom: 20px; }
+  .a-cont .progress-bar { height: 4px; margin-bottom: 8px; }
+  .a-cont .progress .pc { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); display: flex; justify-content: space-between; }
+  .a-cont .actions { display: flex; gap: 10px; margin-top: 24px; }
+
+  /* Side column */
+  .a-side h3 { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; margin: 0 0 14px; font-weight: 400; }
+  .a-due { padding: 24px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-elev); margin-bottom: 20px; }
+  .a-due .n { font-family: var(--font-display); font-size: 36px; letter-spacing: -0.02em; }
+  .a-due .n em { color: var(--accent); }
+  .a-due .l { color: var(--ink-3); font-size: 13px; margin-bottom: 16px; }
+  .a-due .btn { width: 100%; justify-content: center; }
+
+  .a-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .a-tile { padding: 20px; border: 1px solid var(--line); border-radius: var(--r-lg); }
+  .a-tile .n { font-family: var(--font-display); font-size: 32px; letter-spacing: -0.02em; line-height: 1; }
+  .a-tile .l { color: var(--ink-3); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-mono); margin-top: 6px; }
+
+  /* My courses */
+  .a-courses { margin-top: 56px; }
+  .a-sec { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .a-sec h3 { font-family: var(--font-display); font-size: 28px; letter-spacing: -0.015em; margin: 0; font-weight: 400; }
+  .a-sec .m { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  .a-course-row { display: grid; grid-template-columns: 80px 1fr 180px 120px 40px; gap: 24px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .a-course-row .cov { width: 80px; height: 60px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2)); display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-display); font-style: italic; font-size: 15px; }
+  .a-course-row .cov.c2 { background: linear-gradient(135deg, oklch(0.35 0.08 220 / 0.4), var(--bg-elev-2)); }
+  .a-course-row .cov.c3 { background: linear-gradient(135deg, oklch(0.4 0.08 150 / 0.4), var(--bg-elev-2)); }
+  .a-course-row .cat { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 2px; }
+  .a-course-row .ttl { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.01em; }
+  .a-course-row .prog { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-3); }
+  .a-course-row .prog .pb { flex: 1; height: 3px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .a-course-row .prog .pb span { display: block; height: 100%; background: var(--accent); }
+  .a-course-row .nxt { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; }
+  .a-course-row .arr { color: var(--accent); }
+
+  /* Variant B – editorial, reading-list style */
+  #var-b .b-nav { display: flex; justify-content: space-between; align-items: center; padding: 24px 48px; border-bottom: 1px solid var(--line); }
+  #var-b .b-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; }
+  #var-b .b-brand .d { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  #var-b .b-brand .tld { color: var(--ink-3); font-size: 13px; }
+
+  .b-wrap { max-width: 1200px; margin: 0 auto; padding: 56px 48px 96px; }
+  .b-top { display: grid; grid-template-columns: 1.8fr 1fr; gap: 64px; margin-bottom: 80px; align-items: end; }
+  .b-top .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  .b-top h1 { font-family: var(--font-display); font-size: 96px; letter-spacing: -0.03em; line-height: 0.95; margin: 0; font-weight: 400; }
+  .b-top h1 em { font-style: italic; color: var(--accent); }
+
+  .b-stats { display: flex; flex-direction: column; gap: 20px; }
+  .b-stat { display: grid; grid-template-columns: 40px 1fr auto; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+  .b-stat:first-child { border-top: 1px solid var(--line-strong); }
+  .b-stat .ic { color: var(--accent); width: 20px; height: 20px; }
+  .b-stat .l { font-size: 13px; color: var(--ink-2); }
+  .b-stat .v { font-family: var(--font-display); font-size: 26px; letter-spacing: -0.01em; }
+
+  .b-feature { padding: 0 0 64px; margin-bottom: 64px; border-bottom: 1px solid var(--line); }
+  .b-feature .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+  .b-feature .row { display: grid; grid-template-columns: 2fr 1fr; gap: 48px; align-items: center; }
+  .b-feature h2 { font-family: var(--font-display); font-size: 64px; letter-spacing: -0.025em; line-height: 1; margin: 0 0 18px; font-weight: 400; }
+  .b-feature h2 em { color: var(--accent); }
+  .b-feature .sub { color: var(--ink-2); font-size: 16px; line-height: 1.6; max-width: 48ch; margin-bottom: 24px; }
+  .b-feature .meta { display: flex; gap: 24px; font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px; }
+  .b-feature .cover { height: 280px; border-radius: var(--r-lg); background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev-2)); display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-display); font-style: italic; font-size: 26px; border: 1px solid var(--line); }
+
+  .b-list-hd { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+
+  .b-item { display: grid; grid-template-columns: 60px 1fr auto; gap: 32px; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--line); }
+  .b-item .n { font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); letter-spacing: 0.06em; }
+  .b-item .t .cat { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+  .b-item .t .ttl { font-family: var(--font-display); font-size: 28px; letter-spacing: -0.015em; line-height: 1.15; }
+  .b-item .t .nxt { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+  .b-item .r { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .b-item .r .pb { width: 140px; height: 3px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .b-item .r .pb span { display: block; height: 100%; background: var(--accent); }
+  .b-item .r .pc { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+
+<div class="var-switch">
+  <button data-v="a" class="on">Variante A</button>
+  <button data-v="b">Variante B</button>
+</div>
+
+<!-- VARIANT A -->
+<div id="var-a" class="variant active">
+  <nav class="a-nav">
+    <div class="a-brand"><span class="d"></span>verstande<span class="tld">.ch</span></div>
+    <div class="a-links">
+      <a href="#" class="active">Mein Lernen</a>
+      <a href="catalog.html">Katalog</a>
+    </div>
+    <div class="a-right">
+      <div class="nav-search"><svg class="icon" style="width:14px;height:14px;"><use href="shared/icons.svg#i-search"/></svg>Suchen</div>
+      <a href="profile.html" class="a-avatar">m</a>
+    </div>
+  </nav>
+
+  <div class="a-wrap">
+    <div class="a-greet">
+      <div>
+        <div class="k">Donnerstag, 19. April 2026</div>
+        <h1>Guten Tag,<br><em>Marie</em>.</h1>
+      </div>
+      <div class="a-streak">
+        <div class="flame"><svg class="icon"><use href="shared/icons.svg#i-flame"/></svg></div>
+        <div>
+          <div class="n">12</div>
+          <div class="l">Tage in Folge</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="a-main">
+      <div class="a-cont">
+        <div class="k">Weiterlernen · Kap. 02 · Lektion 04</div>
+        <h2>Mikroklima<br>auf <em>50 km</em>.</h2>
+        <p class="sub">Warum die Côte d'Or, dieses schmale Kalksteinband, auf 50 km Länge gleich mehrere Mikroklimata beherbergt – und was das für deinen Pinot im Glas bedeutet.</p>
+        <div class="progress">
+          <div class="progress-bar"><span style="width: 34%;"></span></div>
+          <div class="pc"><span>Kurs 34 % abgeschlossen</span><span>Lektion 04 / 14</span></div>
+        </div>
+        <div class="actions">
+          <a href="lesson-reading.html" class="btn btn-primary"><svg class="icon"><use href="shared/icons.svg#i-play"/></svg>Weiterlesen · 14 Min</a>
+          <a href="course.html" class="btn btn-ghost">Zur Kursübersicht</a>
+        </div>
+      </div>
+
+      <div class="a-side">
+        <h3>Heute fällig</h3>
+        <div class="a-due">
+          <div class="n">23 <em>Karten</em></div>
+          <div class="l">Wiederholung · ≈ 8 Minuten</div>
+          <a href="lesson-quiz.html" class="btn btn-primary"><svg class="icon"><use href="shared/icons.svg#i-spark"/></svg>Jetzt wiederholen</a>
+        </div>
+        <div class="a-tiles">
+          <div class="a-tile"><div class="n">07</div><div class="l">Kurse aktiv</div></div>
+          <div class="a-tile"><div class="n">02</div><div class="l">Zertifikate</div></div>
+          <div class="a-tile"><div class="n">148</div><div class="l">Lektionen</div></div>
+          <div class="a-tile"><div class="n">42 h</div><div class="l">Diesen Monat</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="a-courses">
+      <div class="a-sec">
+        <h3>Meine Kurse</h3>
+        <div class="m">7 aktiv</div>
+      </div>
+      <a href="course.html" class="a-course-row">
+        <div class="cov">Burgund</div>
+        <div><div class="cat">Weinkunde</div><div class="ttl">WSET Level 2 · Die Climats von Burgund</div></div>
+        <div class="prog"><div class="pb"><span style="width: 34%;"></span></div>34%</div>
+        <div class="nxt">Kap. 02 · Lekt. 04</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="a-course-row">
+        <div class="cov c2">A2</div>
+        <div><div class="cat">Recht</div><div class="ttl">Drohnen-Führerschein A2</div></div>
+        <div class="prog"><div class="pb"><span style="width: 68%;"></span></div>68%</div>
+        <div class="nxt">Kap. 05 · Lekt. 02</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="a-course-row">
+        <div class="cov c3">Wolken</div>
+        <div><div class="cat">Meteorologie</div><div class="ttl">Wetter verstehen</div></div>
+        <div class="prog"><div class="pb"><span style="width: 12%;"></span></div>12%</div>
+        <div class="nxt">Kap. 01 · Lekt. 02</div>
+        <div class="arr">→</div>
+      </a>
+      <a href="course.html" class="a-course-row">
+        <div class="cov">Italien</div>
+        <div><div class="cat">Weinkunde</div><div class="ttl">Italienischer Wein von Nord nach Süd</div></div>
+        <div class="prog"><div class="pb"><span style="width: 89%;"></span></div>89%</div>
+        <div class="nxt">Kap. 06 · Lekt. 03</div>
+        <div class="arr">→</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- VARIANT B -->
+<div id="var-b" class="variant">
+  <nav class="b-nav">
+    <a href="index.html" class="b-brand"><span class="d"></span>verstande<span class="tld">.ch</span></a>
+    <div class="a-links">
+      <a href="#" style="color: var(--ink);">Mein Lernen</a>
+      <a href="catalog.html">Katalog</a>
+      <a href="profile.html">Profil</a>
+    </div>
+  </nav>
+
+  <div class="b-wrap">
+    <div class="b-top">
+      <div>
+        <div class="eyebrow">● Donnerstag, 19. April · KW 16</div>
+        <h1>Hallo <em>Marie</em>.<br>Weiter, wo du<br>gestern warst.</h1>
+      </div>
+      <div class="b-stats">
+        <div class="b-stat"><svg class="icon ic"><use href="shared/icons.svg#i-flame"/></svg><div class="l">Streak</div><div class="v">12 Tage</div></div>
+        <div class="b-stat"><svg class="icon ic"><use href="shared/icons.svg#i-clock"/></svg><div class="l">Diese Woche</div><div class="v">5 h 42</div></div>
+        <div class="b-stat"><svg class="icon ic"><use href="shared/icons.svg#i-spark"/></svg><div class="l">Fällig heute</div><div class="v">23 Karten</div></div>
+        <div class="b-stat"><svg class="icon ic"><use href="shared/icons.svg#i-award"/></svg><div class="l">Zertifikate</div><div class="v">2</div></div>
+      </div>
+    </div>
+
+    <div class="b-feature">
+      <div class="k">● Weiterlernen</div>
+      <div class="row">
+        <div>
+          <h2>Mikroklima auf<br><em>50 km</em>.</h2>
+          <div class="sub">Warum die Côte d'Or, dieses schmale Kalksteinband, auf 50 km Länge gleich mehrere Mikroklimata beherbergt – und was das für deinen Pinot im Glas bedeutet.</div>
+          <div class="meta"><span>WSET Level 2</span><span>Kap. 02 · Lekt. 04</span><span>≈ 14 Min</span></div>
+          <a href="lesson-reading.html" class="btn btn-primary">Weiterlesen<svg class="icon"><use href="shared/icons.svg#i-arrow-right"/></svg></a>
+        </div>
+        <div class="cover">Côte d'Or</div>
+      </div>
+    </div>
+
+    <div class="b-list-hd">
+      <span>Meine Kurse · 7 aktiv</span>
+      <span>nach Fortschritt</span>
+    </div>
+
+    <a href="course.html" class="b-item">
+      <div class="n">01</div>
+      <div class="t"><div class="cat">Weinkunde</div><div class="ttl">Die Climats von Burgund</div><div class="nxt">Als Nächstes: Mikroklima auf 50 km</div></div>
+      <div class="r"><div class="pb"><span style="width:34%;"></span></div><div class="pc">34 % · 5 von 14</div></div>
+    </a>
+    <a href="course.html" class="b-item">
+      <div class="n">02</div>
+      <div class="t"><div class="cat">Recht · Zertifikat</div><div class="ttl">Drohnen-Führerschein A2</div><div class="nxt">Als Nächstes: Kap. 05 · Luftraumklassen</div></div>
+      <div class="r"><div class="pb"><span style="width:68%;"></span></div><div class="pc">68 % · 13 von 19</div></div>
+    </a>
+    <a href="course.html" class="b-item">
+      <div class="n">03</div>
+      <div class="t"><div class="cat">Meteorologie</div><div class="ttl">Wetter verstehen</div><div class="nxt">Als Nächstes: Luftdruck &amp; Isobaren</div></div>
+      <div class="r"><div class="pb"><span style="width:12%;"></span></div><div class="pc">12 % · 2 von 16</div></div>
+    </a>
+    <a href="course.html" class="b-item">
+      <div class="n">04</div>
+      <div class="t"><div class="cat">Weinkunde</div><div class="ttl">Italienischer Wein</div><div class="nxt">Als Nächstes: Sizilien &amp; Etna</div></div>
+      <div class="r"><div class="pb"><span style="width:89%;"></span></div><div class="pc">89 % · 16 von 18</div></div>
+    </a>
+  </div>
+</div>
+
+<script>
+  const btns = document.querySelectorAll('.var-switch button');
+  const vars = document.querySelectorAll('.variant');
+  const saved = localStorage.getItem('v-dash-var') || 'a';
+  function setVar(v) {
+    localStorage.setItem('v-dash-var', v);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    vars.forEach(el => el.classList.toggle('active', el.id === 'var-' + v));
+  }
+  btns.forEach(b => b.addEventListener('click', () => setVar(b.dataset.v)));
+  setVar(saved);
+</script>
+<script src="shared/theme-toggle.js"></script>
+</body>
+</html>

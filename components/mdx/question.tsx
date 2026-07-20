@@ -2,15 +2,19 @@
 
 import { Check, X, Lightbulb } from "lucide-react";
 import {
-  createContext,
-  useContext,
+  Children,
+  isValidElement,
   useEffect,
-  useId,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { useQuizContext } from "@/components/quiz/quiz-context";
+import {
+  correctIndices,
+  isAnswerCorrect,
+  optionVisualState,
+} from "@/lib/quiz/grade";
 import styles from "./question.module.css";
 
 type Mode = "single" | "multi";
@@ -20,42 +24,50 @@ type OptionProps = {
   children: ReactNode;
 };
 
-type RegisteredOption = {
-  id: string;
+/**
+ * Option ist ein reiner DATEN-Marker. Sie rendert selbst nichts — <Question>
+ * liest `correct` und die Kinder (das Label) synchron aus den Props der
+ * Option-Elemente.
+ *
+ * Warum kein Effekt-/Context-Registry mehr? Die frühere Variante registrierte
+ * jede Option clientseitig per useEffect beim umgebenden <Question>. Das war
+ * die Ursache dafür, dass korrekte Antworten wiederholt als falsch angezeigt
+ * wurden: Beim Server-Rendering (RSC) liefen die Effekte nicht, die
+ * Options-Liste entstand erst nach der Hydration, und dabei verrutschte die
+ * Reihenfolge gegenüber den `correct`-Flags. Das synchrone Auslesen der
+ * Children ist SSR-fest, reihenfolgetreu und hängt weder an Effekt-Timing
+ * noch an Component-Identity (wir prüfen NICHT `child.type === Option`,
+ * sondern lesen nur die Props — überlebt Minifier/RSC-Grenzen).
+ */
+export function Option(props: OptionProps): null {
+  void props; // reiner Daten-Marker: <Question> liest die Props direkt
+  return null;
+}
+Option.displayName = "Option";
+
+type ExtractedOption = {
   label: ReactNode;
   correct: boolean;
 };
 
-type OptionRegistry = {
-  register: (opt: RegisteredOption) => void;
-  unregister: (id: string) => void;
-};
-
-const OptionRegistryContext = createContext<OptionRegistry | null>(null);
-
 /**
- * Option-Marker-Component. Rendert kein UI direkt, sondern registriert
- * sich beim umgebenden <Question> via Context. <Question> liest die
- * registrierten Options aus dem State und rendert sie als Buttons.
- *
- * Warum nicht direkter Children-Filter? In Production-Builds mit RSC +
- * Minifier verlieren wir Component-Identity (verschiedene Function-
- * References zwischen MDX-Pipeline und Question-Component-Code).
- * Context-Pattern umgeht das vollständig.
+ * Zieht die Optionen aus den <Question>-Children. Whitespace-Textknoten
+ * (Zeilenumbrüche zwischen den <Option>-Tags) sind keine Elemente und fallen
+ * durch `isValidElement` heraus.
  */
-export function Option({ correct = false, children }: OptionProps) {
-  const registry = useContext(OptionRegistryContext);
-  const id = useId();
-
-  useEffect(() => {
-    if (!registry) return;
-    registry.register({ id, label: children, correct });
-    return () => registry.unregister(id);
-  }, [registry, id, children, correct]);
-
-  return null;
+function extractOptions(children: ReactNode): ExtractedOption[] {
+  return Children.toArray(children)
+    .filter(isValidElement)
+    .map((el) => {
+      const props = (el as { props?: OptionProps }).props ?? {
+        children: null,
+      };
+      return {
+        label: props.children,
+        correct: Boolean(props.correct),
+      };
+    });
 }
-Option.displayName = "Option";
 
 type QuestionProps = {
   prompt: string;
@@ -70,34 +82,17 @@ export function Question({
   explanation,
   children,
 }: QuestionProps) {
-  const [registry, setRegistry] = useState<RegisteredOption[]>([]);
-
-  // Stable register/unregister-Callbacks, damit useEffect in Option
-  // nicht unnötig refeuert.
-  const ctxValue = useMemo<OptionRegistry>(
-    () => ({
-      register: (opt) =>
-        setRegistry((prev) =>
-          prev.some((p) => p.id === opt.id) ? prev : [...prev, opt],
-        ),
-      unregister: (id) =>
-        setRegistry((prev) => prev.filter((p) => p.id !== id)),
-    }),
-    [],
+  // Optionen synchron beim Rendern ableiten — verfügbar auf Server UND Client.
+  const options = useMemo(() => extractOptions(children), [children]);
+  const correctFlags = useMemo(
+    () => options.map((o) => o.correct),
+    [options],
   );
-
-  const labels = registry.map((r) => r.label);
-  const correctSet = new Set<number>(
-    registry.map((r, i) => (r.correct ? i : -1)).filter((i) => i >= 0),
-  );
-  const correctIndices = [...correctSet].sort((a, b) => a - b);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [submitted, setSubmitted] = useState(false);
 
-  const isCorrect =
-    selected.size === correctSet.size &&
-    [...selected].every((i) => correctSet.has(i));
+  const isCorrect = isAnswerCorrect(correctFlags, selected);
 
   const quiz = useQuizContext();
 
@@ -106,10 +101,10 @@ export function Question({
     quiz.reportResult(prompt, {
       prompt,
       selected: [...selected].sort((a, b) => a - b),
-      correct: correctIndices,
+      correct: correctIndices(correctFlags),
       isCorrect,
     });
-  }, [submitted, isCorrect, prompt, selected, correctIndices, quiz]);
+  }, [submitted, isCorrect, prompt, selected, correctFlags, quiz]);
 
   function toggle(i: number) {
     if (submitted) return;
@@ -126,90 +121,75 @@ export function Question({
     });
   }
 
-  function getOptionState(
-    i: number,
-  ): "default" | "selected" | "correct" | "wrong" | "missed" {
-    if (!submitted) return selected.has(i) ? "selected" : "default";
-    const isSel = selected.has(i);
-    const isCor = correctSet.has(i);
-    if (isSel && isCor) return "correct";
-    if (isSel && !isCor) return "wrong";
-    if (!isSel && isCor) return "missed";
-    return "default";
-  }
-
   return (
-    <OptionRegistryContext.Provider value={ctxValue}>
-      <div className={styles.card}>
-        <p className={styles.prompt}>{prompt}</p>
+    <div className={styles.card}>
+      <p className={styles.prompt}>{prompt}</p>
 
-        {/* Children rendern, damit <Option>-Effekte feuern und sich
-            im Registry eintragen. <Option> selbst rendert null,
-            also kein Markup-Beitrag. */}
-        {children}
-
-        <div
-          className={styles.options}
-          role={type === "single" ? "radiogroup" : "group"}
-        >
-          {labels.map((label, i) => {
-            const state = getOptionState(i);
-            return (
-              <button
-                key={i}
-                type="button"
-                className={`${styles.option} ${styles[state]}`}
-                onClick={() => toggle(i)}
-                disabled={submitted}
-                aria-pressed={selected.has(i)}
-              >
-                <span className={styles.bullet}>
-                  {state === "correct" && <Check size={14} strokeWidth={2} />}
-                  {state === "wrong" && <X size={14} strokeWidth={2} />}
-                  {state === "missed" && <Check size={14} strokeWidth={2} />}
-                  {(state === "default" || state === "selected") && (
-                    <span className={styles.dot} />
-                  )}
-                </span>
-                <span className={styles.text}>{label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {type === "multi" && !submitted && (
-          <button
-            type="button"
-            className={`btn btn-primary ${styles.submit}`}
-            onClick={() => setSubmitted(true)}
-            disabled={selected.size === 0}
-          >
-            Antwort prüfen
-          </button>
-        )}
-
-        {submitted && (
-          <div
-            className={`${styles.feedback} ${
-              isCorrect ? styles.right : styles.fail
-            }`}
-          >
-            <div className={styles.verdict}>
-              {isCorrect ? "Richtig" : "Nicht ganz"}
-            </div>
-            {explanation && (
-              <div className={styles.explanation}>
-                <Lightbulb
-                  size={16}
-                  strokeWidth={1.5}
-                  className={styles.lampIcon}
-                />
-                <span>{explanation}</span>
-              </div>
-            )}
-          </div>
-        )}
+      <div
+        className={styles.options}
+        role={type === "single" ? "radiogroup" : "group"}
+      >
+        {options.map((option, i) => {
+          const state = optionVisualState(i, {
+            submitted,
+            selected,
+            correctFlags,
+          });
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`${styles.option} ${styles[state]}`}
+              onClick={() => toggle(i)}
+              disabled={submitted}
+              aria-pressed={selected.has(i)}
+            >
+              <span className={styles.bullet}>
+                {state === "correct" && <Check size={14} strokeWidth={2} />}
+                {state === "wrong" && <X size={14} strokeWidth={2} />}
+                {state === "missed" && <Check size={14} strokeWidth={2} />}
+                {(state === "default" || state === "selected") && (
+                  <span className={styles.dot} />
+                )}
+              </span>
+              <span className={styles.text}>{option.label}</span>
+            </button>
+          );
+        })}
       </div>
-    </OptionRegistryContext.Provider>
+
+      {type === "multi" && !submitted && (
+        <button
+          type="button"
+          className={`btn btn-primary ${styles.submit}`}
+          onClick={() => setSubmitted(true)}
+          disabled={selected.size === 0}
+        >
+          Antwort prüfen
+        </button>
+      )}
+
+      {submitted && (
+        <div
+          className={`${styles.feedback} ${
+            isCorrect ? styles.right : styles.fail
+          }`}
+        >
+          <div className={styles.verdict}>
+            {isCorrect ? "Richtig" : "Nicht ganz"}
+          </div>
+          {explanation && (
+            <div className={styles.explanation}>
+              <Lightbulb
+                size={16}
+                strokeWidth={1.5}
+                className={styles.lampIcon}
+              />
+              <span>{explanation}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

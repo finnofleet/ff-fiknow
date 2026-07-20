@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 import { QuizContext, type QuestionResult } from "./quiz-context";
 import { submitQuizAttemptAction } from "@/app/(frontend)/learn/[courseSlug]/[sectionSlug]/[lessonSlug]/actions";
+import { summarizeQuiz } from "@/lib/quiz/grade";
 import styles from "./quiz-shell.module.css";
 
 type Props = {
@@ -39,12 +40,8 @@ export function QuizShell({
 
   const ctxValue = useMemo(() => ({ reportResult }), [reportResult]);
 
-  const answered = results.size;
-  const correct = [...results.values()].filter((r) => r.isCorrect).length;
-  const allAnswered = answered >= questionCount;
-  const score = answered === 0 ? 0 : correct / answered;
-  const passed = score >= passingScore;
-  const scorePct = Math.round(score * 100);
+  const { answered, correct, allAnswered, score, passed, scorePct } =
+    summarizeQuiz([...results.values()], questionCount, passingScore);
 
   async function onSubmit() {
     setSubmitting(true);

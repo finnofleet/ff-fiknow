@@ -9,7 +9,9 @@
   Accepted, 2026-07-24**: deklarierte Kursdauer, generische Treiber-Taxonomie,
   opt-in Lernkontrolle, Verständnisbestätigung — und **Phase 5 (CSV-Audit-
   Export) wird dabei entparkt** (jetzt Phase 6d, siehe Abschnitt 6 und
-  „Umsetzung in Phasen" unten).
+  „Umsetzung in Phasen" unten). **Phase 6a–6d umgesetzt und verifiziert,
+  2026-07-24**: `next build` grün, 129/129 Vitest, e2e 2/2, Migration real
+  gegen Postgres angewendet inkl. sauberem Down.
 - **Datum:** 2026-07-03
 - **Kontext-Phase:** Compliance / Tracking
 - **Betroffene Bereiche:** Course-Content (`payload/collections/courses.ts` —
@@ -257,19 +259,23 @@ bestehenden Snapshot-Prinzip (`courseTitleSnapshot`/`courseVersionSnapshot`).
 - **Phase 4 — Compliance-Dashboard.** Quote + Teilnehmer-Drill-down unter
   `manage/`, Access `canManageCourses`/`canManageUsers`.
 - **Phase 5 — CSV-Audit-Export.** Aus derselben Query.
-- **Phase 6 — Art.-4-Schärfung (2026-07-24).**
-  - **6a — Kurs-Metadaten.** `complianceDrivers`/`assessmentRequired`/
+- **Phase 6 — Art.-4-Schärfung (2026-07-24). ✓ erledigt/live, verifiziert
+  2026-07-24 (build + 129 Vitest + e2e gegen Postgres, Migration real
+  angewendet inkl. Down).**
+  - **6a — Kurs-Metadaten. ✓ live.** `complianceDrivers`/`assessmentRequired`/
     `confirmationRequired` auf `courses` (Dauer nutzt das bestehende
     `estimatedMinutes` wieder) + Migration via `payload migrate:create`
     generiert (inkl. `.json`-Snapshot). *Delegierbar nach fixer Spec.*
-  - **6b — Completion-Schärfung.** Opt-in Quiz-Gating (Kurs erst mit
+  - **6b — Completion-Schärfung. ✓ live.** Opt-in Quiz-Gating (Kurs erst mit
     bestandenem Quiz abgeschlossen, wenn `assessmentRequired`) +
     evidence-Anreicherung (Treiber/Dauer/Quiz-Ergebnis beim Abschluss
     einfrieren). *Kernlogik — Hauptthread.*
-  - **6c — Verständnisbestätigung.** UI-Bestätigung am Kursende +
-    Zeitstempel-Persistenz in `evidence`.
-  - **6d — Auswertung.** Treiber-Filter im Compliance-Dashboard +
-    CSV-Export (entparkt Phase 5).
+  - **6c — Verständnisbestätigung. ✓ live.** UI-Bestätigung am Kursende +
+    Zeitstempel-Persistenz in `evidence`. Ohne Schema-Change umgesetzt: die
+    Bestätigung läuft als Aktions-Parameter (nicht als eigenes DB-Feld).
+  - **6d — Auswertung. ✓ live.** Treiber-Filter im Compliance-Dashboard +
+    CSV-Export (entparkt Phase 5) — liefert damit auch den vormaligen
+    Phase-5-Umfang mit.
 
 **Descoped auf v1.1:** Mail-Reminder + Eskalation, Cron/Job-Infrastruktur,
 termingenaue Rezertifizierung, feingranulares Requirements-Targeting über den

@@ -30,6 +30,13 @@ export default defineConfig({
   // kills it again. See comments in e2e/global-setup.ts for details.
   projects: [
     {
+      // Anonym (kein storageState) — prüft, dass die Payload-API/Media
+      // ohne Login gesperrt ist (proxy.ts).
+      name: "anon",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /api-gating\.spec\.ts/,
+    },
+    {
       name: "learner",
       use: {
         ...devices["Desktop Chrome"],
@@ -43,7 +50,9 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         storageState: path.resolve(__dirname, "e2e/.auth/curator.json"),
       },
-      testMatch: /compliance\.spec\.ts/,
+      // api-gating läuft hier zusätzlich, um zu prüfen, dass eingeloggte
+      // Requests NICHT geblockt werden.
+      testMatch: /(compliance|api-gating)\.spec\.ts/,
     },
   ],
 });

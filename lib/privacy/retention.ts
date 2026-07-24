@@ -56,3 +56,21 @@ export function isRetentionExpired(
   const expiry = addYears(anchor, years);
   return expiry.getTime() <= now.getTime();
 }
+
+/**
+ * Stichtag für einen **mengenbasierten** Retention-Purge: alle Zeilen mit
+ * `completed_at <= retentionCutoff(now)` sind löschreif. Statt pro Zeile
+ * `isRetentionExpired` auszuwerten (N Round-Trips), verschiebt der Purge den
+ * Vergleich in ein einziges `WHERE completed_at <= $cutoff`. Der Stichtag ist
+ * `now` minus `years`, mit derselben `setFullYear`-Semantik wie
+ * `isRetentionExpired` — für jeden Anker gilt auf Tagesebene
+ * `anchor <= retentionCutoff(now)` ⟺ `isRetentionExpired(anchor, now)`.
+ * (Einzige Sub-Tages-Divergenz am 29.02.-Ankerrand durch die Kalender-
+ * arithmetik; bei einer 3-Jahres-Frist rechtlich irrelevant.)
+ */
+export function retentionCutoff(
+  now: Date,
+  years: number = RETENTION_YEARS,
+): Date {
+  return addYears(now, -years);
+}

@@ -1,0 +1,80 @@
+{{/*
+Retention-Purge — ADR 0006 Phase 7c (DSGVO/DSG-Retention).
+
+Ephemerer Batch-Pod (KEIN Dauer-Pod): läuft nachts einmal, führt
+`scripts/retention-purge.ts --confirm` aus und terminiert danach wieder.
+Nutzt DASSELBE Image wie das Deployment (deployment.yaml) — nur ein
+anderes `command`. Payload-agnostisch: die Purge-Logik läuft direkt gegen
+Postgres (Drizzle), unabhängig von Payload-CMS.
+
+Sicherheitsnetz: `RETENTION_PURGE_DRY_RUN` erzwingt serverseitig einen
+dry-run, selbst wenn `--confirm` gesetzt ist — steuerbar über
+`cronjob.retentionPurge.dryRun` in den Values, ohne den Job neu zu bauen.
+
+Ganze Datei hinter `cronjob.retentionPurge.enabled` gated (Default: aus).
+*/}}
+{{- if .Values.cronjob.retentionPurge.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "fiknow.fullname" . }}-retention-purge
+  labels:
+    {{- include "fiknow.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.cronjob.retentionPurge.schedule | quote }}
+  {{- with .Values.cronjob.retentionPurge.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: {{ .Values.cronjob.retentionPurge.startingDeadlineSeconds }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.retentionPurge.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.retentionPurge.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.cronjob.retentionPurge.backoffLimit }}
+      template:
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "fiknow.serviceAccountName" . }}
+          restartPolicy: Never
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: retention-purge
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.containerSecurityContext | nindent 16 }}
+              # Direkt das tsx-Binary (NICHT npx) — vermeidet Cache-Writes
+              # unter readOnlyRootFilesystem außerhalb von /tmp.
+              command: ["node_modules/.bin/tsx", "scripts/retention-purge.ts", "--confirm"]
+              envFrom:
+                - configMapRef:
+                    name: {{ include "fiknow.fullname" . }}-env
+                - secretRef:
+                    name: {{ include "fiknow.secretName" . }}
+              env:
+                # Job braucht keinen großen Pool; schont die geteilten
+                # max_connections der Managed-DB.
+                - name: DB_POOL_MAX
+                  value: "2"
+                # esbuild/tsx schreibt hierhin (readOnlyRootFilesystem).
+                - name: TMPDIR
+                  value: /tmp
+                # Sicherheits-Override: erzwingt dry-run serverseitig,
+                # unabhängig vom --confirm-Flag oben.
+                - name: RETENTION_PURGE_DRY_RUN
+                  value: {{ if .Values.cronjob.retentionPurge.dryRun }}"1"{{ else }}"0"{{ end }}
+              resources:
+                {{- toYaml .Values.cronjob.retentionPurge.resources | nindent 16 }}
+              volumeMounts:
+                # readOnlyRootFilesystem: true → /tmp braucht ein Volume.
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
+{{- end }}

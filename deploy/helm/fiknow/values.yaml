@@ -212,3 +212,28 @@ podAnnotations: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# ------------------------------------------------------------
+# CronJobs (ephemere Batch-Pods, kein Dauer-Pod). Siehe templates/cronjob.yaml.
+# ------------------------------------------------------------
+cronjob:
+  retentionPurge:
+    # DSGVO/DSG-Retention: löscht abgelaufene Nachweise (training_assignments)
+    # nach FIKNOW_RETENTION_YEARS (Default 3 J). ADR 0006 Phase 7c.
+    enabled: false
+    schedule: "17 3 * * *"   # nächtlich 03:17 (ruhige Stunde)
+    timeZone: ""              # leer = UTC; z. B. "Europe/Zurich" für lokale Zeit
+    # dryRun=true: Job zählt nur, löscht nichts (RETENTION_PURGE_DRY_RUN=1).
+    # Für den ersten Prod-Rollout sinnvoll, danach auf false.
+    dryRun: false
+    startingDeadlineSeconds: 300
+    successfulJobsHistoryLimit: 5
+    failedJobsHistoryLimit: 5
+    backoffLimit: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

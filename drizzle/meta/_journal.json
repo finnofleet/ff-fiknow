@@ -57,6 +57,13 @@
       "when": 1783080149070,
       "tag": "0007_unusual_maelstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784916157553,
+      "tag": "0008_add_retention_purge_runs",
+      "breakpoints": true
     }
   ]
 }

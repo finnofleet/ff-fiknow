@@ -415,6 +415,61 @@ vorgesehen.
 
 ---
 
+## 7b. Retention-Purge (DSGVO/DSG, ADR 0006)
+
+Ein **CronJob** (`templates/cronjob.yaml`, Default: **aus** —
+`cronjob.retentionPurge.enabled: false`) löscht nachts abgelaufene
+**`training_assignments`-Nachweise** nach Ablauf der Frist
+(`FIKNOW_RETENTION_YEARS`, Default 3 Jahre). Betroffen ist **ausschliesslich**
+diese Nachweis-Tabelle — Klasse-B-Daten und Keycloak-Nutzerkonten sind **nicht**
+betroffen (Keycloak verwaltet Nutzer:innen selbst, s. Abschnitt 2.4).
+
+Der Job ist ein **ephemerer Batch-Pod**: dasselbe Image wie das Deployment,
+nur anderes `command` (`node_modules/.bin/tsx scripts/retention-purge.ts
+--confirm`). Ein Sicherheits-Override (`RETENTION_PURGE_DRY_RUN`, gesteuert
+über `cronjob.retentionPurge.dryRun` in den Values) erzwingt serverseitig
+einen dry-run, selbst wenn `--confirm` gesetzt ist.
+
+> **Erwartung: 0 gelöschte Zeilen, auf absehbare Zeit.** FIKNOW läuft erst seit
+> 2026 produktiv — bei einer 3-Jahres-Frist wird der Job also noch länger
+> nichts zu löschen finden. Das ist **kein Fehler**: Der nächtliche Lauf
+> validiert, dass der Mechanismus funktioniert (Job startet, verbindet sich
+> zur DB, terminiert erfolgreich), nicht dass er bereits etwas tut.
+
+**Aktivieren** (z. B. in einer Werte-Datei):
+```yaml
+cronjob:
+  retentionPurge:
+    enabled: true
+    dryRun: false          # true = zählt nur, löscht nichts
+    timeZone: "Europe/Zurich"
+```
+
+**Manuell auslösen** (Ad-hoc-Job aus dem CronJob, z. B. zum Testen):
+```bash
+kubectl create job --from=cronjob/<release>-retention-purge \
+  retention-manual-$(date +%s) -n <namespace>
+```
+
+**Logs ansehen:**
+```bash
+kubectl logs job/<jobname> -n <namespace>
+```
+
+**Audit-Trail prüfen** (PII-frei — nur Zählwerte/Zeitstempel, keine Personendaten):
+```sql
+select ran_at, dry_run, retention_years, deleted_count, cutoff_date
+from retention_purge_runs
+order by ran_at desc
+limit 10;
+```
+
+**Dry-run erzwingen ohne Redeploy:** `cronjob.retentionPurge.dryRun: true`
+setzen und `helm upgrade` ausführen — das setzt `RETENTION_PURGE_DRY_RUN=1`
+im Container-Env, unabhängig vom `--confirm`-Flag im `command`.
+
+---
+
 ## 8. OpenShift / ROKS-Hinweis
 
 Bei der `restricted`-SCC vergibt OpenShift eine zufällige UID und ignoriert

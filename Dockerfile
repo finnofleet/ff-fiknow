@@ -75,6 +75,17 @@ COPY --from=builder --chown=nextjs:nodejs /app/migrations ./migrations
 # komplette manuelle Migrations-Schritte pro Brand-Env sind teuer.
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
+# Ops-/Cron-Entrypoints: Batch-Jobs laufen NICHT über `node server.js`,
+# sondern als eigener CronJob-Pod mit `npx tsx scripts/<job>.ts` (gleiches
+# Image, anderes command). Dafür braucht der Runner den TS-Quellbaum der
+# Scripts + der importierten lib/ + tsconfig.json (für die `@/`-Pfad-
+# Auflösung). tsx + typescript sind bereits in node_modules (npm ci ohne
+# --omit=dev). Payload-agnostisch: retention-purge importiert nur den
+# Drizzle-Client. Siehe deploy/helm/fiknow/templates/cronjob.yaml.
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
+
 USER nextjs
 EXPOSE 3000
 

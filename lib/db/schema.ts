@@ -417,3 +417,38 @@ export const trainingAssignments = pgTable(
     }),
   ],
 ).enableRLS();
+
+/**
+ * Audit-Protokoll des fristbasierten Retention-Purge (ADR 0006, Phase 7c —
+ * Teil „Retention"). Eine Zeile pro Lauf des Retention-Cron
+ * (`scripts/retention-purge.ts`). Bewusst **PII-frei**: nur Aggregat
+ * (Cutoff, Frist, gelöschte Anzahl, Dry-Run-Flag) — belegt die DSGVO-
+ * Rechenschaftspflicht (Art. 5 Abs. 2), *dass* fristgerecht gelöscht wird,
+ * ohne selbst personenbezogene Daten anzuhäufen. Überlebt Pod-Log-Rotation.
+ * Append-only im Betrieb; die Tabelle selbst enthält keine Nutzerdaten und
+ * unterliegt daher keiner eigenen Löschfrist.
+ */
+export const retentionPurgeRuns = pgTable(
+  "retention_purge_runs",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    ranAt: timestamp("ran_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Stichtag: Zeilen mit `completed_at <= cutoff_date` waren löschreif. */
+    cutoffDate: timestamp("cutoff_date", { withTimezone: true }).notNull(),
+    /** Verwendete Aufbewahrungsfrist in Jahren (aus `FIKNOW_RETENTION_YEARS`). */
+    retentionYears: integer("retention_years").notNull(),
+    /** True: Lauf war ein Dry-Run (nichts gelöscht, nur gezählt). */
+    dryRun: boolean("dry_run").notNull(),
+    /** Anzahl tatsächlich (bzw. bei Dry-Run: hypothetisch) gelöschter Zeilen. */
+    deletedCount: integer("deleted_count").notNull(),
+  },
+  (t) => [
+    index("retention_purge_runs_ran_at_idx").on(t.ranAt),
+    pgPolicy("retention_purge_runs_select_staff", {
+      for: "select",
+      using: isStaffRole,
+    }),
+  ],
+).enableRLS();

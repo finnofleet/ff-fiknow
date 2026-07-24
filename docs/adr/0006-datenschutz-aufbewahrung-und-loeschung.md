@@ -1,13 +1,20 @@
 # ADR 0006 — Datenschutz: Aufbewahrung & Löschung
 
-- **Status:** Proposed / Geplant — **nicht implementiert**. Dies ist ein Plan,
-  kein ausgeliefertes Feature.
+- **Status:** Accepted · **teilweise umgesetzt** (2026-07-24). Leitprinzip +
+  Parameter entschieden. **Phase 7a/7b umgesetzt** (Datenklassen, Retention-
+  Logik, Purge-Primitive + CLI, RoPA). **Phase 7c — Retention-Cron umgesetzt +
+  gegen echtes Postgres verifiziert** (dry-run/apply, nur abgelaufene Klasse-A-
+  Zeilen gelöscht, offene/frische behalten, PII-freie Audit-Zeile). **Rollout
+  mit dem nächsten Deploy** (K8s-CronJob, default nächtlich). **Noch offen:**
+  Phase 7c — Keycloak-Reconcile/Austritts-Trigger (Deprovisionierung), s. u.
 - **Datum:** 2026-07-24
 - **Kontext-Phase:** Compliance / Datenschutz
 - **Betroffene Bereiche:** `profiles`, `enrollments`, `lesson_progress`,
   `quiz_attempts`, `annotations`, `training_assignments` (alle
-  `lib/db/schema.ts`); Profil-UI (`app/(frontend)/profile/`); künftig ein
-  Austritts-Trigger und ein Retention-Cron (noch nicht gebaut).
+  `lib/db/schema.ts`); Profil-UI (`app/(frontend)/profile/`); Retention-Cron
+  (`lib/privacy/purge-expired.ts`, `scripts/retention-purge.ts`,
+  `retention_purge_runs`, `deploy/helm/fiknow/templates/cronjob.yaml` —
+  umgesetzt); künftig ein Austritts-Trigger/Keycloak-Reconcile (offen).
 - **Verwandt:** [[0005-pflichtkurse-und-compliance-nachweis]], `ROADMAP.md`.
 
 ---
@@ -130,17 +137,36 @@ striktem 3-Jahres-Löschen könnten seltene Spätansprüche nicht mehr belegbar
 sein. Das ist der bewusste Tradeoff der restriktiven Wahl; der DSB nimmt die
 finale Frist (Default 3 Jahre) formal ab.
 
-## Umsetzung in Phasen (geplant)
+## Umsetzung in Phasen
 
-- **Phase 7a — Datenklassen + Retention-Policy + RoPA.** Klassifikation (A/B)
-  dokumentieren/codifizieren, Aufbewahrungsfristen definieren, Verzeichnis der
-  Verarbeitungstätigkeiten (RoPA) zu FiKnow erstellen. *Braucht DSB-Input.*
-- **Phase 7b — Konto-Löschung self-service + Kaskaden-/Anonymisierungslogik.**
-  Die vorhandene, aber nicht verdrahtete „Danger-Zone"-UI
-  (`app/(frontend)/profile/`) aktivieren; Backend, das Klasse (B) über alle
-  Tabellen per `userId` löscht/anonymisiert.
-- **Phase 7c — Austritts-Trigger + Retention-Cron.** Verbindet die Identitäts-
-  mit der App-Daten-Ebene. **Mechanismus: nächtlicher Keycloak-Reconcile (Pull),**
+- **Phase 7a — Datenklassen + Retention-Policy + RoPA. ✓ umgesetzt.**
+  Klassifikation (A/B) codifiziert (`lib/privacy/data-classes.ts`), Frist-Logik
+  (`lib/privacy/retention.ts`, `FIKNOW_RETENTION_YEARS` Default 3),
+  Verzeichnis der Verarbeitungstätigkeiten (`docs/ROPA-fiknow.md`).
+- **Phase 7b — Löschung Klasse (B) + Purge-Primitive. ✓ umgesetzt.**
+  `purgeUserData(userId)` (`lib/privacy/purge-user.ts`) löscht Klasse (B) über
+  alle Tabellen per `userId` + offene Assignments in einer Transaktion; Admin-
+  CLI `scripts/purge-user.ts` (dry-run default, `--confirm`). *(Die
+  „Danger-Zone"-Self-Service-UI ist bewusst nicht Teil davon — im SSO-Kontext
+  ist Löschung admin-/trigger-ausgelöst, s. „Identität vs. App-Daten".)*
+- **Phase 7c (Teil 1) — Retention-Cron. ✓ umgesetzt + verifiziert (2026-07-24).**
+  `purgeExpiredNachweise` (`lib/privacy/purge-expired.ts`) löscht abgeschlossene
+  `training_assignments`, deren Frist abgelaufen ist (`completed_at <= now −
+  FIKNOW_RETENTION_YEARS`); offene Zeilen (`completed_at IS NULL`) werden nie
+  angefasst. CLI `scripts/retention-purge.ts` (dry-run default, `--confirm`;
+  `RETENTION_PURGE_DRY_RUN=1` erzwingt dry-run). Jeder Lauf schreibt eine
+  PII-freie Audit-Zeile in `retention_purge_runs` (Cutoff, Frist, Anzahl,
+  dry-run-Flag) — DSGVO-Rechenschaftspflicht. Läuft als **K8s-CronJob**
+  (`deploy/helm/fiknow/templates/cronjob.yaml`, ephemerer Pod pro Lauf, gleiches
+  Image), Payload-agnostisch. Integrationstest gegen echtes Postgres bestanden.
+  **Hinweis:** löscht bis ~2029 real 0 Zeilen (App erst seit 2026) — der Lauf
+  validiert bis dahin nur den Mechanismus. **Bewusste Konsequenz der
+  restriktiven Wahl:** gelöscht wird fristabhängig, **unabhängig vom
+  Beschäftigungsstatus** — auch Einmal-Nachweise noch aktiver Personen fallen
+  nach 3 J weg.
+- **Phase 7c (Teil 2) — Austritts-Trigger / Keycloak-Reconcile. ⏳ offen.**
+  Verbindet die Identitäts- mit der App-Daten-Ebene. **Mechanismus: nächtlicher
+  Keycloak-Reconcile (Pull),**
   nicht Webhook-Push — passt zum bestehenden Reconciler-Muster (ADR 0005), ist
   selbstheilend und braucht keinen eingehenden Endpoint. Ablauf: Job holt via
   Keycloak Admin REST API (`GET /admin/realms/{realm}/users`, Service-Account mit
@@ -156,10 +182,13 @@ finale Frist (Default 3 Jahre) formal ab.
   in einem Lauf ein großer Anteil der User (z. B. >10–20 % ggü. Vorlauf),
   abbrechen + alerten (fast sicher API-/Realm-Problem, kein Massenaustritt);
   (3) `enabled: false` ≠ gelöscht (kein Trigger); (4) Alerting bei Vormerkung +
-  Purge. Nebeneffekt: derselbe Diff räumt verwaiste Altdaten mit auf.
-  *Abhängigkeit: Cron/Job-Infrastruktur ist in ADR 0005 auf v1.1 descoped →
-  Vorbedingung für 7c. Optional später: zusätzlicher Webhook für geringere
-  Latenz.*
+  Purge. Nebeneffekt: derselbe Diff räumt verwaiste Altdaten mit auf. Braucht
+  zusätzlich neue `profiles`-Spalten (`deletionCandidateSince`,
+  `keycloakMissCount`) + einen Keycloak-Service-Account mit `view-users`.
+  *Die Cron/Job-Infrastruktur (K8s-CronJob) steht jetzt durch Teil 1 — dieser
+  Reconcile ist ein weiterer CronJob nach demselben Muster. Offene
+  Vorbedingung ist nur noch der Service-Account. Optional später: zusätzlicher
+  Webhook für geringere Latenz.*
 
 ## Konsequenzen / Hinweise
 
@@ -170,6 +199,9 @@ finale Frist (Default 3 Jahre) formal ab.
   Defense-in-Depth fehlt damit auf DB-Ebene. Das ist ein eigener
   Härtungs-Fix, **vor Ableitung weiterer Schlüsse aus den RLS-Policies zu
   verifizieren** — hier nicht adressiert.
-- Bis zur Umsetzung von 7a–7c besteht die eingangs beschriebene Lücke fort.
-  Das ist bewusst als **geplant, nicht gebaut** ausgewiesen — kein Feature,
-  das heute existiert.
+- **Restlücke bis zum nächsten Deploy + bis 7c-Teil-2:** 7a/7b und der
+  Retention-Cron (7c-Teil-1) sind gebaut/verifiziert, greifen produktiv aber
+  erst mit dem nächsten Rollout. Die **automatische Deprovisionierung bei
+  Austritt** (7c-Teil-2, Keycloak-Reconcile) fehlt weiterhin — bis dahin wird
+  Klasse (B) nur admin-getriggert per `scripts/purge-user.ts` gelöscht, nicht
+  automatisch beim Austritt.

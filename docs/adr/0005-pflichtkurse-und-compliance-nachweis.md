@@ -277,8 +277,18 @@ bestehenden Snapshot-Prinzip (`courseTitleSnapshot`/`courseVersionSnapshot`).
     CSV-Export (entparkt Phase 5) — liefert damit auch den vormaligen
     Phase-5-Umfang mit.
 
-**Descoped auf v1.1:** Mail-Reminder + Eskalation, Cron/Job-Infrastruktur,
-termingenaue Rezertifizierung, feingranulares Requirements-Targeting über den
+**Descoped auf v1.1:** Mail-Reminder + Eskalation, termingenaue
+Rezertifizierung, feingranulares Requirements-Targeting über den
 „alle Lerner"-Toggle hinaus, Gruppen-/Team-Modell, PDF-Export. **CSV-Export ist
 nicht mehr descoped** — mit der Art.-4-Schärfung in Scope (Phase 5 → 6d
 entparkt).
+
+**Update 2026-07-24 — Job-Infrastruktur existiert jetzt.** Die auf v1.1
+geparkte Cron/Job-Infrastruktur ist mit dem Retention-Cron aus ADR 0006
+(Phase 7c, K8s-`CronJob` im Helm-Chart, gleiches Image via
+`npx tsx scripts/<job>.ts`) etabliert. Die verbleibenden v1.1-Punkte oben sind
+damit **infrastrukturell entblockt** — termingenaue Rezertifizierung wäre ein
+weiterer CronJob nach demselben Muster; Mail-Reminder brauchen zusätzlich noch
+eine Mail-Infrastruktur (weiterhin nicht vorhanden). Der Kern-Zustand
+„überfällig" bleibt bewusst cron-unabhängig am Lesepunkt abgeleitet
+(Abschnitt 3) — der Cron ist Ergänzung, nicht Voraussetzung.

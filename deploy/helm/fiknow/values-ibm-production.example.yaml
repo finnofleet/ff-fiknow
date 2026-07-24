@@ -83,3 +83,12 @@ dataVolume:
 
 # Kein podSecurityContext-Override nötig: Die Chart-Defaults (runAsUser 1001,
 # runAsGroup 1001, fsGroup 1001) passen exakt zum Share-Owner 1001:1001.
+
+# Nächtlicher DSGVO/DSG-Retention-Purge (ADR 0006 Phase 7c) — in Prod aktiv,
+# echter Purge (kein dry-run), lokale Zeitzone für nachvollziehbare Läufe.
+# Restliche Werte (schedule, resources, …) kommen aus values.yaml.
+cronjob:
+  retentionPurge:
+    enabled: true
+    dryRun: false
+    timeZone: "Europe/Zurich"

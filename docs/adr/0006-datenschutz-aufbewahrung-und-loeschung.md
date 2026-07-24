@@ -46,12 +46,16 @@ sind mit dem Datenschutzbeauftragten/Recht zu klären (siehe unten).
 
 ### Leitprinzip: zwei Datenklassen
 
-- **Klasse (A) — Nachweis-relevant.** `training_assignments`. Unterliegt einer
-  Aufbewahrungspflicht: Rechtsgrundlage **Art. 17 Abs. 3 lit. b DSGVO**
-  (Aufbewahrung zur Erfüllung einer rechtlichen Pflicht — hier der
-  EU-AI-Act-Nachweispflicht aus Art. 4, siehe ADR 0005). Diese Zeilen werden
-  bei Konto-Löschung/Austritt **nicht sofort gelöscht**, sondern für eine
-  definierte Frist vorgehalten und erst danach gelöscht.
+- **Klasse (A) — Nachweis-relevant.** `training_assignments`. Aufbewahrung zu
+  Rechenschafts-/Verteidigungszwecken: Rechtsgrundlage **Art. 6 Abs. 1 lit. f
+  DSGVO** (berechtigtes Interesse: Rechenschaft nach Art. 5 Abs. 2 +
+  Verteidigung möglicher Ansprüche) i. V. m. **Art. 17 Abs. 3 lit. e DSGVO**
+  (Löschrecht greift nicht, soweit zur Geltendmachung/Verteidigung von
+  Rechtsansprüchen nötig). *Nicht* lit. b — Art. 4 EU AI Act schreibt keine
+  statutarische Aufbewahrungsfrist vor. Diese Zeilen werden bei
+  Konto-Löschung/Austritt **nicht sofort gelöscht**, sondern für die
+  Aufbewahrungsfrist (siehe „Entschieden" unten) vorgehalten und erst danach
+  gelöscht.
 - **Klasse (B) — nicht nachweispflichtig.** `lesson_progress`,
   `quiz_attempts`, `annotations`, `enrollments`, `profiles`. Diese Daten sind
   bei Austritt oder auf Verlangen **löschbar bzw. anonymisierbar** — es gibt
@@ -70,8 +74,9 @@ rückwirkend zu überschreiben oder Zeilen willkürlich zu löschen, damit der
 Nachweis als Audit-Trail belastbar bleibt. Sie ist **keine absolute
 Löschsperre**. Eine kontrollierte, protokollierte Lifecycle-Löschung
 (Fristablauf) oder eine rechtlich erzwungene Löschung (bestätigter
-Löschanspruch, der die Aufbewahrungspflicht aus Art. 17 Abs. 3 lit. b DSGVO
-nicht mehr trägt) ist ein **separater, auditierter Vorgang** — nicht der
+Löschanspruch, der das Aufbewahrungsinteresse aus Art. 6 Abs. 1 lit. f /
+Art. 17 Abs. 3 lit. e DSGVO nicht mehr trägt) ist ein **separater, auditierter
+Vorgang** — nicht der
 Normalbetrieb, den die append-only-Regel schützen soll. Beide Prinzipien
 stehen damit nicht im Widerspruch: append-only verhindert stille, beiläufige
 Manipulation des Nachweises; Retention-Löschung ist eine bewusste,
@@ -100,20 +105,30 @@ aus dem Identitäts-Lebenszyklus die lokale Bereinigung auslöst (Phase 7c).
 Self-Service-„Konto löschen" ist im SSO-Kontext nicht das Modell; die lokale
 Löschung ist ein admin-/trigger-ausgelöster, auditierter Datenpurge.
 
-### Offene Entscheidungen — mit Datenschutzbeauftragtem/Recht zu klären
+### Entschieden (2026-07-24) — restriktivste Auslegung, EU/DSGVO
 
-Ausdrücklich **nicht** in dieser ADR festgelegt:
+Grundsatz (mit Yves festgelegt): **die restriktivste, maximal datensparsame
+Auslegung** — kürzeste vertretbare Aufbewahrung, früheste Löschung. Die Lösung
+ist **im EU-Raum gehostet**, damit ist **DSGVO/EU** die maßgebliche Ordnung; der
+lange Schweizer Anker (Art. 127 OR, bis 10 Jahre) wird bewusst **nicht**
+herangezogen.
 
-- konkrete Aufbewahrungsfristen für Klasse (A) (z. B. bis Ende
-  Beschäftigungsverhältnis + X Jahre, oder bis zur Verjährung möglicher
-  Ansprüche),
-- Bestätigung der Rechtsgrundlage (Art. 17 Abs. 3 lit. b DSGVO wie oben
-  angenommen, oder eine abweichende Einordnung).
+- **Governing law:** DSGVO/EU.
+- **Klasse (B):** Löschung bei Austritt/auf Verlangen, **keine** Vorhaltung.
+- **Klasse (A) — Aufbewahrungsfrist:** kürzeste vertretbare = regelmäßige
+  Verjährung nach **§ 195/§ 199 BGB (3 Jahre, ab Ende des Entstehungsjahres)**,
+  danach **Hard-Delete**. Kein Puffer. Technisch als **konfigurierbarer Wert**,
+  nicht hartkodiert.
+- **Rechtsgrundlage:** Art. 6 Abs. 1 lit. f + Art. 17 Abs. 3 lit. e DSGVO
+  (siehe Leitprinzip oben).
+- **Auslöse-Mechanismus:** nächtlicher Keycloak-Reconcile (Phase 7c) —
+  Engineering-Entscheidung; optional später zusätzlich ein Webhook.
 
-Der **Auslöse-Mechanismus** für den Austritt ist dagegen entschieden (kein
-DSB-Thema, sondern Engineering): nächtlicher Keycloak-Reconcile, siehe
-Phase 7c. Offen bleibt allenfalls, ob später zusätzlich ein Webhook für
-geringere Latenz ergänzt wird.
+**Einziger verbleibender DSB-Check:** die absoluten Höchstfristen nach
+**§ 199 Abs. 3/4 BGB** (10/30 Jahre, kenntnisunabhängig) für Sonderfälle — bei
+striktem 3-Jahres-Löschen könnten seltene Spätansprüche nicht mehr belegbar
+sein. Das ist der bewusste Tradeoff der restriktiven Wahl; der DSB nimmt die
+finale Frist (Default 3 Jahre) formal ab.
 
 ## Umsetzung in Phasen (geplant)
 

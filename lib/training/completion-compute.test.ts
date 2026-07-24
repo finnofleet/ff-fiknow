@@ -14,6 +14,8 @@ function baseInput(over: Partial<CompletionInput> = {}): CompletionInput {
     passedQuizzes: [],
     drivers: [],
     estimatedMinutes: null,
+    confirmationRequired: false,
+    confirmed: false,
     ...over,
   };
 }
@@ -123,6 +125,78 @@ describe("decideCourseCompletion — Lernkontroll-Gate (opt-in)", () => {
       expect(d.evidence.assessment?.quizzes).toEqual([
         { sectionSlug: "s1", lessonSlug: "q1", score: 0.95 },
       ]);
+    }
+  });
+});
+
+describe("decideCourseCompletion — Verständnisbestätigung (opt-in, Phase 6c)", () => {
+  it("confirmationRequired && !confirmed → nicht abgeschlossen", () => {
+    const d = decideCourseCompletion(
+      baseInput({ confirmationRequired: true, confirmed: false }),
+    );
+    expect(d.complete).toBe(false);
+  });
+
+  it("confirmationRequired && confirmed → abgeschlossen, evidence.confirmation.confirmed === true", () => {
+    const d = decideCourseCompletion(
+      baseInput({ confirmationRequired: true, confirmed: true }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.confirmation?.confirmed).toBe(true);
+    }
+  });
+
+  it("kombiniert mit Quiz-Gate: Quiz bestanden, aber nicht bestätigt → nicht abgeschlossen", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        assessmentRequired: true,
+        quizLessons: [{ sectionSlug: "s1", lessonSlug: "q1" }],
+        passedQuizzes: [quiz("s1", "q1")],
+        confirmationRequired: true,
+        confirmed: false,
+      }),
+    );
+    expect(d.complete).toBe(false);
+  });
+
+  it("kombiniert mit Quiz-Gate: bestätigt, aber Quiz nicht bestanden → nicht abgeschlossen", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        assessmentRequired: true,
+        quizLessons: [{ sectionSlug: "s1", lessonSlug: "q1" }],
+        passedQuizzes: [],
+        confirmationRequired: true,
+        confirmed: true,
+      }),
+    );
+    expect(d.complete).toBe(false);
+  });
+
+  it("kombiniert mit Quiz-Gate: beides erfüllt → abgeschlossen", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        assessmentRequired: true,
+        quizLessons: [{ sectionSlug: "s1", lessonSlug: "q1" }],
+        passedQuizzes: [quiz("s1", "q1")],
+        confirmationRequired: true,
+        confirmed: true,
+      }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.type).toBe("all_lessons_and_assessment");
+      expect(d.evidence.confirmation?.confirmed).toBe(true);
+    }
+  });
+
+  it("confirmationRequired false → unverändert, kein evidence.confirmation", () => {
+    const d = decideCourseCompletion(
+      baseInput({ confirmationRequired: false, confirmed: false }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.confirmation).toBeUndefined();
     }
   });
 });

@@ -43,6 +43,23 @@
   border-left-color: var(--danger);
   color: var(--danger);
 }
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+.confirmCheckbox {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
 .submit {
   margin-top: 16px;
   padding: 14px 22px;

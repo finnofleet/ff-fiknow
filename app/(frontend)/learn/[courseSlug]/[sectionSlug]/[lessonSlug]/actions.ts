@@ -24,6 +24,8 @@ export type SubmitQuizPayload = {
   score: number;
   passed: boolean;
   next: string;
+  /** Verständnisbestätigung (Phase 6c) — nur relevant auf der letzten Lektion. */
+  confirmed?: boolean;
 };
 
 export async function submitQuizAttemptAction(payload: SubmitQuizPayload) {
@@ -49,7 +51,9 @@ export async function submitQuizAttemptAction(payload: SubmitQuizPayload) {
   });
 
   try {
-    await syncCourseCompletion(user.id, payload.courseSlug);
+    await syncCourseCompletion(user.id, payload.courseSlug, {
+      confirmed: payload.confirmed,
+    });
   } catch (err) {
     console.error("[training] syncCourseCompletion fehlgeschlagen:", err);
   }
@@ -67,6 +71,7 @@ export async function completeAndContinueAction(formData: FormData) {
   const sectionSlug = String(formData.get("section_slug") ?? "");
   const lessonSlug = String(formData.get("lesson_slug") ?? "");
   const next = String(formData.get("next") ?? "");
+  const confirmed = formData.get("confirmed") === "on" || formData.get("confirmed") === "true";
 
   if (!courseSlug || !sectionSlug || !lessonSlug) return;
 
@@ -81,7 +86,7 @@ export async function completeAndContinueAction(formData: FormData) {
   });
 
   try {
-    await syncCourseCompletion(user.id, courseSlug);
+    await syncCourseCompletion(user.id, courseSlug, { confirmed });
   } catch (err) {
     console.error("[training] syncCourseCompletion fehlgeschlagen:", err);
   }

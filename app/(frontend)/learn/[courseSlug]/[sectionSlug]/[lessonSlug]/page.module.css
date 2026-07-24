@@ -414,7 +414,9 @@
 }
 .completeForm {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
+  gap: 10px;
 }
 .completeBtn {
   padding: 18px 24px;
@@ -422,6 +424,26 @@
   border-radius: var(--r-md);
   width: 100%;
   justify-content: center;
+}
+.completeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+.confirmCheckbox {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 .lessonFoot {

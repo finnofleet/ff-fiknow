@@ -13,6 +13,13 @@
  * Updates, kein reines Vor-Check. Die schärfere Lernkontroll-Regel greift
  * dadurch automatisch erst ab neuen/offenen Zuweisungen (keine rückwirkende
  * Entwertung bestehender Nachweise).
+ *
+ * `confirmationRequired` (Phase 6c): `opts.confirmed` wird von den Learn-
+ * Actions durchgereicht (Checkbox „Ich bestätige …" auf der letzten Lektion)
+ * und ist nur relevant, wenn `course.frontmatter.confirmation_required`
+ * gesetzt ist. Bei Abschluss ergänzt diese I/O-Schicht `confirmedAt` im
+ * eingefrorenen `evidence.confirmation` — die reine `decideCourseCompletion`
+ * kennt nur `confirmed: true`, keine Zeitstempel.
  */
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
@@ -30,6 +37,7 @@ import {
 export async function syncCourseCompletion(
   userId: string,
   courseSlug: string,
+  opts?: { confirmed?: boolean },
 ): Promise<void> {
   const course = await getCourse(courseSlug);
   if (!course) return;
@@ -83,6 +91,8 @@ export async function syncCourseCompletion(
     }));
   }
 
+  const confirmationRequired = Boolean(course.frontmatter.confirmation_required);
+
   const decision = decideCourseCompletion({
     totalLessons,
     completedLessons,
@@ -91,18 +101,28 @@ export async function syncCourseCompletion(
     passedQuizzes,
     drivers: course.frontmatter.compliance_drivers ?? [],
     estimatedMinutes: course.frontmatter.estimated_minutes ?? null,
+    confirmationRequired,
+    confirmed: opts?.confirmed ?? false,
   });
 
   if (!decision.complete) return;
 
   const now = new Date();
+  const evidence = decision.evidence;
+  if (evidence.confirmation) {
+    evidence.confirmation = {
+      ...evidence.confirmation,
+      confirmedAt: now.toISOString(),
+    };
+  }
+
   await db
     .update(trainingAssignments)
     .set({
       completedAt: now,
       courseTitleSnapshot: course.frontmatter.title,
       courseVersionSnapshot: course.frontmatter.version ?? null,
-      evidence: decision.evidence,
+      evidence,
     })
     .where(
       and(

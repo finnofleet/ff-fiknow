@@ -15,6 +15,8 @@ type Props = {
   passingScore: number;
   questionCount: number;
   nextHref: string | null;
+  /** Kurs-Flag `confirmationRequired` — Checkbox nur auf der letzten Lektion. */
+  confirmationRequired: boolean;
   children: ReactNode;
 };
 
@@ -25,10 +27,15 @@ export function QuizShell({
   passingScore,
   questionCount,
   nextHref,
+  confirmationRequired,
   children,
 }: Props) {
   const [results, setResults] = useState<Map<string, QuestionResult>>(new Map());
   const [submitting, setSubmitting] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Verständnisbestätigung greift nur auf der letzten Lektion des Kurses.
+  const needsConfirmation = confirmationRequired && nextHref === null;
 
   const reportResult = useCallback((id: string, result: QuestionResult) => {
     setResults((prev) => {
@@ -53,6 +60,7 @@ export function QuizShell({
       courseSlug,
       sectionSlug,
       lessonSlug,
+      confirmed,
     };
     await submitQuizAttemptAction(payload);
     // Action navigiert weiter — kein setSubmitting(false) nötig
@@ -84,11 +92,23 @@ export function QuizShell({
           </div>
         )}
 
+        {needsConfirmation && (
+          <label className={styles.confirmRow}>
+            <input
+              type="checkbox"
+              className={styles.confirmCheckbox}
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+            />
+            Ich bestätige, den Inhalt verstanden zu haben.
+          </label>
+        )}
+
         <button
           type="button"
           className={`btn btn-primary ${styles.submit}`}
           onClick={onSubmit}
-          disabled={!allAnswered || submitting}
+          disabled={!allAnswered || (needsConfirmation && !confirmed) || submitting}
         >
           {submitting ? (
             "…"

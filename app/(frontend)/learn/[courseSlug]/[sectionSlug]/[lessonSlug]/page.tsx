@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, Check, Circle, CircleCheck, CircleDot } from "lucide-react";
+import { Circle, CircleCheck, CircleDot } from "lucide-react";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -20,7 +20,7 @@ import {
   progressKey,
 } from "@/lib/progress";
 
-import { completeAndContinueAction } from "./actions";
+import { CompleteForm } from "./complete-form";
 import styles from "./page.module.css";
 
 type RouteParams = Promise<{
@@ -237,6 +237,7 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
               questionCount={questionCount}
               passingScore={passingScore}
               nextHref={nextHref}
+              confirmationRequired={Boolean(course.frontmatter.confirmation_required)}
             >
               <div className={styles.prose} data-tutor-prose>
                 <MDXRemote
@@ -270,29 +271,14 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
             )}
 
             {!isQuiz && (
-              <form action={completeAndContinueAction} className={styles.completeForm}>
-                <input type="hidden" name="course_slug" value={courseSlug} />
-                <input type="hidden" name="section_slug" value={sectionSlug} />
-                <input type="hidden" name="lesson_slug" value={lessonSlug} />
-                <input type="hidden" name="next" value={nextHref ?? ""} />
-                <button
-                  type="submit"
-                  className={`btn btn-primary ${styles.completeBtn}`}
-                  disabled={!user}
-                >
-                  {nextHref ? (
-                    <>
-                      Erledigt &amp; weiter
-                      <ArrowRight size={14} strokeWidth={1.75} />
-                    </>
-                  ) : (
-                    <>
-                      <Check size={14} strokeWidth={1.75} />
-                      Kurs abschließen
-                    </>
-                  )}
-                </button>
-              </form>
+              <CompleteForm
+                courseSlug={courseSlug}
+                sectionSlug={sectionSlug}
+                lessonSlug={lessonSlug}
+                nextHref={nextHref}
+                confirmationRequired={Boolean(course.frontmatter.confirmation_required)}
+                hasUser={Boolean(user)}
+              />
             )}
           </nav>
 

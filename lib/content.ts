@@ -55,6 +55,17 @@ export type CourseFrontmatter = {
   tutor_enabled?: boolean;
   /** Bundle-Konflikt-Token (ADR 0001) — dient als bundle_version-Anker. */
   version?: string;
+  /**
+   * Compliance-Nachweis (ADR 0005, Abschnitt 6) — Admin-only Felder, nicht aus
+   * dem Bundle-Frontmatter, sondern im Payload-Admin gepflegt (wie
+   * `tutor_enabled`/`mandatory`).
+   */
+  /** Regulatorische/organisatorische Treiber (z. B. ["eu_ai_act"]). */
+  compliance_drivers?: string[];
+  /** Bestandene Prüfung als Abschlusskriterium (nur wirksam mit Quiz). */
+  assessment_required?: boolean;
+  /** Verständnisbestätigung am Kursende verlangt (Gate ab Phase 6c). */
+  confirmation_required?: boolean;
 };
 
 export type SectionFrontmatter = {
@@ -347,6 +358,11 @@ function courseFrontmatterFromDoc(d: any): CourseFrontmatter {
       undefined,
     tutor_enabled: Boolean(d.tutorEnabled),
     version: (d.version as string) ?? undefined,
+    compliance_drivers: Array.isArray(d.complianceDrivers)
+      ? (d.complianceDrivers as string[])
+      : undefined,
+    assessment_required: Boolean(d.assessmentRequired),
+    confirmation_required: Boolean(d.confirmationRequired),
   };
 }
 

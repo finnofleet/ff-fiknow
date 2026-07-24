@@ -99,6 +99,7 @@ Das Ergebnis fügst du ins Bundle unter `<NN>-<section>/<MM>-<slug>.mdx` ein und
 - [ ] Bei Faktenaussagen: Quelle oder Norm im Text genannt (z. B. „nach EU 2019/947 Art. 3")
 - [ ] Keine Du-/Sie-Mischung
 - [ ] Quiz-Fragen haben alle eine `explanation`
+- [ ] Falls im Admin `assessmentRequired` gesetzt ist: mindestens eine Quiz-Lesson (`type: "quiz"`) im Kurs vorhanden — sonst greift das Feld nicht sinnvoll
 - [ ] Hinweis, dass verstande.ch vorbereitet, aber keine offizielle Prüfung ersetzt — wo passend, einmal pro Section
 - [ ] Keine verschachtelten Anführungszeichen in MDX-Attribut-Werten
 - [ ] Bundle hochgeladen als Draft → im echten Learner-Shell begangen → erst dann publishen

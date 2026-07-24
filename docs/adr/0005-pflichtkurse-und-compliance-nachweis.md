@@ -5,8 +5,11 @@
   Pflichtschulungen", P4 Compliance-Dashboard `/manage/pflichtkurse`.
   Umsetzungs-Abweichung ggü. Plan: Materialisierung läuft **lazy am Lesepunkt**
   statt via afterChange-Hooks (Transaction-Visibility + Orphan-Risiko, via
-  Live-Test belegt). **Phase 5 (CSV-Audit-Export) parkiert** (Bedarf unklar,
-  siehe ROADMAP „Später").
+  Live-Test belegt). **Art.-4-Schärfung (KI-Kompetenz-Nachweis) als Erweiterung
+  Accepted, 2026-07-24**: deklarierte Kursdauer, generische Treiber-Taxonomie,
+  opt-in Lernkontrolle, Verständnisbestätigung — und **Phase 5 (CSV-Audit-
+  Export) wird dabei entparkt** (jetzt Phase 6d, siehe Abschnitt 6 und
+  „Umsetzung in Phasen" unten).
 - **Datum:** 2026-07-03
 - **Kontext-Phase:** Compliance / Tracking
 - **Betroffene Bereiche:** Course-Content (`payload/collections/courses.ts` —
@@ -143,6 +146,64 @@ Compliance-Dashboard je Kurs/Requirement:
 - **CSV-Export** aus derselben Query (reines `text/csv`-Response, kein neuer
   Stack). PDF optional später.
 
+### 6. Art.-4-Schärfung — vom generischen Nachweis zum belastbaren KI-Kompetenz-Beleg (2026-07-24)
+
+Der EU AI Act, Art. 4 (KI-Kompetenz-Nachweispflicht, in Kraft seit 02.02.2025)
+verlangt kein Pflicht-Curriculum, aber einen belastbaren, rollenproportionalen
+**Nachweis pro Person**: Teilnehmer+Funktion, Datum, Themen/Curriculum, Umfang
+(UE/Stunden), Lernkontrolle-mit-Ergebnis, Auffrischungsdatum, abgedeckter
+Geltungsbereich — und **herausgebbar** (Export). Ohne Lernkontrolle gilt ein
+Nachweis in der Aufsichtspraxis als schwach. Die folgenden fünf Entscheidungen
+schärfen den bestehenden Nachweis entsprechend nach. **Das Modell bleibt
+treiber-agnostisch** — EU AI Act ist nur ein Tag-Wert unter mehreren, keine
+Sonderbehandlung. Die Kern-Architektur (eine Wahrheit/zwei Eingänge,
+append-only, Content-Snapshot) ändert sich nicht; die Erweiterung fügt
+Metadaten, eine optionale Lernkontroll-Kopplung und einen Export hinzu.
+
+1. **Generische Compliance-Treiber-Taxonomie statt `aiActRelevant`-Boolean.**
+   Ein Standard-spezifisches Boolean-Flag würde das bewusst treiber-agnostische
+   Design aus Abschnitt „Kontext" konterkarieren — es koppelt das Datenmodell an
+   EINEN Standard. Stattdessen neues Kursfeld `complianceDrivers`
+   (Multi-Select, kontrolliertes Vokabular: `eu_ai_act`, `iso_42001`,
+   `iso_27001`, `dsg_dsgvo`, `security_awareness`, `arbeitsrecht`,
+   `branchenspezifisch`, `sonstige`). Der Tag lebt am Kurs (Inhaltseigenschaft)
+   und wird beim Abschluss in den Nachweis eingefroren. Das Dashboard kann
+   „Erfüllungsquote pro Treiber" auswerten, ohne dass EU AI Act mehr ist als
+   ein Wert in einer Liste.
+2. **Deklarierte Kursdauer statt gemessener Session-Zeit.** Der
+   Behörden-Nachweis will einen nominalen „Umfang in UE/Stunden", keine
+   Stoppuhr pro Person. Gemessene Zeit bräuchte Heartbeat-Infra,
+   Idle-/Gaming-Handling und bringt vor allem ein Mitbestimmungs-/DSG-Risiko
+   (Mitarbeiter-Zeiterfassung) — für einen im Ergebnis schwächeren Nachweis.
+   **Kein neues Feld:** der Kurs hat bereits `estimatedMinutes`
+   („Geschätzte Lernzeit", aus dem Bundle-Frontmatter `estimated_minutes`,
+   siehe `AUTHORING_BUNDLE.md`) — genau die deklarierte Kursdauer, die der
+   Nachweis-Umfang braucht. Dieses Feld wird wiederverwendet und beim
+   Abschluss eingefroren; ein zweites, paralleles Dauer-Feld würde Autor:innen
+   nur verwirren (und Payload beim Config-Load mit `DuplicateFieldName`
+   ablehnen). Sollte „Umfang/UE" später rechtlich von der Lernzeit divergieren,
+   wird es dann getrennt — YAGNI (Entscheidung 6a, 2026-07-24).
+3. **Lernkontrolle als Abschlusskriterium: pro Kurs opt-in.** Neues Kursfeld
+   `assessmentRequired` (Checkbox). Greift nur, wenn der Kurs ein Quiz enthält;
+   dann gilt der Kurs erst mit bestandenem Quiz (`passingScore`,
+   `quiz_attempts.passed`) als abgeschlossen. Quizlose Kurse bleiben unberührt.
+   **Append-only bleibt gewahrt**: bestehende `completedAt`-Zeilen werden nicht
+   angetastet, die schärfere Regel greift erst ab neuen Zuweisungen/neuem
+   Zyklus — keine rückwirkende Entwertung bestehender Nachweise.
+4. **Verständnisbestätigung als optionales Kursfeld `confirmationRequired`**
+   (Checkbox): Lernende bestätigen am Kursende explizit „verstanden", der
+   Zeitstempel wird im Nachweis (`evidence`) festgehalten.
+5. **CSV-Audit-Export wird entparkt** (bisher Phase 5, „Bedarf unklar"). Ohne
+   herausgebbares Artefakt ist der Nachweis im Streitfall schwach — der
+   Trigger (EU-AI-Act-Nachweisbedarf) ist eingetreten. Der Export kommt jetzt
+   in Scope, inkl. Spalten für Treiber, Umfang und Lernkontroll-Ergebnis.
+
+**Technisch:** Treiber, `estimatedMinutes`, Quiz-Ergebnis und
+Bestätigungs-Zeitstempel werden beim Abschluss in
+`training_assignments.evidence` (jsonb, existiert bereits) eingefroren —
+**kein Migrations-Bedarf auf `training_assignments`**, konsistent mit dem
+bestehenden Snapshot-Prinzip (`courseTitleSnapshot`/`courseVersionSnapshot`).
+
 ## Begründung
 
 - **Append-only + Snapshot = belastbarer Nachweis.** Ein Audit-Record, der auf
@@ -196,8 +257,22 @@ Compliance-Dashboard je Kurs/Requirement:
 - **Phase 4 — Compliance-Dashboard.** Quote + Teilnehmer-Drill-down unter
   `manage/`, Access `canManageCourses`/`canManageUsers`.
 - **Phase 5 — CSV-Audit-Export.** Aus derselben Query.
+- **Phase 6 — Art.-4-Schärfung (2026-07-24).**
+  - **6a — Kurs-Metadaten.** `complianceDrivers`/`assessmentRequired`/
+    `confirmationRequired` auf `courses` (Dauer nutzt das bestehende
+    `estimatedMinutes` wieder) + Migration via `payload migrate:create`
+    generiert (inkl. `.json`-Snapshot). *Delegierbar nach fixer Spec.*
+  - **6b — Completion-Schärfung.** Opt-in Quiz-Gating (Kurs erst mit
+    bestandenem Quiz abgeschlossen, wenn `assessmentRequired`) +
+    evidence-Anreicherung (Treiber/Dauer/Quiz-Ergebnis beim Abschluss
+    einfrieren). *Kernlogik — Hauptthread.*
+  - **6c — Verständnisbestätigung.** UI-Bestätigung am Kursende +
+    Zeitstempel-Persistenz in `evidence`.
+  - **6d — Auswertung.** Treiber-Filter im Compliance-Dashboard +
+    CSV-Export (entparkt Phase 5).
 
 **Descoped auf v1.1:** Mail-Reminder + Eskalation, Cron/Job-Infrastruktur,
 termingenaue Rezertifizierung, feingranulares Requirements-Targeting über den
-„alle Lerner"-Toggle hinaus, Gruppen-/Team-Modell, PDF-Export, Quiz-als-
-Abschlusskriterium.
+„alle Lerner"-Toggle hinaus, Gruppen-/Team-Modell, PDF-Export. **CSV-Export ist
+nicht mehr descoped** — mit der Art.-4-Schärfung in Scope (Phase 5 → 6d
+entparkt).

@@ -224,6 +224,7 @@ Das Ergebnis fügst du ins Bundle unter `<NN>-<section>/<MM>-<slug>.mdx` ein und
 - [ ] Bei regulatorischen oder Compliance-Aussagen: Quelle oder Norm im Text genannt (z. B. „gemäss KWG § 18" oder „laut interner Richtlinie vom …")
 - [ ] Keine Du-/Sie-Mischung
 - [ ] Quiz-Fragen haben alle eine `explanation`
+- [ ] Falls im Admin `assessmentRequired` gesetzt ist: mindestens eine Quiz-Lesson (`type: "quiz"`) im Kurs vorhanden — sonst greift das Feld nicht sinnvoll
 - [ ] Keine verschachtelten Anführungszeichen in MDX-Attribut-Werten
 - [ ] Bundle hochgeladen als Draft → im echten Learner-Shell geprüft → erst dann publishen
 

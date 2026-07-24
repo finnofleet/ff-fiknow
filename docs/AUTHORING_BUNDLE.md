@@ -84,6 +84,29 @@ gespeichert, kann aber für Bundle-übergreifende Beschreibung dienen).
 | `cover_alt` | string | – | Alt-Text für das Cover-Bild |
 | `version` | string | – | Vom Server beim Download gesetzt. Wird beim Upload geprüft; bei Mismatch lehnt der Server mit 409 + Diff ab statt blind zu überschreiben. **Nicht manuell editieren.** |
 
+#### Admin-only Kursfelder (nicht Teil des Bundle-Frontmatters)
+
+Die folgenden Kursfelder werden **nur im Payload-Admin** gepflegt (Sidebar
+des Kurs-Editors) — sie stehen **nicht** im `course.mdx`-Frontmatter und
+werden vom Bundle-Import nicht gesetzt/überschrieben (genau wie
+`mandatory` und `tutorEnabled`). Relevant für den Compliance-Nachweis
+(z. B. Art. 4 EU AI Act, ISO/IEC 42001/27001, DSG/DSGVO):
+
+| Feld | Typ | Beschreibung |
+|---|---|---|
+| `complianceDrivers` | Multi-Select | Regulatorische/organisatorische Treiber dieses (Pflicht-)Kurses. Werte: `eu_ai_act` (EU AI Act, KI-Kompetenz Art. 4), `iso_42001` (ISO/IEC 42001), `iso_27001` (ISO/IEC 27001), `dsg_dsgvo` (Datenschutz DSG/DSGVO), `security_awareness`, `arbeitsrecht` (Arbeitsrecht/-sicherheit), `branchenspezifisch`, `sonstige`. Setze `eu_ai_act`, wenn der Kurs zur KI-Kompetenz-Schulung nach Art. 4 EU AI Act zählt — ermöglicht später eine Auswertung „alle Kurse für den Art.-4-Nachweis". Ein Kurs kann mehrere Treiber gleichzeitig haben. |
+| `assessmentRequired` | checkbox | Verlangt eine **bestandene** Prüfung, damit der Kurs als abgeschlossen gilt. Setzt voraus, dass der Kurs mindestens eine Quiz-Lesson (`type: "quiz"`) enthält — ohne Quiz greift das Feld nicht sinnvoll. Wirkt erst ab neuer Zuweisung/neuem Zyklus, bestehende Abschlüsse bleiben unberührt. |
+| `confirmationRequired` | checkbox | Verlangt am Kursende eine explizite Verständnisbestätigung der/des Lernenden; die Bestätigung wird im Compliance-Nachweis festgehalten. |
+
+Der **Nachweis-Umfang** (UE/Stunden) bekommt **kein eigenes Feld** — dafür
+wird die bereits vorhandene, deklarierte Kursdauer `estimated_minutes`
+(Frontmatter, oben) wiederverwendet und beim Abschluss in den Nachweis
+eingefroren.
+
+> Stand Phase 6a: reine Metadatenfelder. Die eigentliche
+> Completion-/Abschluss-Prüfung (Quiz-Pflicht, Bestätigungs-Dialog) ist
+> noch nicht verdrahtet — das ist ein späterer Schritt.
+
 ### `section.mdx` (optional)
 
 ```yaml

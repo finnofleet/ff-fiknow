@@ -177,5 +177,65 @@ export const Courses: CollectionConfig = {
           "läuft über Pflicht-Anforderungen.",
       },
     },
+    // Phase 6a (Compliance-Nachweis, Art. 4 EU AI Act u. a.): reine
+    // Metadatenfelder. Kernlogik/Completion-Verhalten bleibt unverändert —
+    // `assessmentRequired`/`confirmationRequired` greifen erst, sobald ein
+    // späterer Phase-Schritt die Completion-Prüfung entsprechend erweitert.
+    {
+      name: "complianceDrivers",
+      type: "select",
+      hasMany: true,
+      label: "Compliance-Treiber",
+      options: [
+        { label: "EU AI Act (KI-Kompetenz, Art. 4)", value: "eu_ai_act" },
+        {
+          label: "ISO/IEC 42001 (KI-Managementsystem)",
+          value: "iso_42001",
+        },
+        {
+          label: "ISO/IEC 27001 (Informationssicherheit)",
+          value: "iso_27001",
+        },
+        { label: "Datenschutz (DSG/DSGVO)", value: "dsg_dsgvo" },
+        { label: "Security Awareness", value: "security_awareness" },
+        {
+          label: "Arbeitsrecht / Arbeitssicherheit",
+          value: "arbeitsrecht",
+        },
+        { label: "Branchenspezifisch", value: "branchenspezifisch" },
+        { label: "Sonstige", value: "sonstige" },
+      ],
+      admin: {
+        position: "sidebar",
+        description:
+          "Regulatorische/organisatorische Treiber dieses (Pflicht-)Kurses. " +
+          "Ermöglicht Auswertung z. B. aller EU-AI-Act-Kurse für den " +
+          "KI-Kompetenz-Nachweis (Art. 4).",
+      },
+    },
+    {
+      name: "assessmentRequired",
+      type: "checkbox",
+      label: "Bestandene Prüfung für Abschluss erforderlich",
+      admin: {
+        position: "sidebar",
+        description:
+          "Nur wirksam, wenn der Kurs ein Quiz enthält. Ohne bestandenes " +
+          "Quiz gilt der Kurs dann nicht als abgeschlossen. Greift ab " +
+          "neuer Zuweisung/neuem Zyklus — bestehende Abschlüsse bleiben " +
+          "unberührt.",
+      },
+    },
+    {
+      name: "confirmationRequired",
+      type: "checkbox",
+      label: "Verständnisbestätigung verlangen",
+      admin: {
+        position: "sidebar",
+        description:
+          "Lernende bestätigen am Kursende explizit, den Inhalt verstanden " +
+          "zu haben; die Bestätigung wird im Nachweis festgehalten.",
+      },
+    },
   ],
 };

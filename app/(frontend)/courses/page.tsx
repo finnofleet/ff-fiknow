@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
 import { brand } from "@/lib/brand";
 import { listCourses } from "@/lib/content";
-import { viewerCanSeeDrafts } from "@/lib/auth/session";
+import { getCurrentUser, viewerCanSeeDrafts } from "@/lib/auth/session";
 
 import { CatalogClient, type CatalogCourse } from "./catalog-client";
 import styles from "./page.module.css";
@@ -21,6 +22,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CatalogPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
+
   // Kuratoren/Admins sehen zusätzlich Draft-Kurse (im selben Katalog, mit Badge).
   const includeDrafts = await viewerCanSeeDrafts();
   const courses = await listCourses({ includeDrafts });

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ArrowRight, BookOpen, Clock, Layers, ListChecks, PlayCircle } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
 import { brand } from "@/lib/brand";
@@ -78,13 +78,14 @@ export default async function CourseDetailPage({
   params: RouteParams;
 }) {
   const { slug } = await params;
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
+
   const includeDrafts = await viewerCanSeeDrafts();
   const course = await getCourse(slug, { includeDrafts });
   if (!course) notFound();
 
   const isDraft = course.frontmatter.status === "draft";
-
-  const user = await getCurrentUser();
 
   let isEnrolled = false;
   if (user) {

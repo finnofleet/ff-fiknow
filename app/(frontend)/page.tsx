@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandSignature } from "@/components/brand-signature";
 import { TopNav } from "@/components/top-nav";
+import { getCurrentUser } from "@/lib/auth/session";
 import { brand, brandConfig, brandFullName } from "@/lib/brand";
 import {
   type CourseSummary,
@@ -106,9 +107,49 @@ export default async function Home({
 }: {
   searchParams: SearchParams;
 }) {
+  const user = await getCurrentUser();
+  const { signedout } = await searchParams;
+
+  // Anonym: reine Welcome-Seite — keine Kurstitel, keine Roadmap. Erst nach
+  // Login gibt es Einblick in Inhalte (siehe Login-Gating der Kurs-Routen).
+  if (!user) {
+    return (
+      <>
+        <TopNav />
+        <main className={styles.wrap}>
+          {signedout && (
+            <div className={styles.notice}>
+              Du bist abgemeldet — bis bald.
+            </div>
+          )}
+          <header className={styles.header}>
+            <div className={styles.brand}>
+              <div className={styles.brandLine}>
+                <BrandSignature
+                  markClassName={styles.mark}
+                  nameClassName={styles.name}
+                  tldClassName={styles.tld}
+                />
+              </div>
+              {brand.tagline && (
+                <div className={styles.tag}>{brand.tagline}</div>
+              )}
+            </div>
+            <div className={styles.lede}>
+              <h1>{brand.description}</h1>
+              {brandConfig.hero.intro && <p>{brandConfig.hero.intro}</p>}
+              <Link href="/auth/oidc/login" className={`btn btn-primary ${styles.cta}`}>
+                Anmelden
+              </Link>
+            </div>
+          </header>
+        </main>
+      </>
+    );
+  }
+
   const allCourses = await listCourseSummaries();
   const featured = pickRandom(allCourses, 3);
-  const { signedout } = await searchParams;
 
   return (
     <>

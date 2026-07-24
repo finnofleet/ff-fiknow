@@ -43,13 +43,15 @@ export async function TopNav({ active }: Props) {
             Mein Lernen
           </Link>
         )}
-        <Link
-          href="/courses"
-          className={active === "katalog" ? styles.active : undefined}
-        >
-          Katalog
-        </Link>
-        {showPathsLink && (
+        {user && (
+          <Link
+            href="/courses"
+            className={active === "katalog" ? styles.active : undefined}
+          >
+            Katalog
+          </Link>
+        )}
+        {user && showPathsLink && (
           <Link
             href="/paths"
             className={active === "pfade" ? styles.active : undefined}

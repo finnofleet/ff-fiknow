@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
 import { getCurrentUser, viewerCanSeeDrafts } from "@/lib/auth/session";
 import { getPath, type PathRole } from "@/lib/paths";
-import { getPathProgress, type PathProgress } from "@/lib/paths-progress";
+import { getPathProgress } from "@/lib/paths-progress";
 
 import styles from "./page.module.css";
 
@@ -31,14 +31,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PathDetailPage({ params }: Props) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
+
   const { slug } = await params;
   const path = await getPath(slug, { includeDrafts: await viewerCanSeeDrafts() });
   if (!path) notFound();
 
-  const user = await getCurrentUser();
-  const progress: PathProgress | null = user
-    ? await getPathProgress(user.id, path)
-    : null;
+  const progress = await getPathProgress(user.id, path);
 
   // Pro-Kurs-Statistik per Slug nachschlagen (nur auflösbare Kurse haben Stats).
   const statBySlug = new Map(

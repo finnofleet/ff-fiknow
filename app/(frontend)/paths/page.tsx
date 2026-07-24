@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
-import { viewerCanSeeDrafts } from "@/lib/auth/session";
+import { getCurrentUser, viewerCanSeeDrafts } from "@/lib/auth/session";
 import { brand } from "@/lib/brand";
 import { listPaths } from "@/lib/paths";
 
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PathsPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
+
   // Autoren/Admins sehen zusätzlich Draft-Pfade (mit „Entwurf"-Badge).
   const includeDrafts = await viewerCanSeeDrafts();
   const paths = await listPaths({ includeDrafts });

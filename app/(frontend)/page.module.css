@@ -82,6 +82,12 @@
   margin: 0;
 }
 
+/* CTA auf der anonymen Welcome-Seite — folgt direkt auf die Lede. */
+.cta {
+  margin-top: 28px;
+  display: inline-flex;
+}
+
 .section {
   margin-top: 32px;
 }

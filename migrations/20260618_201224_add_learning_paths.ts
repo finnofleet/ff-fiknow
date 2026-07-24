@@ -43,9 +43,11 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "payload"."learning_paths" DISABLE ROW LEVEL SECURITY;
   DROP TABLE "payload"."learning_paths_courses" CASCADE;
   DROP TABLE "payload"."learning_paths" CASCADE;
-  ALTER TABLE "payload"."payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_learning_paths_fk";
-  
-  DROP INDEX "payload"."payload_locked_documents_rels_learning_paths_id_idx";
+  -- IF EXISTS: der vorherige DROP TABLE ... CASCADE entfernt diese FK-Constraint
+  -- bereits mit; ohne IF EXISTS scheitert der Down-Batch hier ("does not exist").
+  ALTER TABLE "payload"."payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_learning_paths_fk";
+
+  DROP INDEX IF EXISTS "payload"."payload_locked_documents_rels_learning_paths_id_idx";
   ALTER TABLE "payload"."payload_locked_documents_rels" DROP COLUMN "learning_paths_id";
   DROP TYPE "payload"."enum_learning_paths_courses_role";
   DROP TYPE "payload"."enum_learning_paths_fuehrungsgrad";`)

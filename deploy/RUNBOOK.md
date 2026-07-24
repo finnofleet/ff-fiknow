@@ -504,6 +504,98 @@ im Container-Env, unabhängig vom `--confirm`-Flag im `command`.
 
 ---
 
+## 7c. Update auf dieses Release (Betreiber-Prozedur)
+
+Dieses Release bringt zwei **opt-in** Änderungen: Retention-Purge (Abschnitt 7b)
+und den Embedding-Provider watsonx/granite (Abschnitt 5a). Das Deployen des
+neuen Images allein ist unkritisch — es legt beim Boot nur die neue, leere und
+PII-freie Tabelle `retention_purge_runs` an; beide Features aktiviert man
+bewusst über Helm-Values bzw. Env. Die folgenden Schritte sind unabhängig
+voneinander; Schritt 3 ist optional.
+
+**Schritt 1 — Image deployen (Pflicht).**
+Neues Image ausrollen wie gewohnt via `helm upgrade --install …` (Befehl siehe
+Abschnitt 5). Beim Pod-Start läuft das Auto-Migrate und legt
+`retention_purge_runs` an (Drizzle-Migration 0008). Erwartet im Log:
+`[auto-migrate] … fertig in <n> ms` (Abschnitt 6). Klemmt die Boot-Migration,
+ist `SKIP_MIGRATIONS` der dokumentierte Notausstieg (Abschnitt 7 / 7a).
+
+> Drizzle-Migrationen sind **vorwärts-only** (kein Auto-Down). Bei einem
+> Image-Rollback bleibt die neue Tabelle einfach stehen — das ist harmlos.
+
+Verifikation:
+```bash
+kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow   # alle Ready
+curl -fsS https://app.fiknow.example.com/api/health
+psql "$DATABASE_URL" -c 'select count(*) from retention_purge_runs;'   # → 0
+```
+
+**Schritt 2 — Retention-Purge aktivieren (DSGVO, empfohlen).**
+In der eigenen Prod-Werte-Datei den `cronjob:`-Block setzen:
+```yaml
+cronjob:
+  retentionPurge:
+    enabled: true
+    dryRun: false
+    timeZone: "Europe/Zurich"
+```
+> ⚠️ `values-ibm-production.yaml` ist gitignored und existiert nur lokal beim
+> Betreiber — der Block muss in **eurer eigenen** Werte-Datei ergänzt werden.
+> Vorlage: `values-ibm-production.example.yaml`, Details siehe Abschnitt 7b.
+
+Danach erneut `helm upgrade` (Befehl siehe Abschnitt 5).
+
+Verifikation:
+```bash
+kubectl -n <ns> get cronjob   # zeigt <release>-retention-purge
+kubectl create job --from=cronjob/<release>-retention-purge \
+  retention-manual-$(date +%s) -n <namespace>   # Befehl aus 7b
+```
+Log prüfen (Befehl aus 7b) — erwartet `deleted_count=0`; das ist korrekt
+(Begründung siehe 7b, „Erwartung: 0 gelöschte Zeilen"). Zusätzlich die
+Audit-Zeile prüfen (SQL aus 7b).
+
+**Schritt 3 — Embedding-Provider auf watsonx/granite umstellen (optional, nur
+mit vorhandenem watsonx-Projekt/Key).**
+
+> ⚠️ **Reihenfolge unbedingt einhalten** — sonst laufen Tutor-Antworten
+> kurzzeitig auf gemischten Vektor-Dimensionen (Voyage 1024 vs. watsonx/Granite
+> 768, s. Abschnitt 5a).
+
+3a. Smoke-Test **vor** der Umstellung, ohne DB-Zugriff:
+```bash
+EMBEDDING_PROVIDER=watsonx WATSONX_API_KEY=… WATSONX_PROJECT_ID=… \
+WATSONX_URL=https://eu-de.ml.cloud.ibm.com \
+npx tsx scripts/embed-smoketest.ts
+```
+Muss „Provider erreichbar, 768 Dimensionen" melden.
+
+3b. Env setzen — `EMBEDDING_PROVIDER`, `WATSONX_PROJECT_ID`, `WATSONX_URL`,
+`EMBEDDING_MODEL` in die ConfigMap (`config.extra`), `WATSONX_API_KEY` ins
+Secret (Tabellen/Snippets siehe Abschnitt 5a). Danach `helm upgrade`.
+
+3c. **Pflicht-Backfill**, weil die Vektor-Dimension von 1024 auf 768 wechselt:
+```
+POST /api/authoring/reindex
+```
+ohne `slug` → alle Kurse werden neu embedded (Abschnitt 5a).
+
+Verifikation: `course_index_state` aller Kurse steht auf `indexed`; der Tutor
+liefert wieder gegroundete Antworten.
+
+**Rollback.**
+- Retention pausieren, ohne den Job auszubauen: `cronjob.retentionPurge.dryRun:
+  true` setzen + `helm upgrade` — löscht ab sofort nichts mehr (Abschnitt 7b).
+  Ganz deaktivieren: `enabled: false`. Die Tabelle `retention_purge_runs`
+  bleibt in beiden Fällen bestehen (harmlos).
+- watsonx zurück auf Voyage: `EMBEDDING_PROVIDER` entfernen (oder `=voyage`
+  setzen), `helm upgrade`, danach erneut Backfill fahren (Schritt 3c) — die
+  Dimension wechselt zurück auf 1024.
+- Image-Rollback: `helm rollback <release> <rev>`; die neu angelegte Tabelle
+  bleibt bestehen (unschädlich, s. Schritt 1).
+
+---
+
 ## 8. OpenShift / ROKS-Hinweis
 
 Bei der `restricted`-SCC vergibt OpenShift eine zufällige UID und ignoriert

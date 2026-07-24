@@ -42,6 +42,9 @@ export async function getComplianceOverview(): Promise<CourseCompliance[]> {
       userId: trainingAssignments.userId,
       courseSlug: trainingAssignments.courseSlug,
       completedAt: trainingAssignments.completedAt,
+      courseVersionSnapshot: trainingAssignments.courseVersionSnapshot,
+      cycle: trainingAssignments.cycle,
+      evidence: trainingAssignments.evidence,
     })
     .from(trainingAssignments);
 
@@ -73,16 +76,27 @@ export async function getComplianceOverview(): Promise<CourseCompliance[]> {
     progressRows.map((row) => participantKey(row.userId, row.courseSlug)),
   );
 
-  // Titel batchen: je distinct Slug nur einmal laden, nicht pro Zeile.
+  // Titel + Treiber + Umfang batchen: je distinct Slug nur einmal laden statt
+  // pro Zeile. Treiber/Umfang werden LIVE aus dem Kurs gelesen (Phase 6d,
+  // Art.-4-Schärfung) — bewusst NICHT aus dem eingefrorenen `evidence`, damit
+  // Dashboard-Badges/-Filter immer den aktuellen Kurs-Stand zeigen.
   const courseSlugs = Array.from(
     new Set(assignmentRows.map((row) => row.courseSlug)),
   );
   const titles = new Map<string, string>();
+  const drivers = new Map<string, string[]>();
+  const estimatedMinutes = new Map<string, number>();
   await Promise.all(
     courseSlugs.map(async (slug) => {
       try {
         const course = await getCourse(slug);
-        if (course) titles.set(slug, course.frontmatter.title);
+        if (course) {
+          titles.set(slug, course.frontmatter.title);
+          drivers.set(slug, course.frontmatter.compliance_drivers ?? []);
+          if (typeof course.frontmatter.estimated_minutes === "number") {
+            estimatedMinutes.set(slug, course.frontmatter.estimated_minutes);
+          }
+        }
       } catch (err) {
         console.error(`[training/compliance] getCourse(${slug}) fehlgeschlagen`, err);
       }
@@ -90,10 +104,17 @@ export async function getComplianceOverview(): Promise<CourseCompliance[]> {
   );
 
   return computeCompliance({
-    assignments: assignmentRows,
+    // `evidence` kommt aus Drizzle typlos (jsonb) — cast auf die reine
+    // `CompletionEvidence`-Form, die completion.ts beim Abschluss schreibt.
+    assignments: assignmentRows.map((row) => ({
+      ...row,
+      evidence: row.evidence as CourseCompliance["participants"][number]["evidence"],
+    })),
     startedAt,
     hasProgress,
     displayNames,
     titles,
+    drivers,
+    estimatedMinutes,
   });
 }

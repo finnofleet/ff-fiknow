@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { computeCompliance, type ComputeComplianceInput } from "./compliance-compute";
+import {
+  collectDriverOptions,
+  computeCompliance,
+  filterCoursesByDriver,
+  type ComputeComplianceInput,
+  type CourseCompliance,
+} from "./compliance-compute";
 
 function baseInput(
   over: Partial<ComputeComplianceInput> = {},
@@ -164,4 +170,128 @@ describe("computeCompliance", () => {
       "Zed Abgeschlossen",
     ]);
   });
+
+  it("reichert Kurse mit LIVE Treibern + Umfang an (Phase 6d) — nicht aus evidence", () => {
+    const r = computeCompliance(
+      baseInput({
+        assignments: [
+          { userId: "u-1", courseSlug: "ai-act-basics", completedAt: null },
+        ],
+        drivers: new Map([["ai-act-basics", ["eu_ai_act", "iso_42001"]]]),
+        estimatedMinutes: new Map([["ai-act-basics", 90]]),
+      }),
+    );
+
+    expect(r[0].drivers).toEqual(["eu_ai_act", "iso_42001"]);
+    expect(r[0].estimatedMinutes).toBe(90);
+  });
+
+  it("Kurs ohne drivers/estimatedMinutes-Map -> leeres Array bzw. null (Default)", () => {
+    const r = computeCompliance(
+      baseInput({
+        assignments: [{ userId: "u-1", courseSlug: "c", completedAt: null }],
+      }),
+    );
+    expect(r[0].drivers).toEqual([]);
+    expect(r[0].estimatedMinutes).toBeNull();
+  });
+
+  it("reicht courseVersionSnapshot/cycle/evidence der gewinnenden Zeile an den Teilnehmer durch", () => {
+    const later = new Date("2026-02-01T00:00:00Z");
+    const evidence = { type: "all_lessons" as const, drivers: ["eu_ai_act"] };
+
+    const r = computeCompliance(
+      baseInput({
+        assignments: [
+          {
+            userId: "u-1",
+            courseSlug: "safety-101",
+            completedAt: null,
+            courseVersionSnapshot: null,
+            cycle: 1,
+            evidence: null,
+          },
+          {
+            userId: "u-1",
+            courseSlug: "safety-101",
+            completedAt: later,
+            courseVersionSnapshot: "v3",
+            cycle: 2,
+            evidence,
+          },
+        ],
+      }),
+    );
+
+    const p = r[0].participants[0];
+    expect(p.courseVersionSnapshot).toBe("v3");
+    expect(p.cycle).toBe(2);
+    expect(p.evidence).toEqual(evidence);
+  });
+
+  it("fehlende courseVersionSnapshot/cycle/evidence-Felder -> null/1/null (Default)", () => {
+    const r = computeCompliance(
+      baseInput({
+        assignments: [{ userId: "u-1", courseSlug: "c", completedAt: null }],
+      }),
+    );
+    const p = r[0].participants[0];
+    expect(p.courseVersionSnapshot).toBeNull();
+    expect(p.cycle).toBe(1);
+    expect(p.evidence).toBeNull();
+  });
 });
+
+describe("collectDriverOptions", () => {
+  it("sammelt alle vorkommenden Treiber-Werte, dedupliziert + sortiert", () => {
+    const courses: CourseCompliance[] = [
+      courseFixture({ drivers: ["iso_42001", "eu_ai_act"] }),
+      courseFixture({ courseSlug: "c2", drivers: ["eu_ai_act"] }),
+      courseFixture({ courseSlug: "c3", drivers: [] }),
+    ];
+    expect(collectDriverOptions(courses)).toEqual(["eu_ai_act", "iso_42001"]);
+  });
+
+  it("keine Kurse mit Treibern -> leeres Array", () => {
+    expect(collectDriverOptions([courseFixture({ drivers: [] })])).toEqual([]);
+  });
+});
+
+describe("filterCoursesByDriver", () => {
+  it("ohne Treiber (null/undefined/leer) -> unverändert", () => {
+    const courses: CourseCompliance[] = [courseFixture({ drivers: ["eu_ai_act"] })];
+    expect(filterCoursesByDriver(courses, null)).toBe(courses);
+    expect(filterCoursesByDriver(courses, undefined)).toBe(courses);
+    expect(filterCoursesByDriver(courses, "")).toBe(courses);
+  });
+
+  it("mit Treiber -> nur Kurse, die ihn tragen", () => {
+    const courses: CourseCompliance[] = [
+      courseFixture({ courseSlug: "c1", drivers: ["eu_ai_act"] }),
+      courseFixture({ courseSlug: "c2", drivers: ["iso_42001"] }),
+    ];
+    const r = filterCoursesByDriver(courses, "eu_ai_act");
+    expect(r.map((c) => c.courseSlug)).toEqual(["c1"]);
+  });
+
+  it("Treiber, den kein Kurs trägt -> leeres Ergebnis, kein Crash", () => {
+    const courses: CourseCompliance[] = [courseFixture({ drivers: ["eu_ai_act"] })];
+    expect(filterCoursesByDriver(courses, "sonstige")).toEqual([]);
+  });
+});
+
+function courseFixture(over: Partial<CourseCompliance> = {}): CourseCompliance {
+  return {
+    courseSlug: "c1",
+    title: "Kurs",
+    drivers: [],
+    estimatedMinutes: null,
+    assigned: 0,
+    started: 0,
+    completed: 0,
+    notStarted: 0,
+    pct: 0,
+    participants: [],
+    ...over,
+  };
+}

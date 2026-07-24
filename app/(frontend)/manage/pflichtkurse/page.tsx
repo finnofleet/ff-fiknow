@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 
 import { canManageCourses } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getComplianceOverview } from "@/lib/training/compliance";
-import type { Participant, ParticipantStatus } from "@/lib/training/compliance-compute";
+import {
+  collectDriverOptions,
+  filterCoursesByDriver,
+  type Participant,
+  type ParticipantStatus,
+} from "@/lib/training/compliance-compute";
+import { driverLabel } from "@/lib/training/compliance-drivers";
 
 import styles from "./page.module.css";
 
@@ -14,6 +20,8 @@ export const metadata: Metadata = {
   title: "Pflichtkurse — Nachweis",
   robots: { index: false, follow: false },
 };
+
+type SearchParams = Promise<{ driver?: string }>;
 
 const STATUS_LABEL: Record<ParticipantStatus, string> = {
   nicht_gestartet: "Nicht gestartet",
@@ -51,13 +59,26 @@ function ParticipantRow({ participant }: { participant: Participant }) {
   );
 }
 
-export default async function CompliancePage() {
+export default async function CompliancePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const me = (await getCurrentUser())!;
   if (!canManageCourses(me.role)) {
     redirect("/manage?error=no_compliance_permission");
   }
 
-  const overview = await getComplianceOverview();
+  const { driver: driverRaw } = await searchParams;
+  const driver = driverRaw && driverRaw.length > 0 ? driverRaw : null;
+
+  const fullOverview = await getComplianceOverview();
+  const driverOptions = collectDriverOptions(fullOverview);
+  const overview = filterCoursesByDriver(fullOverview, driver);
+
+  const exportHref = driver
+    ? `/manage/pflichtkurse/export?driver=${encodeURIComponent(driver)}`
+    : "/manage/pflichtkurse/export";
 
   return (
     <>
@@ -74,13 +95,51 @@ export default async function CompliancePage() {
         </p>
       </header>
 
+      {fullOverview.length > 0 && (
+        <nav className={styles.filterBar} aria-label="Nach Compliance-Treiber filtern">
+          {driverOptions.length > 0 && (
+            <>
+              <Link
+                href="/manage/pflichtkurse"
+                className={`${styles.filterLink} ${!driver ? styles.filterLinkActive : ""}`}
+              >
+                Alle
+              </Link>
+              {driverOptions.map((value) => (
+                <Link
+                  key={value}
+                  href={`/manage/pflichtkurse?driver=${encodeURIComponent(value)}`}
+                  className={`${styles.filterLink} ${driver === value ? styles.filterLinkActive : ""}`}
+                >
+                  {driverLabel(value)}
+                </Link>
+              ))}
+            </>
+          )}
+          <a href={exportHref} className={styles.exportLink}>
+            <Download size={14} /> CSV exportieren
+          </a>
+        </nav>
+      )}
+
       {overview.length === 0 ? (
         <div className={styles.empty}>
-          Es sind aktuell keine Pflichtkurse definiert. Markiere einen Kurs
-          als &bdquo;Pflichtkurs&ldquo; oder lege eine Pflicht-Anforderung an.{" "}
-          <Link href="/manage/courses" className={styles.emptyLink}>
-            Zu den Kursen →
-          </Link>
+          {driver ? (
+            <>
+              Kein Pflichtkurs mit diesem Treiber gefunden.{" "}
+              <Link href="/manage/pflichtkurse" className={styles.emptyLink}>
+                Filter zurücksetzen →
+              </Link>
+            </>
+          ) : (
+            <>
+              Es sind aktuell keine Pflichtkurse definiert. Markiere einen Kurs
+              als &bdquo;Pflichtkurs&ldquo; oder lege eine Pflicht-Anforderung an.{" "}
+              <Link href="/manage/courses" className={styles.emptyLink}>
+                Zu den Kursen →
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <section className={styles.courseList}>
@@ -90,6 +149,15 @@ export default async function CompliancePage() {
                 <div>
                   <h2 className={styles.cardTitle}>{course.title}</h2>
                   <div className={styles.cardSlug}>{course.courseSlug}</div>
+                  {course.drivers.length > 0 && (
+                    <div className={styles.driverBadges}>
+                      {course.drivers.map((value) => (
+                        <span key={value} className={styles.driverBadge}>
+                          {driverLabel(value)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className={styles.quote}>
                   <span className={styles.quoteNum}>

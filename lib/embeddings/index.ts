@@ -3,15 +3,16 @@
  * lib/llm/index.ts.
  *
  * Liest die Deployment-Config (./env.ts) und liefert die passende
- * `EmbeddingProvider`-Implementierung. v1 kennt nur "voyage"; weitere Provider
- * (OpenAI als Fallback, self-hosted/lokale Embeddings für restricted courses)
- * reihen sich hier ein, ohne die Caller zu ändern.
+ * `EmbeddingProvider`-Implementierung. Bekannt: "voyage" und "watsonx".
+ * Weitere Provider (OpenAI als Fallback, self-hosted/lokale Embeddings für
+ * restricted courses) reihen sich hier ein, ohne die Caller zu ändern.
  */
 import { getEmbeddingConfig } from "./env";
 import { EmbeddingError, type EmbeddingProvider } from "./types";
 import { VoyageProvider } from "./voyage";
+import { WatsonxProvider } from "./watsonx";
 
-export { isEmbeddingConfigured, getEmbeddingConfig, EMBEDDING_DIMENSIONS } from "./env";
+export { isEmbeddingConfigured, getEmbeddingConfig } from "./env";
 export { EmbeddingError } from "./types";
 export type {
   EmbeddingProvider,
@@ -30,10 +31,19 @@ export function getEmbeddingProvider(): EmbeddingProvider {
         model: cfg.model,
         dimensions: cfg.dimensions,
       });
+    case "watsonx":
+      return new WatsonxProvider({
+        apiKey: cfg.apiKey,
+        url: cfg.baseUrl,
+        projectId: cfg.projectId!,
+        model: cfg.model,
+        dimensions: cfg.dimensions,
+        apiVersion: cfg.apiVersion,
+      });
     default:
       throw new EmbeddingError(
         "not_configured",
-        `Unbekannter EMBEDDING_PROVIDER "${cfg.provider}" — unterstützt: voyage`,
+        `Unbekannter EMBEDDING_PROVIDER "${cfg.provider}" — unterstützt: voyage, watsonx`,
         false,
       );
   }

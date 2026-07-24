@@ -6,20 +6,36 @@
  * deploymentweit AUS (der Tutor fällt dann auf den nicht-gegroundeten Pfad
  * zurück, der Upload läuft trotzdem durch → Kurse bleiben needs-reindex).
  *
- *   EMBEDDING_PROVIDER   "voyage" (Default; einziger v1-Provider)
+ *   EMBEDDING_PROVIDER   "voyage" (Default) oder "watsonx"
+ *
+ * Provider "voyage" (Default):
  *   VOYAGE_API_KEY       Provider-API-Key (Pflicht, sonst Indexing AUS)
  *   EMBEDDING_MODEL      Modell-ID — Default voyage-3.5-lite (günstigster Tier,
  *                        schlägt OpenAI-v3-large; per Env auf voyage-3.5 (full)
  *                        hochstufbar OHNE Migration, da gleiche Default-Dim).
  *   EMBEDDING_BASE_URL   API-Basis-URL — Default https://api.voyageai.com.
+ *   → Dimension: VOYAGE_DIMENSIONS (1024).
+ *
+ * Provider "watsonx" (IBM watsonx.ai, z. B. für EU/CH-Datenresidenz):
+ *   WATSONX_API_KEY      IBM-Cloud-API-Key (Pflicht, sonst Indexing AUS)
+ *   WATSONX_PROJECT_ID   watsonx.ai-Projekt-UUID (Pflicht)
+ *   WATSONX_URL          Region-Endpoint, z. B. https://eu-de.ml.cloud.ibm.com
+ *                        (Pflicht; trailing slash wird entfernt)
+ *   WATSONX_API_VERSION  API-Versionsdatum — Default 2024-05-02
+ *   EMBEDDING_MODEL      Modell-ID — Default ibm/granite-embedding-278m-multilingual
+ *   → Dimension: GRANITE_DIMENSIONS (768).
  *
  * NICHT env-konfigurierbar: die Dimension. Alle Embeddings im Index müssen
  * dieselbe Länge haben, sonst ist Cosine-Ähnlichkeit nicht berechenbar. Das
  * DB-Schema (`lesson_chunks.embedding real[]`) erzwingt die Länge NICHT — die
- * Konsistenz liegt hier. Dimension ändern = alles neu embedden.
+ * Konsistenz liegt hier. Provider/Dimension wechseln = alles neu embedden
+ * (siehe deploy/RUNBOOK.md, Abschnitt 5a).
  */
 
-export const EMBEDDING_DIMENSIONS = 1024;
+/** Voyage-Default-Dimension (voyage-3.5 / voyage-3.5-lite). */
+export const VOYAGE_DIMENSIONS = 1024;
+/** Granite-Embedding-Dimension (ibm/granite-embedding-278m-multilingual). */
+export const GRANITE_DIMENSIONS = 768;
 
 export interface EmbeddingConfig {
   provider: string;
@@ -27,17 +43,36 @@ export interface EmbeddingConfig {
   baseUrl: string;
   model: string;
   dimensions: number;
+  /** Nur watsonx: das Projekt, gegen das embedded wird. */
+  projectId?: string;
+  /** Nur watsonx: API-Versionsdatum der Embeddings-Route. */
+  apiVersion?: string;
 }
 
 const DEFAULT_PROVIDER = "voyage";
-const DEFAULT_BASE_URL = "https://api.voyageai.com";
-const DEFAULT_MODEL = "voyage-3.5-lite";
+const DEFAULT_VOYAGE_BASE_URL = "https://api.voyageai.com";
+const DEFAULT_VOYAGE_MODEL = "voyage-3.5-lite";
+const DEFAULT_WATSONX_MODEL = "ibm/granite-embedding-278m-multilingual";
+const DEFAULT_WATSONX_API_VERSION = "2024-05-02";
+
+function getProvider(): string {
+  return process.env.EMBEDDING_PROVIDER?.trim() || DEFAULT_PROVIDER;
+}
 
 /**
  * Ist der RAG-Index für dieses Deployment aktiviert? (Kein Throw — für
- * Gating im Upload-Hook / Health-Checks.) Aktiv = ein API-Key ist gesetzt.
+ * Gating im Upload-Hook / Health-Checks.) Aktiv = die Pflicht-Env-Vars des
+ * konfigurierten Providers sind gesetzt.
  */
 export function isEmbeddingConfigured(): boolean {
+  const provider = getProvider();
+  if (provider === "watsonx") {
+    return Boolean(
+      process.env.WATSONX_API_KEY?.trim() &&
+        process.env.WATSONX_PROJECT_ID?.trim() &&
+        process.env.WATSONX_URL?.trim(),
+    );
+  }
   return Boolean(process.env.VOYAGE_API_KEY?.trim());
 }
 
@@ -46,6 +81,33 @@ export function isEmbeddingConfigured(): boolean {
  * konfiguriert — der Caller prüft vorher `isEmbeddingConfigured()`.
  */
 export function getEmbeddingConfig(): EmbeddingConfig {
+  const provider = getProvider();
+
+  if (provider === "watsonx") {
+    const apiKey = process.env.WATSONX_API_KEY?.trim();
+    const projectId = process.env.WATSONX_PROJECT_ID?.trim();
+    const url = process.env.WATSONX_URL?.trim();
+    if (!apiKey || !projectId || !url) {
+      throw new Error(
+        "WATSONX_API_KEY / WATSONX_PROJECT_ID / WATSONX_URL nicht vollständig gesetzt — die RAG-Indexierung ist für dieses Deployment nicht konfiguriert.",
+      );
+    }
+
+    return {
+      provider,
+      apiKey,
+      // WATSONX_URL trägt den Region-Endpoint; wir spiegeln ihn in `baseUrl`,
+      // damit die Factory (index.ts) provider-übergreifend gleich aussieht.
+      baseUrl: url.replace(/\/+$/, ""),
+      model: process.env.EMBEDDING_MODEL?.trim() || DEFAULT_WATSONX_MODEL,
+      dimensions: GRANITE_DIMENSIONS,
+      projectId,
+      apiVersion:
+        process.env.WATSONX_API_VERSION?.trim() ||
+        DEFAULT_WATSONX_API_VERSION,
+    };
+  }
+
   const apiKey = process.env.VOYAGE_API_KEY?.trim();
   if (!apiKey) {
     throw new Error(
@@ -54,14 +116,14 @@ export function getEmbeddingConfig(): EmbeddingConfig {
   }
 
   const baseUrl = (
-    process.env.EMBEDDING_BASE_URL?.trim() || DEFAULT_BASE_URL
+    process.env.EMBEDDING_BASE_URL?.trim() || DEFAULT_VOYAGE_BASE_URL
   ).replace(/\/+$/, "");
 
   return {
-    provider: process.env.EMBEDDING_PROVIDER?.trim() || DEFAULT_PROVIDER,
+    provider,
     apiKey,
     baseUrl,
-    model: process.env.EMBEDDING_MODEL?.trim() || DEFAULT_MODEL,
-    dimensions: EMBEDDING_DIMENSIONS,
+    model: process.env.EMBEDDING_MODEL?.trim() || DEFAULT_VOYAGE_MODEL,
+    dimensions: VOYAGE_DIMENSIONS,
   };
 }

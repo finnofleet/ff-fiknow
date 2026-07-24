@@ -10,7 +10,8 @@
  *
  * Die Vektor-Dimension ist KEIN Provider-Detail: alle Embeddings im Index
  * müssen dieselbe Länge haben (sonst ist Cosine nicht berechenbar). Gespeichert
- * als `lesson_chunks.embedding real[]` — siehe EMBEDDING_DIMENSIONS.
+ * als `lesson_chunks.embedding real[]` — siehe VOYAGE_DIMENSIONS /
+ * GRANITE_DIMENSIONS in ./env.ts (provider-abhängig, kein globaler Wert mehr).
  */
 
 /**

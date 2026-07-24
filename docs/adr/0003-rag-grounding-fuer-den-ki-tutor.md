@@ -1,9 +1,12 @@
 # ADR 0003 — RAG-Grounding für den KI-Tutor
 
 - **Status:** Proposed (Kern-Entscheidung) · Phase 1+2 umgesetzt + live
-  — **zwei wichtige Nachträge am Ende:** (1) pgvector verworfen → `real[]` +
+  — **drei Nachträge am Ende:** (1) pgvector verworfen → `real[]` +
   App-Cosine; (2) automatischer Scope-Router verworfen → Button „Allgemeinwissen
-  ergänzen" (user-initiiert), Phase-3-Schwellen-Tuning damit hinfällig
+  ergänzen" (user-initiiert), Phase-3-Schwellen-Tuning damit hinfällig;
+  (3) 2026-07-24 Embedding-Provider Voyage → IBM watsonx (`granite-embedding-
+  278m-multilingual`, 768-dim), pgvector bleibt draußen — Code umgesetzt,
+  Rollout ausstehend
 - **Datum:** 2026-06-14
 - **Kontext-Phase:** Phase 3 (Lerner-Features)
 - **Betroffene Bereiche:** Tutor-Endpoint (`api/tutor/explain`), neuer
@@ -238,3 +241,49 @@ Nur **Decision 2** wird ersetzt: Relevanz = Rausch-Filter, Scope = Button.
 ungrounded nur noch button-initiiert, UI-Button + angehängter Block). Phase 3
 (Eval/Tuning) **aufgeschoben — bei Bedarf, nicht auf Spec** (kein Security-/
 Nutzungs-Trigger; der Button entschärft den ursprünglichen Hauptgrund).
+
+---
+
+## Nachtrag 2026-07-24 — Embedding-Provider: Voyage → IBM watsonx (granite), pgvector bleibt draußen
+
+Entscheidung getroffen 2026-07-24 (mit Yves). **Umsetzung im Code, Rollout mit
+dem nächsten Deploy ausstehend** — der echte Smoke-Test gegen watsonx erfolgt,
+sobald ein watsonx-Projekt/Key vorliegt.
+
+**Wechsel des Embedding-Providers auf IBM watsonx.ai,** Modell
+`ibm/granite-embedding-278m-multilingual`. Treiber (mit Yves): **Kosten**
+(kein per-Token-Voyage), **deutschsprachige/multilinguale Qualität** (granite
+ist multilingual, u. a. Deutsch — das aktuelle Voyage-Setup ist US-zentriert),
+**IBM-Alignment** (die Plattform läuft ohnehin auf IBM Cloud; granite ist IBMs
+eigenes Modell, über watsonx.ai direkt als API verfügbar). Kein Self-Hosting —
+watsonx.ai-API war die bewusste Wahl gegenüber einem in-cluster TEI.
+
+- **Passt in die vorhandene Abstraktion** (Decision 3 hat den Provider-Wechsel
+  vorgesehen): neuer `WatsonxProvider` neben `VoyageProvider`, geschaltet über
+  `EMBEDDING_PROVIDER=watsonx`. watsonx braucht zusätzlich einen IAM-Token-Flow
+  (API-Key → kurzlebiger Bearer, gecacht) sowie `WATSONX_PROJECT_ID` +
+  `WATSONX_URL` (Region-Endpoint, `eu-de` für EU-Datenlokalität).
+- **Dimension 768 statt 1024.** granite-278m liefert 768-dim, symmetrisch (kein
+  query/document-`input_type`). Die Dimension wird damit **provider-abhängig**
+  (`env.ts`), nicht mehr eine globale Konstante. Folge: **alle Chunks müssen neu
+  embedded werden** (Backfill über `POST /api/authoring/reindex` ohne slug).
+  Risikoarm, weil Embeddings aus dem Bundle regenerierbar sind (ADR 0001,
+  Bundle = Wahrheit). Übergangsphase gemischter Dimensionen degradiert sauber:
+  `cosineSimilarity` gibt bei Längen-Mismatch 0 zurück (kein Crash), nicht
+  passende Alt-Vektoren werden beim Reindex ersetzt.
+
+**pgvector bleibt bewusst draußen** (bestätigt 2026-07-24). Der Grund aus dem
+Nachtrag 2026-06-15 (Extension am alten Host nicht verfügbar) ist auf dem neuen
+Host — **IBM Cloud Databases for PostgreSQL** — zwar wahrscheinlich behoben
+(pgvector steht auf der Extension-Whitelist), aber es **braucht** pgvector
+schlicht nicht: der Pro-Kurs-Scope läuft mit Brute-Force-App-Cosine in
+Mikrosekunden. pgvector lohnt erst bei **kursübergreifendem/pfad-weitem**
+Retrieval (Decision 6) — dann neu bewerten, und dann zwingend gegen die echte
+Instanz verifiziert, **nicht** als harte Boot-Migration (Lesson learned
+2026-06-15).
+
+**Unverändert gültig:** `real[]`-Storage + App-Cosine (Nachtrag 2026-06-15),
+Retrieval als Rausch-Filter + „Allgemeinwissen"-Button (Nachtrag 2026-06-16),
+Index beim Upload + best-effort + Reindex/Backfill (Decision 4), Chunking +
+Quiz-Guardrails (5), Versions-Keying, `grounded`-Flag. Nur der **Provider** und
+die **Dimension** ändern sich.

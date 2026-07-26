@@ -11,7 +11,11 @@
   Export) wird dabei entparkt** (jetzt Phase 6d, siehe Abschnitt 6 und
   „Umsetzung in Phasen" unten). **Phase 6a–6d umgesetzt und verifiziert,
   2026-07-24**: `next build` grün, 129/129 Vitest, e2e 2/2, Migration real
-  gegen Postgres angewendet inkl. sauberem Down.
+  gegen Postgres angewendet inkl. sauberem Down. **Nachtrag 2026-07-26
+  (geplant, noch nicht gebaut):** Abschlusstest-Modell — Pflichtkurs-Nachweis
+  koppelt künftig an einen dedizierten, summativen Abschlusstest statt an
+  „alle Quiz-Lektionen bestanden"; ausgelöst durch eine Kollegen-Review, siehe
+  Abschnitt „Nachtrag 2026-07-26" am Dateiende.
 - **Datum:** 2026-07-03
 - **Kontext-Phase:** Compliance / Tracking
 - **Betroffene Bereiche:** Course-Content (`payload/collections/courses.ts` —
@@ -292,3 +296,114 @@ weiterer CronJob nach demselben Muster; Mail-Reminder brauchen zusätzlich noch
 eine Mail-Infrastruktur (weiterhin nicht vorhanden). Der Kern-Zustand
 „überfällig" bleibt bewusst cron-unabhängig am Lesepunkt abgeleitet
 (Abschnitt 3) — der Cron ist Ergänzung, nicht Voraussetzung.
+
+## Nachtrag 2026-07-26 — Abschlusstest statt Quiz-Summe (Kollegen-Review)
+
+**Status: geplant (ADR) — noch nicht gebaut.** Ausgelöst durch eine
+Kollegen-Review des bestehenden Nachweis-Modells (BR-Kontext) und mit Yves
+entschieden, 2026-07-26. Zwei Schwächen des heutigen Abschluss-Gates
+(Abschnitt 4 + Abschnitt 6, Entscheidung 3): (1) Die Quiz-Lektionen, an die
+`assessmentRequired` heute koppelt (`payload/collections/lessons.ts`,
+`type: "quiz"`), sind **formative** Wissenschecks entlang des Kursinhalts,
+kein **summativer** Abschlusstest — die Compliance-Prüfpraxis unterscheidet
+beides, ein formativer Check trägt einen Abschluss-Nachweis nicht. (2)
+`markLessonCompleted` markiert eine Quiz-Lektion auch bei **nicht
+bestandenem** Versuch als erledigt (Lektionsabschluss ≠ Bestehen). Ohne
+`assessmentRequired` schließt „alle Lektionen erledigt"
+(`decideCourseCompletion`, Kriterium 1 in `completion-compute.ts`) den
+Nachweis deshalb auch nach einem Durchfallen ab — die Lücke „durchgeklickt
+zählt als bestanden". Die folgenden fünf Entscheidungen schärfen das
+Nachweis-Modell entsprechend nach, im selben Geist wie die Art.-4-Schärfung
+in Abschnitt 6.
+
+1. **Dedizierter Abschlusstest statt Summe der Quizze.** Ein
+   Pflichtkurs-Nachweis wird an einen **summativen Abschlusstest** gekoppelt;
+   verteilte Quiz-Lektionen bleiben **formativ** und zählen NICHT mehr für
+   den Nachweis. Technische Richtung (empfohlen, so gekennzeichnet — noch
+   keine Implementierungsentscheidung im engeren Sinn): ein **Flag auf einer
+   Quiz-Lektion**, `final_exam: true` im Frontmatter, statt eines neuen
+   Lesson-Typs. Begründung: nutzt den bestehenden Quiz-Renderer,
+   `passingScore` (`lessons.ts`, Feld mit `condition: type === "quiz"`) und
+   den `quiz_attempts`-Schreibpfad (`submitQuizAttemptAction`,
+   `app/(frontend)/learn/[courseSlug]/[sectionSlug]/[lessonSlug]/actions.ts`)
+   unverändert weiter; ein neuer Lesson-Typ müsste Payload-Schema,
+   MDX-Renderer und `LessonType` (`lib/content.ts`) gleich dreifach anfassen
+   für denselben Interaktionstyp (Frage → Antwort → Score) — minimal-invasiv
+   schlägt neuer Typ. Der Abschluss-Gate (`decideCourseCompletion`,
+   `completion-compute.ts`) zielt künftig auf die als `final_exam`
+   markierte(n) Lektion(en), nicht mehr auf „alle Quizze"
+   (`input.quizLessons`).
+2. **Bestehen ist für Pflichtkurse verbindlich.** Enthält ein Kurs einen
+   Abschlusstest, ist dessen Bestehen (`passingScore`, wie heute
+   `quiz_attempts.passed`) Voraussetzung für `completedAt`. Für
+   **Pflichtkurse** (Kurs-`mandatory` bzw. via `training-requirements`
+   zugewiesen, Abschnitt 1) gilt das **unabhängig vom alten opt-in-
+   `assessmentRequired`-Flag** — verbindlich, nicht optional. Das behebt die
+   eingangs beschriebene Lücke: ohne `assessmentRequired` zählte ein
+   durchgefallener, aber „erledigter" Abschlusstest den Kurs bislang trotzdem
+   als abgeschlossen. **Append-only bleibt gewahrt** (Abschnitt 3): wie bei
+   der Art.-4-Schärfung (6.3) greift die schärfere Regel erst ab
+   neuen/offenen Zuweisungen — bestehende `completedAt`-Zeilen werden nicht
+   rückwirkend entwertet.
+3. **Wiederholung: unbegrenzt, aber gegen Auswendiglernen abgesichert über
+   Fragen-Pool + Randomisierung.** `submitQuizAttemptAction` erlaubt heute
+   unbegrenzte Versuche (jeder Submit legt eine neue `quiz_attempts`-Zeile
+   an, kein Cooldown, kein Limit) — das bleibt in v1 bewusst so. Statt eines
+   Attempt-Limits ist der Anti-Gaming-Hebel die Frage selbst: ein
+   Abschlusstest definiert einen **Pool von M Fragen**, pro Versuch werden
+   **N Fragen gezogen** und die Antwortoptionen gemischt — deterministisch
+   über einen **Seed pro Versuch**, damit ein Reload denselben Versuch nicht
+   neu würfelt. KEIN Cooldown, KEIN Attempt-Limit in v1 (bewusst;
+   Randomisierung ist der Anti-Gaming-Hebel, nicht Restriktion). **Größter
+   Bau-Brocken dieser Erweiterung**: Fragen stehen heute FIX inline im MDX
+   als `<Question>`/`<Option>`-Components — Pool + Zufallsauswahl brauchen
+   eine Erweiterung des Authoring-Formats (Pool-Deklaration statt fixer
+   Sequenz) UND eine Runtime-Auswahl-/Misch-Schicht. Eigenständig zu bauen,
+   nicht nebenbei mit 7a.
+4. **Versuchszähler im Nachweis, Score NICHT breit sichtbar.**
+   `training_assignments.evidence` hält künftig minimal: welcher
+   Abschlusstest (Section-/Lesson-Slug), Bestehensgrenze, „bestanden" sowie
+   die **Anzahl Versuche bis Bestehen** (Accountability — unterscheidet „im
+   ersten Anlauf bestanden" von „nach zehn Versuchen"). Die exakte
+   **Punktzahl gehört NICHT in das breit staff-lesbare `evidence`**: heute
+   leakt `evidence.assessment.quizzes[].score`
+   (`CompletionEvidence.assessment`, `completion-compute.ts`) über die
+   RLS-Policy `training_assignments_select_staff` (`lib/db/schema.ts`,
+   `using: isStaffRole`) an **jeden** Curator/Admin, obwohl `quiz_attempts`
+   selbst owner-only ist (kein Staff-Select dort). Das ist der
+   Kollegen-Review-Punkt 2 und wird hiermit behoben. Detaillierte
+   Scores/Versuche bleiben in `quiz_attempts` (owner-only) und werden nur in
+   der **gescopeten HR-Sicht** sichtbar — siehe
+   [[0007-mandanten-scoping-und-auswerte-ebenen]] (Governance-/Scoping-ADR,
+   Status Proposed/Geplant) für die Sichtbarkeits-Ebene. Beim Umbau von
+   `evidence.assessment` ist ein **Guard-Kommentar** vorzusehen:
+   diese Struktur ist staff-lesbar (RLS erlaubt jedem Curator/Admin den
+   Read) → darf nie Roh-Antworten oder Scores enthalten, nur Zähler/Status.
+5. **Beziehung zu den bestehenden opt-in-Flags.** `assessment_required` und
+   `confirmation_required` (Phase 6b/6c) bleiben für **Nicht-Pflicht-Kurse**
+   gültig — ein freiwilliger Kurs kann weiterhin per Checkbox „Quiz muss
+   bestanden sein" / „Verständnis bestätigen" verlangen, ohne einen
+   Abschlusstest anzulegen. Der Abschlusstest ist die **schärfere, für
+   Pflichtkurse verbindliche Form** aus Entscheidung 2 — er ersetzt
+   `assessment_required` als Mechanismus nicht, sondern **überstimmt** ihn,
+   sobald ein Kurs sowohl Pflichtkurs ist als auch eine
+   `final_exam`-Lektion enthält.
+
+**Umsetzung in Phasen (Vorschlag, geplant):**
+
+- **Phase 7a — `final_exam`-Flag + Gate-Umstellung.** `final_exam: true` im
+  Quiz-Lesson-Frontmatter; `decideCourseCompletion` zielt auf die
+  Abschlusstest-Lektion(en) statt auf „alle Quizze";
+  `evidence.assessment`-Umbau inkl. Score-Entfernung + Guard-Kommentar
+  (Entscheidung 4). Klein/mittel, sofort machbar.
+- **Phase 7b — Versuchszähler.** Anzahl Versuche bis Bestehen im `evidence`
+  mitführen (Entscheidung 4).
+- **Phase 7c — Fragen-Pool + Randomisierung.** Authoring-Format-Erweiterung
+  (Pool von M Fragen) + Runtime-Auswahl/-Mischung mit Versuchs-Seed
+  (Entscheidung 3). Großer Brocken, eigener Schritt.
+
+**Abhängigkeit:** Die Score-Sichtbarkeit aus Phase 7a hängt inhaltlich an
+[[0007-mandanten-scoping-und-auswerte-ebenen]] — die dort geplante gescopete
+HR-/GF-Sicht ist der Ort, an dem Detail-Scores/Versuche (aus `quiz_attempts`)
+für berechtigte Rollen wieder sichtbar gemacht werden, ohne den breiten
+`training_assignments_select_staff`-Zugriff zu nutzen.

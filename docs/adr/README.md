@@ -19,3 +19,5 @@ Architecture Decision Records (ADRs) halten bedeutsame, schwer umkehrbare Archit
 | 0003 | [RAG-Grounding für den KI-Tutor](0003-rag-grounding-fuer-den-ki-tutor.md) | Proposed | 2026-06-14 |
 | 0004 | [MCP als eigenständiges Authoring-Frontend](0004-mcp-authoring-frontend.md) | Proposed | 2026-06-17 |
 | 0005 | [Pflichtkurse & Compliance-Nachweis](0005-pflichtkurse-und-compliance-nachweis.md) | Accepted | 2026-07-03 |
+| 0006 | [Datenschutz: Aufbewahrung & Löschung](0006-datenschutz-aufbewahrung-und-loeschung.md) | Accepted (teilw. umgesetzt) | 2026-07-24 |
+| 0007 | [Mandanten-Scoping & Auswerte-Ebenen für Compliance-Nachweise](0007-mandanten-scoping-und-auswerte-ebenen.md) | Proposed | 2026-07-26 |

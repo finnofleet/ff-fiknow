@@ -121,8 +121,8 @@ Benötigte Keys:
 | `OIDC_CLIENT_SECRET` | ja | aus Keycloak (2.1) |
 | `OIDC_SESSION_SECRET` | optional | 32+ Zufalls-Hex; fehlt er, wird `PAYLOAD_SECRET` genutzt |
 | `LLM_API_KEY` | optional | KI-Tutor-LLM (Abschnitt 5a); fehlt → Tutor AUS |
-| `VOYAGE_API_KEY` | optional | RAG-Embeddings, Provider Voyage (Abschnitt 5a); fehlt → RAG-Index AUS |
-| `WATSONX_API_KEY` | optional | RAG-Embeddings, Provider watsonx (Abschnitt 5a) — nur bei `EMBEDDING_PROVIDER=watsonx` |
+| `WATSONX_API_KEY` | optional | RAG-Embeddings, **Default-Provider watsonx** (Abschnitt 5a); fehlt → RAG-Index AUS |
+| `VOYAGE_API_KEY` | optional | RAG-Embeddings, Legacy-Provider Voyage — nur bei `EMBEDDING_PROVIDER=voyage` (Abschnitt 5a) |
 
 Secrets generieren:
 ```bash
@@ -228,7 +228,7 @@ Zwei unabhängige Provider:
 | Funktion | Key (Secret) | Config (ConfigMap) | Default |
 |---|---|---|---|
 | **Tutor-Antworten (LLM)** | `LLM_API_KEY` | `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_MAX_TOKENS` | Anthropic, `claude-haiku-4-5`, `https://api.anthropic.com` |
-| **RAG-Embeddings** | `VOYAGE_API_KEY` (oder `WATSONX_API_KEY` s. u.) | `EMBEDDING_PROVIDER`, `EMBEDDING_MODEL`, `EMBEDDING_BASE_URL`, `RAG_RELEVANCE_THRESHOLD` | Voyage, `voyage-3.5-lite` |
+| **RAG-Embeddings** | `WATSONX_API_KEY` (Default; oder `VOYAGE_API_KEY` bei Legacy) | `EMBEDDING_PROVIDER`, `WATSONX_PROJECT_ID`, `WATSONX_URL`, `EMBEDDING_MODEL`, `RAG_RELEVANCE_THRESHOLD` | watsonx, `granite-embedding-278m-multilingual` |
 
 - **Key anlegen:** LLM bei console.anthropic.com (oder ein Anthropic-kompatibles
   Gateway via `LLM_BASE_URL` — z. B. für EU/CH-Region + Zero-Data-Retention,
@@ -247,13 +247,14 @@ Zwei unabhängige Provider:
   nachindexieren: `POST /api/authoring/reindex` (ohne slug = Backfill aller
   Kurse).
 
-**Alternativer Embedding-Provider: IBM watsonx.ai.** Statt Voyage kann
-`EMBEDDING_PROVIDER=watsonx` gesetzt werden (z. B. für IBM-/EU-Datenresidenz).
-Benötigte Env-Vars:
+**Standard-Embedding-Provider: IBM watsonx.ai** (Default seit 2026-07-26 —
+bewusste Ablösung von Voyage, weil mit IBM ein Vertrag/AVV besteht und die
+Verarbeitung in `eu-de` bleibt). Voyage ist nur noch Legacy-Fallback per
+`EMBEDDING_PROVIDER=voyage`. Für den Default-Weg benötigte Env-Vars:
 
 | Variable | Ort | Pflicht | Bedeutung |
 |---|---|---|---|
-| `EMBEDDING_PROVIDER` | ConfigMap | ja | auf `watsonx` setzen |
+| `EMBEDDING_PROVIDER` | ConfigMap | nein | Default `watsonx`; nur für Legacy auf `voyage` setzen |
 | `WATSONX_API_KEY` | Secret | ja | IBM-Cloud-API-Key |
 | `WATSONX_PROJECT_ID` | ConfigMap | ja | watsonx.ai-Projekt-UUID |
 | `WATSONX_URL` | ConfigMap | ja | Region-Endpoint, z. B. `https://eu-de.ml.cloud.ibm.com` |
@@ -314,7 +315,7 @@ Next-Start. Danach:
 | `BUNDLE_STORAGE_DIR` | nein | Authoring-Bundle-Pfad (Chart-Default `/data/bundles`); s. 7a |
 | `SKIP_MIGRATIONS` | nein | `true` = Auto-Migrate beim Boot überspringen |
 | `LLM_PROVIDER` / `LLM_BASE_URL` / `LLM_MODEL` / `LLM_MAX_TOKENS` | nein | KI-Tutor-LLM (Default Anthropic/claude-haiku-4-5); siehe 5a |
-| `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_BASE_URL` / `RAG_RELEVANCE_THRESHOLD` | nein | RAG-Embeddings (Default Voyage/voyage-3.5-lite); siehe 5a |
+| `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `WATSONX_PROJECT_ID` / `WATSONX_URL` / `RAG_RELEVANCE_THRESHOLD` | nein | RAG-Embeddings (Default watsonx/granite-embedding-278m; Voyage nur per `EMBEDDING_PROVIDER=voyage`); siehe 5a |
 | `WATSONX_PROJECT_ID` / `WATSONX_URL` / `WATSONX_API_VERSION` | nein | nur bei `EMBEDDING_PROVIDER=watsonx`; siehe 5a |
 
 **Aus Secret (geheim):** `DATABASE_URL`, `PAYLOAD_SECRET`, `OIDC_CLIENT_SECRET`,

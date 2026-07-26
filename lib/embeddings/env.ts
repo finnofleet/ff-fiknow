@@ -6,17 +6,10 @@
  * deploymentweit AUS (der Tutor fällt dann auf den nicht-gegroundeten Pfad
  * zurück, der Upload läuft trotzdem durch → Kurse bleiben needs-reindex).
  *
- *   EMBEDDING_PROVIDER   "voyage" (Default) oder "watsonx"
+ *   EMBEDDING_PROVIDER   "watsonx" (Default, IBM) oder "voyage" (Legacy)
  *
- * Provider "voyage" (Default):
- *   VOYAGE_API_KEY       Provider-API-Key (Pflicht, sonst Indexing AUS)
- *   EMBEDDING_MODEL      Modell-ID — Default voyage-3.5-lite (günstigster Tier,
- *                        schlägt OpenAI-v3-large; per Env auf voyage-3.5 (full)
- *                        hochstufbar OHNE Migration, da gleiche Default-Dim).
- *   EMBEDDING_BASE_URL   API-Basis-URL — Default https://api.voyageai.com.
- *   → Dimension: VOYAGE_DIMENSIONS (1024).
- *
- * Provider "watsonx" (IBM watsonx.ai, z. B. für EU/CH-Datenresidenz):
+ * Provider "watsonx" (Default — IBM watsonx.ai, EU-Datenresidenz via eu-de;
+ * bewusste Ablösung von Voyage, weil mit IBM ein Vertrag/AVV besteht):
  *   WATSONX_API_KEY      IBM-Cloud-API-Key (Pflicht, sonst Indexing AUS)
  *   WATSONX_PROJECT_ID   watsonx.ai-Projekt-UUID (Pflicht)
  *   WATSONX_URL          Region-Endpoint, z. B. https://eu-de.ml.cloud.ibm.com
@@ -24,6 +17,12 @@
  *   WATSONX_API_VERSION  API-Versionsdatum — Default 2024-05-02
  *   EMBEDDING_MODEL      Modell-ID — Default ibm/granite-embedding-278m-multilingual
  *   → Dimension: GRANITE_DIMENSIONS (768).
+ *
+ * Provider "voyage" (Legacy — nur per EMBEDDING_PROVIDER=voyage):
+ *   VOYAGE_API_KEY       Provider-API-Key (Pflicht, sonst Indexing AUS)
+ *   EMBEDDING_MODEL      Modell-ID — Default voyage-3.5-lite.
+ *   EMBEDDING_BASE_URL   API-Basis-URL — Default https://api.voyageai.com.
+ *   → Dimension: VOYAGE_DIMENSIONS (1024).
  *
  * NICHT env-konfigurierbar: die Dimension. Alle Embeddings im Index müssen
  * dieselbe Länge haben, sonst ist Cosine-Ähnlichkeit nicht berechenbar. Das
@@ -49,7 +48,11 @@ export interface EmbeddingConfig {
   apiVersion?: string;
 }
 
-const DEFAULT_PROVIDER = "voyage";
+// Standard ist IBM watsonx (granite) — bewusste Ablösung von Voyage: mit IBM
+// (Betriebsplattform) besteht ein Vertrag/AVV, mit Voyage nicht (US/Drittland).
+// Voyage bleibt als Legacy-Provider per `EMBEDDING_PROVIDER=voyage` wählbar,
+// ist aber nicht mehr der Default (ADR 0003, Nachtrag 2026-07-24/-26).
+const DEFAULT_PROVIDER = "watsonx";
 const DEFAULT_VOYAGE_BASE_URL = "https://api.voyageai.com";
 const DEFAULT_VOYAGE_MODEL = "voyage-3.5-lite";
 const DEFAULT_WATSONX_MODEL = "ibm/granite-embedding-278m-multilingual";

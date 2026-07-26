@@ -272,8 +272,11 @@ in-cluster TEI. Offen (separat): ob analog auch die **Text-LLM-Ebene**
 Modelle konsolidiert wird — s. RoPA Tätigkeit 4.
 
 - **Passt in die vorhandene Abstraktion** (Decision 3 hat den Provider-Wechsel
-  vorgesehen): neuer `WatsonxProvider` neben `VoyageProvider`, geschaltet über
-  `EMBEDDING_PROVIDER=watsonx`. watsonx braucht zusätzlich einen IAM-Token-Flow
+  vorgesehen): neuer `WatsonxProvider` neben `VoyageProvider`. **watsonx ist
+  seit 2026-07-26 der Code-Default** (`DEFAULT_PROVIDER` in `env.ts`); Voyage
+  bleibt nur als Legacy-Fallback per `EMBEDDING_PROVIDER=voyage` erreichbar —
+  die Ablösung ist damit im Standardpfad vollzogen, nicht mehr opt-in. watsonx
+  braucht zusätzlich einen IAM-Token-Flow
   (API-Key → kurzlebiger Bearer, gecacht) sowie `WATSONX_PROJECT_ID` +
   `WATSONX_URL` (Region-Endpoint, `eu-de` für EU-Datenlokalität).
 - **Dimension 768 statt 1024.** granite-278m liefert 768-dim, symmetrisch (kein

@@ -3,7 +3,8 @@
 **Rechtsgrundlage der Dokumentationspflicht:** Art. 30 DSGVO.
 
 > **Hinweis zum Status:** Dieses Dokument beschreibt den Ist-Zustand der
-> Plattform (Stand 2026-07-24) sowie geplante, aber noch nicht gebaute
+> Plattform (Stand 2026-07-24, Tätigkeit 4 aktualisiert 2026-07-26 um den
+> Embeddings-Anbieter) sowie geplante, aber noch nicht gebaute
 > Bausteine (insbesondere die Löschmechanik aus ADR 0006, Phasen 7a–7c). Wo
 > Angaben noch nicht final entschieden oder vom Datenschutzbeauftragten (DSB)
 > zu bestätigen sind, ist dies mit **„[…] — DSB zu bestätigen"** markiert. Es
@@ -11,8 +12,9 @@
 > ausgewiesen.
 >
 > **Quellen:** `docs/adr/0006-datenschutz-aufbewahrung-und-loeschung.md`,
-> `docs/adr/0005-pflichtkurse-und-compliance-nachweis.md`, `lib/db/schema.ts`,
-> `app/(frontend)/api/tutor/explain/route.ts`, `README.md`,
+> `docs/adr/0005-pflichtkurse-und-compliance-nachweis.md`,
+> `docs/adr/0003-rag-grounding-fuer-den-ki-tutor.md`, `lib/db/schema.ts`,
+> `app/(frontend)/api/tutor/explain/route.ts`, `lib/embeddings/*`, `README.md`,
 > `deploy/deploy-ibmcloud.md`.
 
 ---
@@ -35,7 +37,7 @@
 | 1 | Nutzerkonto/Authentifizierung | Zugriff auf die Plattform via SSO/Keycloak |
 | 2 | Lernbetrieb & Fortschritt | Kurse absolvieren, Fortschritt/Quiz/Notizen speichern |
 | 3 | Pflichtkurs-/Compliance-Nachweis | Nachweis „wer hat wann welchen Pflichtkurs absolviert" (u. a. EU AI Act Art. 4) |
-| 4 | Optionaler KI-Tutor | Lektionsinhalt-gegroundete Erklärungen via externen LLM-Anbieter |
+| 4 | Optionaler KI-Tutor (inkl. RAG-Embeddings) | Lektionsinhalt-gegroundete Erklärungen via externem LLM-Anbieter; Vektor-Retrieval via externem Embeddings-Anbieter |
 
 ---
 
@@ -84,17 +86,17 @@
 
 ---
 
-## 6. Tätigkeit 4 — Optionaler KI-Tutor
+## 6. Tätigkeit 4 — Optionaler KI-Tutor (inkl. RAG-Embeddings)
 
 | Feld | Angabe |
 |---|---|
 | **Betroffenenkategorien** | Lernende (und Kuratoren/Admins, sofern sie den Tutor als Lernende nutzen), sofern der jeweilige Kurs `tutor_enabled` ist. |
-| **Datenkategorien** | An den externen LLM-Anbieter übermittelt: markierter Textauszug der Lektion (`selection`), optionale Nutzerfrage (`question`), zur Kontext-Grounding ausgewählte Lektions-/Chunk-Inhalte des Kurses. **Kein Logging** dieser Inhalte durch FiKnow selbst (Route-Kommentar, `app/(frontend)/api/tutor/explain/route.ts`: „Selektion/Frage/Antwort werden NICHT geloggt"). Bei Speicherung als Notiz (User-Aktion „Tutor-Antwort merken") landet die Antwort als `annotations`-Zeile vom Typ `tutor_explanation` (siehe Tätigkeit 2) — das ist eine bewusste, separate Nutzerhandlung. |
+| **Datenkategorien** | **Zwei getrennte externe Verarbeitungen.** (a) **LLM (Texterklärung):** an den LLM-Anbieter übermittelt werden markierter Textauszug der Lektion (`selection`), optionale Nutzerfrage (`question`), zur Kontext-Grounding ausgewählte Lektions-/Chunk-Inhalte des Kurses. (b) **Embeddings (RAG-Retrieval):** an den Embeddings-Anbieter übermittelt werden zum Indexierungszeitpunkt die **Kurs-Chunk-Inhalte** (kein Personenbezug — reiner Kursinhalt) und pro Tutor-Anfrage die **Nutzerfrage/Selektion** als Query-Embedding (potenziell personenbezogen, da Freitext). **Kein Logging** dieser Inhalte durch FiKnow selbst (Route-Kommentar, `app/(frontend)/api/tutor/explain/route.ts`: „Selektion/Frage/Antwort werden NICHT geloggt"; die Embeddings-Schicht `lib/embeddings/*` persistiert keine Klartexte). Bei Speicherung als Notiz (User-Aktion „Tutor-Antwort merken") landet die Antwort als `annotations`-Zeile vom Typ `tutor_explanation` (siehe Tätigkeit 2) — das ist eine bewusste, separate Nutzerhandlung. |
 | **Zweck** | Kontextbezogene Erklärung von Kursinhalten auf Anfrage der/des Lernenden; optionaler „Allgemeinwissen ergänzen"-Modus für ungegroundete Antworten außerhalb des Kursinhalts. |
 | **Rechtsgrundlage** | `[…] — DSB zu bestätigen`. Da es sich um eine explizite, optionale Nutzerhandlung mit Übermittlung an einen externen Dritten handelt, kommen in Betracht: Einwilligung (Art. 6 Abs. 1 lit. a, durch aktive Nutzung der Funktion) oder berechtigtes Interesse (lit. f, Bereitstellung einer optionalen Lernfunktion). Enthält die Selektion/Frage potenziell personenbezogene Angaben der/des Lernenden (freitextlich, nicht vorhersehbar), ist dies bei der Einordnung zu berücksichtigen. |
-| **Aufbewahrung/Löschung** | Keine Aufbewahrung durch FiKnow selbst (kein Logging der Anfrage/Antwort). Aufbewahrung/Löschung beim externen Anbieter richtet sich nach dessen AVV/Auftragsverarbeitungsvertrag — `[…] AVV-Inhalt und Löschfristen beim Anbieter zu bestätigen`. Wird eine Antwort explizit als Notiz gespeichert (`annotations`), gilt Klasse B (siehe Tätigkeit 2). |
-| **Empfänger** | **Externer LLM-Anbieter** als Auftragsverarbeiter (v1 konfiguriert: Anthropic; Anbieter ist austauschbar/konfigurierbar über `lib/llm`, künftig ggf. weitere Provider). Empfängt Lektionsinhalt + Auswahltext + Frage je Anfrage; **kein Logging clientseitig durch FiKnow**. |
-| **Hosting/Ort** | FiKnow-Applikation: IBM Cloud IKS, Region `eu-de` (EU). **Hosting-/Verarbeitungsort des LLM-Anbieters:** `[…] — DSB zu bestätigen`. Dies ist die wichtigste offene Stelle dieser Tätigkeit: ADR 0006 legt EU-Hosting für die FiKnow-Infrastruktur fest, trifft aber keine Aussage zum Verarbeitungsort des externen LLM-Anbieters. Vor Produktivbetrieb ist zu klären, ob ein AVV nach Art. 28 DSGVO vorliegt und ob ggf. eine Drittlandübermittlung (Art. 44 ff. DSGVO, z. B. Standardvertragsklauseln) vorliegt. |
+| **Aufbewahrung/Löschung** | Keine Aufbewahrung durch FiKnow selbst (kein Logging der Anfrage/Antwort, keine Klartext-Persistenz in der Embeddings-Schicht). Aufbewahrung/Löschung bei den externen Anbietern richtet sich nach deren AVV — `[…] AVV-Inhalt und Löschfristen je Anbieter zu bestätigen`. Wird eine Antwort explizit als Notiz gespeichert (`annotations`), gilt Klasse B (siehe Tätigkeit 2). |
+| **Empfänger** | Zwei externe Auftragsverarbeiter: **(a) LLM-Anbieter** (v1: Anthropic; über `lib/llm` konfigurierbar) — empfängt Lektionsinhalt + Auswahltext + Frage je Anfrage. **(b) Embeddings-Anbieter** (`lib/embeddings`, über `EMBEDDING_PROVIDER` konfigurierbar): **Zielzustand IBM watsonx.ai** (`ibm/granite-embedding-278m-multilingual`) — **bewusste, konsequente Ablösung** des bisherigen Default **Voyage**. Begründung (mit Yves, 2026-07-26): IBM ist die **Betriebsplattform mit bestehendem Vertragsverhältnis**, während mit Voyage **kein Vertrag** besteht (kein AVV, US-Anbieter/Drittland) — das ist ein DSG-Nachteil ohne Vorteil, daher Voyage nicht als Dauerzustand. **Kein Logging clientseitig durch FiKnow** bei beiden. |
+| **Hosting/Ort** | FiKnow-Applikation: IBM Cloud IKS, Region `eu-de` (EU). **Embeddings-Anbieter (Zielzustand):** IBM watsonx.ai, Region wählbar `eu-de` (EU) — verglichen mit Voyage (US) entfällt damit die Drittland-Problematik; ob das bestehende IBM-Vertragsverhältnis die watsonx.ai-Nutzung als Auftragsverarbeiter mit abdeckt, ist noch formal zu bestätigen (jedenfalls Vertragsbeziehung vorhanden, anders als bei Voyage). **LLM-Anbieter (Anthropic):** Hosting-/Verarbeitungsort `[…] — DSB zu bestätigen` — **das bleibt die wichtigste offene Stelle**: ADR 0006 legt EU-Hosting für die FiKnow-Infrastruktur fest, trifft aber keine Aussage zum Verarbeitungsort des LLM-Anbieters. Vor Produktivbetrieb ist zu klären, ob ein AVV nach Art. 28 DSGVO vorliegt und ob eine Drittlandübermittlung (Art. 44 ff. DSGVO, z. B. Standardvertragsklauseln) besteht. Offen ist, ob auch die **Text-LLM-Ebene** analog zu den Embeddings auf IBM (watsonx-gehostete Modelle) konsolidiert werden soll — siehe offene Punkte. |
 | **TOM-Verweis** | `[Verweis auf TOM-Dokument/Sicherheitskonzept …]`. Zusätzliche technische Schutzmaßnahmen laut Code-Kommentar: Rate-Limit pro Nutzer (Kosten-/Missbrauchsschutz), Prompt-Injection-Abgrenzung (Selektion/Frage als Daten markiert), Output wird clientseitig sanitisiert gerendert (kein rohes HTML/JS), Feature nur für Kurse mit `tutor_enabled` (Gating). |
 
 ---
@@ -115,7 +117,7 @@ Zur schnellen Übersicht, was vor Freigabe dieses RoPA noch zu klären ist:
 1. Verantwortlicher, DSB-Kontakt (Abschnitt 1).
 2. Finale Rechtsgrundlagen für Tätigkeiten 1, 2 und 4 (aktuell nur Kandidaten benannt).
 3. Formale DSB-Abnahme der 3-Jahres-Frist für Klasse A sowie Prüfung der Höchstfristen § 199 Abs. 3/4 BGB (Tätigkeit 3).
-4. AVV-Status, Verarbeitungsort und ggf. Drittlandmechanismus des externen LLM-Anbieters (Tätigkeit 4) — derzeit größte offene Compliance-Lücke dieses RoPA.
+4. **Externe KI-Anbieter (Tätigkeit 4):** (a) **Embeddings** — Ablösung von Voyage (kein Vertrag, US/Drittland) durch **IBM watsonx.ai, `eu-de`** ist entschieden (2026-07-26); noch formal zu bestätigen, ob das bestehende IBM-Vertragsverhältnis die watsonx-Nutzung als Auftragsverarbeiter abdeckt. (b) **LLM (Anthropic)** — AVV-Status, Verarbeitungsort und ggf. Drittlandmechanismus weiterhin offen; **derzeit größte offene Compliance-Lücke dieses RoPA**. (c) Zu entscheiden: ob auch die Text-LLM-Ebene auf IBM konsolidiert wird (analog zu (a)).
 5. Betreiber/Hosting-Ort von Keycloak, sofern nicht selbst betrieben (Tätigkeit 1).
 6. TOM-Dokument/Sicherheitskonzept-Verweis (alle Tätigkeiten) — inkl. Nachverfolgung des bekannten RLS-Wirksamkeits-Befunds.
 7. Prozess/Frist für Betroffenenanfragen (Abschnitt 7).

@@ -250,13 +250,26 @@ Entscheidung getroffen 2026-07-24 (mit Yves). **Umsetzung im Code, Rollout mit
 dem nächsten Deploy ausstehend** — der echte Smoke-Test gegen watsonx erfolgt,
 sobald ein watsonx-Projekt/Key vorliegt.
 
-**Wechsel des Embedding-Providers auf IBM watsonx.ai,** Modell
-`ibm/granite-embedding-278m-multilingual`. Treiber (mit Yves): **Kosten**
-(kein per-Token-Voyage), **deutschsprachige/multilinguale Qualität** (granite
-ist multilingual, u. a. Deutsch — das aktuelle Voyage-Setup ist US-zentriert),
-**IBM-Alignment** (die Plattform läuft ohnehin auf IBM Cloud; granite ist IBMs
-eigenes Modell, über watsonx.ai direkt als API verfügbar). Kein Self-Hosting —
-watsonx.ai-API war die bewusste Wahl gegenüber einem in-cluster TEI.
+**Konsequente Ablösung des Embedding-Providers Voyage durch IBM watsonx.ai,**
+Modell `ibm/granite-embedding-278m-multilingual`. Es geht **nicht** um eine
+Koexistenz „watsonx neben Voyage" — Voyage wird abgelöst, nicht als
+Dauerzustand behalten. Treiber (mit Yves, 2026-07-24 / geschärft 2026-07-26):
+- **Vertrag/Datenschutz (der ausschlaggebende Grund).** IBM ist die
+  **Betriebsplattform mit bestehendem Vertragsverhältnis** — mit Voyage besteht
+  **kein Vertrag** (kein AVV, US-Anbieter/Drittland nach DSGVO). Voyage ist damit
+  ein DSG-Nachteil ohne kompensierenden Vorteil; das Vertragsargument war
+  mitauslösend für den IBM-Weg insgesamt. Verlagerung der Embeddings (inkl. der
+  freitextlichen Query der Lernenden) zu IBM/`eu-de` schließt die entsprechende
+  RoPA-Lücke (Tätigkeit 4).
+- **Kosten** (kein per-Token-Voyage), **deutschsprachige/multilinguale
+  Qualität** (granite ist multilingual, u. a. Deutsch — Voyage-Setup
+  US-zentriert), **IBM-Alignment** (Plattform läuft ohnehin auf IBM Cloud;
+  granite ist IBMs eigenes Modell, über watsonx.ai direkt als API verfügbar).
+
+Kein Self-Hosting — watsonx.ai-API war die bewusste Wahl gegenüber einem
+in-cluster TEI. Offen (separat): ob analog auch die **Text-LLM-Ebene**
+(heute Anthropic, ebenfalls ohne bestätigten AVV) auf IBM/watsonx-gehostete
+Modelle konsolidiert wird — s. RoPA Tätigkeit 4.
 
 - **Passt in die vorhandene Abstraktion** (Decision 3 hat den Provider-Wechsel
   vorgesehen): neuer `WatsonxProvider` neben `VoyageProvider`, geschaltet über

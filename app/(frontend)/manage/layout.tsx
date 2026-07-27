@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
+import { getAppVersion } from "@/lib/app-version";
 import { canSeeAdmin } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -30,10 +31,15 @@ export default async function AdminLayout({
     redirect("/dashboard?error=no_admin_access");
   }
 
+  const { version, commit } = getAppVersion();
+
   return (
     <div className={styles.shell}>
       <TopNav active="manage" />
       <main className={styles.wrap}>{children}</main>
+      <footer className={styles.footer}>
+        v{version} · {commit}
+      </footer>
     </div>
   );
 }

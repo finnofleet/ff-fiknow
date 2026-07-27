@@ -51,6 +51,15 @@ jobs:
             type=sha,prefix=main-,enable={{is_default_branch}}
             type=semver,pattern=v{{version}}
 
+      # Build-Metadaten für die Versions-/Build-Anzeige (lib/app-version.ts,
+      # GET /version, /manage-Footer) — als Docker-Build-Args ins Image
+      # gebacken (siehe Dockerfile-Kommentar bei ARG GIT_COMMIT/BUILD_TIME).
+      - name: Compute build metadata
+        id: build_meta
+        run: |
+          echo "short_sha=$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_OUTPUT"
+          echo "build_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
       - name: Build & push
         id: build
         uses: docker/build-push-action@v6
@@ -62,6 +71,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ steps.build_meta.outputs.short_sha }}
+            BUILD_TIME=${{ steps.build_meta.outputs.build_time }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

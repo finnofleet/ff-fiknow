@@ -42,6 +42,18 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# Build-Metadaten für die Versions-/Build-Anzeige (lib/app-version.ts,
+# GET /version, /manage-Footer). Werden NICHT automatisch ermittelt — beim
+# `docker build` explizit mitgeben, sonst bleibt "unknown":
+#   docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) \
+#                --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) ...
+# Additiv/optional: fehlen die Build-Args, läuft das Image unverändert
+# weiter (Default "unknown", keine Secrets, kein Verhaltenseinfluss).
+ARG GIT_COMMIT=unknown
+ARG BUILD_TIME=unknown
+ENV GIT_COMMIT=$GIT_COMMIT
+ENV BUILD_TIME=$BUILD_TIME
+
 # Non-root user
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs

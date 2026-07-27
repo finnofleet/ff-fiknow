@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { passesEntityScope } from "./entity-scope";
+import {
+  passesEntityScope,
+  passesViewerScope,
+  viewerScopeFromAssignments,
+} from "./entity-scope";
 
 /**
  * ADR 0007 §4 — Land/BU-Zielfilter für training-requirements. Reine
@@ -86,6 +90,139 @@ describe("passesEntityScope", () => {
       expect(
         passesEntityScope({ land: null, bu: null }, ["CH"], ["Payments"]),
       ).toBe(false);
+    });
+  });
+});
+
+/**
+ * ADR 0007 §3 — Betrachter-Scope (Variante A, ODER ueber Zuweisungen/Grants,
+ * UND ueber Dimensionen). Phase P2b: das Gate ist "keine Zuweisung ->
+ * unrestricted" (heutiges Verhalten bleibt unveraendert).
+ */
+describe("viewerScopeFromAssignments", () => {
+  it("leere Liste -> unrestricted (das Gate)", () => {
+    expect(viewerScopeFromAssignments([])).toEqual({ kind: "unrestricted" });
+  });
+
+  it("eine Zuweisung mit scopeLand/scopeBu = null -> unrestricted (Variante-A-Kollaps)", () => {
+    expect(
+      viewerScopeFromAssignments([{ scopeLand: null, scopeBu: null }]),
+    ).toEqual({ kind: "unrestricted" });
+  });
+
+  it("eine Zuweisung mit leeren Arrays -> unrestricted", () => {
+    expect(
+      viewerScopeFromAssignments([{ scopeLand: [], scopeBu: [] }]),
+    ).toEqual({ kind: "unrestricted" });
+  });
+
+  it("eine Zuweisung mit scopeLand=[CH], scopeBu=null -> scoped mit einem Grant", () => {
+    expect(
+      viewerScopeFromAssignments([{ scopeLand: ["CH"], scopeBu: null }]),
+    ).toEqual({
+      kind: "scoped",
+      grants: [{ land: ["CH"], bu: [] }],
+    });
+  });
+
+  it("trimmt und filtert leere Werte", () => {
+    expect(
+      viewerScopeFromAssignments([
+        { scopeLand: [" CH ", ""], scopeBu: null },
+      ]),
+    ).toEqual({
+      kind: "scoped",
+      grants: [{ land: ["CH"], bu: [] }],
+    });
+  });
+
+  it("mehrere Zuweisungen, eine davon group-level {null,null} -> unrestricted (kollabiert alles)", () => {
+    expect(
+      viewerScopeFromAssignments([
+        { scopeLand: ["CH"], scopeBu: null },
+        { scopeLand: null, scopeBu: null },
+      ]),
+    ).toEqual({ kind: "unrestricted" });
+  });
+
+  it("zwei disjunkte scoped Zuweisungen -> scoped mit zwei Grants", () => {
+    expect(
+      viewerScopeFromAssignments([
+        { scopeLand: ["CH"], scopeBu: null },
+        { scopeLand: ["DE"], scopeBu: null },
+      ]),
+    ).toEqual({
+      kind: "scoped",
+      grants: [
+        { land: ["CH"], bu: [] },
+        { land: ["DE"], bu: [] },
+      ],
+    });
+  });
+});
+
+describe("passesViewerScope", () => {
+  it("unrestricted -> immer true, auch fuer subject ohne Land/BU", () => {
+    expect(
+      passesViewerScope({ land: null, bu: null }, { kind: "unrestricted" }),
+    ).toBe(true);
+    expect(
+      passesViewerScope(
+        { land: "CH", bu: "Payments" },
+        { kind: "unrestricted" },
+      ),
+    ).toBe(true);
+  });
+
+  describe("scoped mit einem Grant", () => {
+    const scope = { kind: "scoped" as const, grants: [{ land: ["CH"], bu: [] }] };
+
+    it("subject-Land im Grant -> true", () => {
+      expect(passesViewerScope({ land: "CH", bu: "Payments" }, scope)).toBe(
+        true,
+      );
+    });
+
+    it("subject-Land nicht im Grant -> false", () => {
+      expect(passesViewerScope({ land: "DE", bu: "Payments" }, scope)).toBe(
+        false,
+      );
+    });
+
+    it("subject ohne Land/BU-Snapshot -> false (strikt)", () => {
+      expect(passesViewerScope({ land: null, bu: null }, scope)).toBe(false);
+    });
+  });
+
+  it("scoped ODER ueber Grants: subject matcht zweiten Grant -> true", () => {
+    const scope = {
+      kind: "scoped" as const,
+      grants: [
+        { land: ["CH"], bu: [] },
+        { land: ["DE"], bu: [] },
+      ],
+    };
+    expect(passesViewerScope({ land: "DE", bu: "Payments" }, scope)).toBe(
+      true,
+    );
+  });
+
+  describe("scoped UND ueber Dimensionen innerhalb eines Grants", () => {
+    const scope = {
+      kind: "scoped" as const,
+      grants: [{ land: ["CH"], bu: ["Payments"] }],
+    };
+
+    it("Land matcht, BU nicht -> false", () => {
+      expect(passesViewerScope({ land: "CH", bu: "Lending" }, scope)).toBe(
+        false,
+      );
+    });
+
+    it("beide matchen -> true", () => {
+      expect(passesViewerScope({ land: "CH", bu: "Payments" }, scope)).toBe(
+        true,
+      );
     });
   });
 });

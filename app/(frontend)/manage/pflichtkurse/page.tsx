@@ -13,6 +13,7 @@ import {
   type ParticipantStatus,
 } from "@/lib/training/compliance-compute";
 import { driverLabel } from "@/lib/training/compliance-drivers";
+import { resolveViewerScope } from "@/lib/training/viewer-scope";
 
 import styles from "./page.module.css";
 
@@ -72,7 +73,8 @@ export default async function CompliancePage({
   const { driver: driverRaw } = await searchParams;
   const driver = driverRaw && driverRaw.length > 0 ? driverRaw : null;
 
-  const fullOverview = await getComplianceOverview();
+  const viewerScope = await resolveViewerScope(me.id, "compliance:view-named");
+  const fullOverview = await getComplianceOverview({ viewerScope });
   const driverOptions = collectDriverOptions(fullOverview);
   const overview = filterCoursesByDriver(fullOverview, driver);
 

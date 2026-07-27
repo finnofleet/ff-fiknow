@@ -14,6 +14,7 @@ import { db } from "@/lib/db/client";
 import { enrollments, lessonProgress, profiles, trainingAssignments } from "@/lib/db/schema";
 
 import { computeCompliance, type CourseCompliance } from "./compliance-compute";
+import { passesViewerScope, type ViewerScope } from "./entity-scope";
 import { reconcileAssignments } from "./reconcile";
 
 function participantKey(userId: string, courseSlug: string): string {
@@ -26,8 +27,14 @@ function participantKey(userId: string, courseSlug: string): string {
  * Rezertifizierung), bevor gelesen wird — analog `getMyTrainingAssignments`
  * darf ein Fehlschlag dabei das Dashboard NIE zum Absturz bringen (nur
  * geloggt, dann mit dem vorhandenen Stand weiter).
+ *
+ * `opts.viewerScope` (ADR 0007 P2b) filtert die Nachweis-Zeilen auf den
+ * Sicht-Scope des Betrachters (Land/BU-Snapshot). Fehlt er oder ist er
+ * `unrestricted`, bleibt das Verhalten unveraendert (heutiger Stand: alles).
  */
-export async function getComplianceOverview(): Promise<CourseCompliance[]> {
+export async function getComplianceOverview(
+  opts: { viewerScope?: ViewerScope } = {},
+): Promise<CourseCompliance[]> {
   try {
     await reconcileAssignments();
   } catch (err) {
@@ -45,10 +52,28 @@ export async function getComplianceOverview(): Promise<CourseCompliance[]> {
       courseVersionSnapshot: trainingAssignments.courseVersionSnapshot,
       cycle: trainingAssignments.cycle,
       evidence: trainingAssignments.evidence,
+      landSnapshot: trainingAssignments.landSnapshot,
+      buSnapshot: trainingAssignments.buSnapshot,
     })
     .from(trainingAssignments);
 
   if (assignmentRows.length === 0) return [];
+
+  // ADR 0007 P2b: Sicht-Scope anwenden. `unrestricted` (Default / kein
+  // Betrachter-Scope) laesst alle Zeilen durch = heutiges Verhalten. Ein
+  // scoped Betrachter sieht nur Nachweise, deren Land/BU-Snapshot mindestens
+  // einen seiner Grants erfuellt (strikt: Zeilen ohne Snapshot fallen raus).
+  const viewerScope: ViewerScope = opts.viewerScope ?? { kind: "unrestricted" };
+  const scopedRows =
+    viewerScope.kind === "unrestricted"
+      ? assignmentRows
+      : assignmentRows.filter((row) =>
+          passesViewerScope(
+            { land: row.landSnapshot, bu: row.buSnapshot },
+            viewerScope,
+          ),
+        );
+  if (scopedRows.length === 0) return [];
 
   const profileRows = await db
     .select({ userId: profiles.userId, displayName: profiles.displayName })
@@ -81,7 +106,7 @@ export async function getComplianceOverview(): Promise<CourseCompliance[]> {
   // Art.-4-Schärfung) — bewusst NICHT aus dem eingefrorenen `evidence`, damit
   // Dashboard-Badges/-Filter immer den aktuellen Kurs-Stand zeigen.
   const courseSlugs = Array.from(
-    new Set(assignmentRows.map((row) => row.courseSlug)),
+    new Set(scopedRows.map((row) => row.courseSlug)),
   );
   const titles = new Map<string, string>();
   const drivers = new Map<string, string[]>();
@@ -106,7 +131,7 @@ export async function getComplianceOverview(): Promise<CourseCompliance[]> {
   return computeCompliance({
     // `evidence` kommt aus Drizzle typlos (jsonb) — cast auf die reine
     // `CompletionEvidence`-Form, die completion.ts beim Abschluss schreibt.
-    assignments: assignmentRows.map((row) => ({
+    assignments: scopedRows.map(({ landSnapshot, buSnapshot, ...row }) => ({
       ...row,
       evidence: row.evidence as CourseCompliance["participants"][number]["evidence"],
     })),

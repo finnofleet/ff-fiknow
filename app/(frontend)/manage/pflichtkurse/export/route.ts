@@ -21,6 +21,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getComplianceOverview } from "@/lib/training/compliance";
 import { filterCoursesByDriver } from "@/lib/training/compliance-compute";
 import { buildComplianceCsv } from "@/lib/training/compliance-csv";
+import { resolveViewerScope } from "@/lib/training/viewer-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,8 @@ export async function GET(request: NextRequest) {
 
   const driver = request.nextUrl.searchParams.get("driver");
 
-  const overview = await getComplianceOverview();
+  const viewerScope = await resolveViewerScope(user.id, "compliance:view-named");
+  const overview = await getComplianceOverview({ viewerScope });
   const filtered = filterCoursesByDriver(overview, driver);
   const csv = buildComplianceCsv(filtered);
 

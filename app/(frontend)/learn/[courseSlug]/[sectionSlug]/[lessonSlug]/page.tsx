@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { LessonCompanion } from "@/components/tutor/lesson-companion";
 import { mdxComponents } from "@/components/mdx";
-import { hardenedMdxOptions } from "@/lib/mdx/options";
+import { hardenedRscOptions } from "@/lib/mdx/options";
 import { QuizShell } from "@/components/quiz/quiz-shell";
 import { BrandSignature } from "@/components/brand-signature";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -243,7 +243,7 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
                 <MDXRemote
                   source={lesson.body}
                   components={mdxComponents}
-                  options={{ mdxOptions: hardenedMdxOptions }}
+                  options={hardenedRscOptions}
                 />
               </div>
             </QuizShell>
@@ -252,7 +252,7 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
               <MDXRemote
                 source={lesson.body}
                 components={mdxComponents}
-                options={{ mdxOptions: hardenedMdxOptions }}
+                options={hardenedRscOptions}
               />
             </div>
           )}

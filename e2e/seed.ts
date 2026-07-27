@@ -48,6 +48,29 @@ const COURSE_SLUG = "datenschutz-grundlagen";
 const COURSE_TITLE = "Datenschutz-Grundlagen";
 const SECTION_SLUG = "grundlagen";
 const LESSON_SLUG = "was-ist-datenschutz";
+const QUIZ_LESSON_SLUG = "quiz-bausteine";
+
+/**
+ * Quiz-Lesson-Body für den RSC-Grading-Regressionstest (ADR 0007-Umfeld, Bug
+ * „korrekte Antwort wird als falsch gewertet"). Nutzt bewusst `correct={true}`
+ * (Expression-Attribut, wie im echten Kurs) — genau die Form, die über die
+ * next-mdx-remote/rsc-Grenze brach, als <Question> die Options-Props noch
+ * clientseitig introspizierte. Rendert über QuizShell → MDXRemote = echter
+ * RSC-Pfad (den kein Unit-Test abdeckt).
+ */
+const QUIZ_BODY = `# Quiz: Bausteine
+
+<Question
+  prompt="Was ist ein Repository?"
+  explanation="Ein Repository ist die zentrale Ablage eines Projekts — mit allen Dateien UND der kompletten Versionshistorie."
+  type="single"
+>
+  <Option correct={true}>Die zentrale Projekt-Ablage mit allen Dateien und der ganzen Historie</Option>
+  <Option>Eine einzelne, aktuelle Datei</Option>
+  <Option>Ein Backup, das einmal pro Woche erstellt wird</Option>
+  <Option>Der Ordner mit allen alten Versionen</Option>
+</Question>
+`;
 
 const PAYLOAD_SECRET = process.env.PAYLOAD_SECRET;
 if (!PAYLOAD_SECRET || PAYLOAD_SECRET.length < 16) {
@@ -114,6 +137,21 @@ async function seedCourseContent(payload: any): Promise<void> {
     overrideAccess: true,
   });
   log(`Lesson created: id=${lesson.id}`);
+
+  const quizLesson = await payload.create({
+    collection: "lessons",
+    data: {
+      title: "Quiz: Bausteine",
+      slug: QUIZ_LESSON_SLUG,
+      section: section.id,
+      orderIndex: 2,
+      type: "quiz",
+      body: QUIZ_BODY,
+      _status: "published",
+    },
+    overrideAccess: true,
+  });
+  log(`Quiz lesson created: id=${quizLesson.id}`);
 
   log("Creating training-requirement (target: role=learner) …");
   const requirement = await payload.create({

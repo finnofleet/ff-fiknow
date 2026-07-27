@@ -118,6 +118,44 @@ export const TrainingRequirements: CollectionConfig = {
             },
           ],
         },
+        {
+          name: "landScope",
+          type: "array",
+          label: "Land-Filter",
+          admin: {
+            description:
+              "Optional. Leer = alle Länder. Grenzt die Zielgruppe " +
+              "zusätzlich (UND) auf diese Land-Werte ein; wirkt zusammen " +
+              "mit dem Rolle/User-Targeting. Strikt: Personen ohne " +
+              "gesetztes Land werden bei gesetztem Filter NICHT erfasst.",
+          },
+          fields: [
+            {
+              name: "land",
+              type: "text",
+              required: true,
+            },
+          ],
+        },
+        {
+          name: "buScope",
+          type: "array",
+          label: "BU-Filter",
+          admin: {
+            description:
+              "Optional. Leer = alle BUs. Grenzt die Zielgruppe " +
+              "zusätzlich (UND) auf diese BU-Werte ein; wirkt zusammen " +
+              "mit dem Rolle/User-Targeting. Strikt: Personen ohne " +
+              "gesetzte BU werden bei gesetztem Filter NICHT erfasst.",
+          },
+          fields: [
+            {
+              name: "bu",
+              type: "text",
+              required: true,
+            },
+          ],
+        },
       ],
     },
     {

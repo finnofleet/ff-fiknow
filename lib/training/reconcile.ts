@@ -25,6 +25,7 @@ import { db } from "@/lib/db/client";
 import { enrollments, profiles, trainingAssignments } from "@/lib/db/schema";
 
 import { computeDueDate, isRecertDue, type DueRule } from "./due-date";
+import { passesEntityScope, scopeValues } from "./entity-scope";
 
 // ============================================================
 // Payload-Singleton (Muster wie lib/content.ts / lib/paths.ts)
@@ -46,11 +47,15 @@ type CourseDoc = {
 };
 
 type RequirementTargetUserEntry = { userId?: string | null };
+type RequirementTargetLandEntry = { land?: string | null };
+type RequirementTargetBuEntry = { bu?: string | null };
 
 type RequirementTarget = {
   type?: "role" | "user" | null;
   role?: string | null;
   userIds?: RequirementTargetUserEntry[] | null;
+  landScope?: RequirementTargetLandEntry[] | null;
+  buScope?: RequirementTargetBuEntry[] | null;
 };
 
 type RequirementDueRule = {
@@ -68,7 +73,12 @@ type RequirementDoc = {
   active?: boolean | null;
 };
 
-type ProfileRow = { userId: string; role: string };
+type ProfileRow = {
+  userId: string;
+  role: string;
+  land: string | null;
+  bu: string | null;
+};
 
 type AssignmentInsert = {
   sourceType: string;
@@ -140,7 +150,14 @@ async function fetchActiveRequirements(
 // ============================================================
 
 async function fetchAllProfiles(): Promise<ProfileRow[]> {
-  return db.select({ userId: profiles.userId, role: profiles.role }).from(profiles);
+  return db
+    .select({
+      userId: profiles.userId,
+      role: profiles.role,
+      land: profiles.land,
+      bu: profiles.bu,
+    })
+    .from(profiles);
 }
 
 /** "Alle nicht-gesperrten Profile" (Toggle-Zielgruppe) — defensiv via normalizeRole. */
@@ -184,6 +201,11 @@ function explicitUserTargetIds(
  * normalizeRole auf den Requirement-Wert — der ist bereits ein kuratierter
  * Enum-Wert aus dem Payload-Select, kein rohes DB-Rollenfeld); fehlt/ist
  * ungültig, wird die Requirement übersprungen + geloggt.
+ *
+ * Land/BU-Scope (ADR 0007 §4) filtert die so ermittelte Basis-Zielmenge
+ * zusätzlich (UND) — additiv und verhaltensneutral: sind beide Scopes leer,
+ * wird die Basis-Zielmenge unverändert zurückgegeben (identisch zum
+ * Vor-P2a-Verhalten, kein Profil-Lookup nötig).
  */
 function resolveRequirementTargetUserIds(
   requirement: RequirementDoc,
@@ -192,6 +214,7 @@ function resolveRequirementTargetUserIds(
   const target = requirement.target;
   if (!target?.type) return [];
 
+  let baseUserIds: string[];
   if (target.type === "role") {
     if (
       target.role !== "learner" &&
@@ -204,17 +227,28 @@ function resolveRequirementTargetUserIds(
       );
       return [];
     }
-    return roleTargetUserIds(candidateProfiles, target.role);
-  }
-
-  if (target.type === "user") {
-    return explicitUserTargetIds(
+    baseUserIds = roleTargetUserIds(candidateProfiles, target.role);
+  } else if (target.type === "user") {
+    baseUserIds = explicitUserTargetIds(
       target.userIds,
       `Requirement ${requirement.id}`,
     );
+  } else {
+    return [];
   }
 
-  return [];
+  const landScope = scopeValues(target.landScope, "land");
+  const buScope = scopeValues(target.buScope, "bu");
+  if (landScope.length === 0 && buScope.length === 0) return baseUserIds;
+
+  const profileByUserId = new Map(
+    candidateProfiles.map((p) => [p.userId, p] as const),
+  );
+  return baseUserIds.filter((userId) => {
+    const profile = profileByUserId.get(userId);
+    if (!profile) return false;
+    return passesEntityScope(profile, landScope, buScope);
+  });
 }
 
 function requirementTargetsUser(
@@ -440,7 +474,12 @@ export async function reconcileForUser(userId: string): Promise<void> {
 
   const [profileRows, mandatorySlugs, requirements] = await Promise.all([
     db
-      .select({ userId: profiles.userId, role: profiles.role })
+      .select({
+        userId: profiles.userId,
+        role: profiles.role,
+        land: profiles.land,
+        bu: profiles.bu,
+      })
       .from(profiles)
       .where(eq(profiles.userId, userId)),
     fetchMandatoryCourseSlugs(),

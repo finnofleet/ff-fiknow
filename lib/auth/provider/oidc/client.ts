@@ -141,6 +141,19 @@ export async function exchangeCode(args: {
     throw new Error("OIDC: kein gültiger sub-Claim im ID-Token.");
   }
 
+  // Diagnose-Sonde (temporär, gegated): welche Claim-FELDER liefert Entra→KC im
+  // ID-Token? Nur Object.keys — KEINE Werte, also PII-frei. Klärt für ADR 0007,
+  // ob Land/BU-Zugehörigkeit je aus Claims (z. B. `groups`/`department`)
+  // gefüttert werden kann, oder ob sie App-verwaltet bleiben muss. Per
+  // OIDC_DEBUG_CLAIMS=true einschalten, einmal einloggen, Pod-Log lesen, wieder
+  // ausschalten. Reine Aufklärung, keine Verhaltensänderung.
+  if (process.env.OIDC_DEBUG_CLAIMS === "true") {
+    console.info(
+      "[oidc-claims] ID-Token-Felder:",
+      Object.keys(claims).sort().join(", "),
+    );
+  }
+
   const email = typeof claims.email === "string" ? claims.email : null;
   const name =
     (typeof claims.name === "string" && claims.name) ||

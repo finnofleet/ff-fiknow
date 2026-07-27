@@ -14,7 +14,15 @@
  * Backward-Compat: alter Wert `editor` wird als Curator behandelt, damit
  * Bestands-DB-Einträge ohne Migration weiterfunktionieren. Bei Gelegenheit
  * sollte `UPDATE profiles SET role='curator' WHERE role='editor'` laufen.
+ *
+ * ADR 0007 (Phase P1): die Permission-Checks unten delegieren intern an die
+ * Capability-Schicht (`lib/auth/capabilities.ts`) via
+ * `capabilitiesForLegacyRole` — Signaturen und Verhalten bleiben identisch,
+ * nur die Herleitung läuft jetzt über Capabilities statt harter
+ * `role === "…"`-Vergleiche. Das ist der erste Schritt Richtung additive
+ * Rollen + feste Capabilities; Call-Sites ändern sich nicht.
  */
+import { can, capabilitiesForLegacyRole } from "./capabilities";
 
 export type Role = "learner" | "curator" | "admin" | "suspended";
 
@@ -45,24 +53,30 @@ export function isSuspended(role: Role): boolean {
   return role === "suspended";
 }
 
-/** Darf Lektionen besuchen, Quiz machen, Fortschritt tracken. */
+/**
+ * Darf Lektionen besuchen, Quiz machen, Fortschritt tracken.
+ *
+ * Bleibt bewusst ein direkter Status-Check statt einer Capability-Ableitung:
+ * „lernen dürfen" ist kein gewährtes Recht, sondern der implizite
+ * Grundzustand, den nur `suspended` (Deny-all-Status) aufhebt (ADR 0007 §2).
+ */
 export function canLearn(role: Role): boolean {
   return role !== "suspended";
 }
 
 /** Darf den Admin-Bereich überhaupt sehen (egal welche Aktionen). */
 export function canSeeAdmin(role: Role): boolean {
-  return role === "curator" || role === "admin";
+  return can(capabilitiesForLegacyRole(role), "courses:manage");
 }
 
 /** Darf Kurs-Bundles hochladen + publishen. */
 export function canManageCourses(role: Role): boolean {
-  return role === "curator" || role === "admin";
+  return can(capabilitiesForLegacyRole(role), "courses:manage");
 }
 
 /** Darf Nutzer:innen verwalten (Rolle ändern, sperren). */
 export function canManageUsers(role: Role): boolean {
-  return role === "admin";
+  return can(capabilitiesForLegacyRole(role), "users:manage");
 }
 
 // ============================================================

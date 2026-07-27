@@ -452,3 +452,106 @@ export const retentionPurgeRuns = pgTable(
     }),
   ],
 ).enableRLS();
+
+/**
+ * Rechte-Achse (ADR 0007, Phase P1) — Fundament für additive Rollen + feste
+ * Capabilities. Drei Tabellen:
+ *
+ *   - `roles`             frei benennbare Rollen (§2), P1 nur die zwei
+ *                         System-Rollen `curator`/`admin` (`is_system`).
+ *   - `role_capabilities` editierbare Rollen×Capability-Matrix (§2).
+ *   - `role_assignments`  additive Zuweisung Rolle→User inkl. vorbereiteter
+ *                         (in P1 ungenutzter) Scope-Spalten (§3).
+ *
+ * `SYSTEM_ROLE_CAPABILITIES` (`lib/auth/capabilities.ts`) ist die Single
+ * Source of Truth, aus der `scripts/seed-system-roles.ts` `roles` +
+ * `role_capabilities` befüllt. Zur Laufzeit werden diese Tabellen in P1
+ * NOCH NICHT gelesen — die Permission-Checks laufen weiterhin über den
+ * Compat-Shim `capabilitiesForLegacyRole` aus der bestehenden Single-Role in
+ * `profiles.role` (ADR 0007 §10 — App-seitige Durchsetzung vorerst,
+ * DB-Tabellen sind das Fundament für eine spätere admin-editierbare Matrix).
+ *
+ * Keine Foreign Keys (konsistent mit dem Rest dieser Datei): `user_id` ist
+ * überall eine nominelle Referenz, und Payload/Drizzle teilen sich kein
+ * Schema. Nur Select-Policies (Staff-Bypass, analog `retention_purge_runs`)
+ * — Schreiben läuft ausschließlich über die privilegierte Server-
+ * `db`-Connection (Seed/Admin-UI, spätere Phase), nie direkt vom Client.
+ */
+export const roles = pgTable(
+  "roles",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    /** Stabiler Slug, z. B. `curator` — worüber `capabilitiesForRoleKeys` matcht. */
+    key: text("key").notNull().unique(),
+    label: text("label").notNull(),
+    description: text("description"),
+    /** True für die zwei System-Rollen (`curator`/`admin`) — nicht löschbar/umbenennbar in der UI. */
+    isSystem: boolean("is_system").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  () => [
+    pgPolicy("roles_select_staff", { for: "select", using: isStaffRole }),
+  ],
+).enableRLS();
+
+export const roleCapabilities = pgTable(
+  "role_capabilities",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    roleId: uuid("role_id").notNull(),
+    /**
+     * `text`, nicht das `Capability`-Union aus `lib/auth/capabilities.ts` —
+     * eine DB-Spalte kann keine TS-Union erzwingen; die Code-Ebene bleibt
+     * die durchsetzende Instanz (siehe Datei-Kopfkommentar dort).
+     */
+    capability: text("capability").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("role_capabilities_unique_idx").on(t.roleId, t.capability),
+    pgPolicy("role_capabilities_select_staff", {
+      for: "select",
+      using: isStaffRole,
+    }),
+  ],
+).enableRLS();
+
+/**
+ * Additive Zuweisung Rolle→User: eine Person kann mehrere Zeilen halten,
+ * effektive Capabilities/Scope sind die Vereinigung (ADR 0007 §2/§3).
+ * `scopeLand`/`scopeBu` sind die vorbereiteten Scope-Dimensionen —
+ * `null` bedeutet „keine Einschränkung = alle" (§3). In P1 ungenutzt (nur
+ * Rechte-Achse gebaut); Scope-Auswertung (UND über Dimensionen, ODER über
+ * Zuweisungen) folgt in P2.
+ */
+export const roleAssignments = pgTable(
+  "role_assignments",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id").notNull(),
+    roleId: uuid("role_id").notNull(),
+    scopeLand: text("scope_land").array(),
+    scopeBu: text("scope_bu").array(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("role_assignments_user_idx").on(t.userId),
+    index("role_assignments_role_idx").on(t.roleId),
+    pgPolicy("role_assignments_select_staff", {
+      for: "select",
+      using: isStaffRole,
+    }),
+  ],
+).enableRLS();

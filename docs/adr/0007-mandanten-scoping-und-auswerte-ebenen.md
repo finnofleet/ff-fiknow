@@ -397,16 +397,30 @@ Append-only-Prinzip aus ADR 0005 für `training_assignments`):
 Proportional: der privilegierte Betrachterkreis ist klein (~10–30 Personen).
 Datenmodell allgemein bauen, Admin-UI minimal starten.
 
+**Shippability-Regel (Vorrang vor allem):** Jede Phase lässt `main` deploybar.
+Neue Maschinerie wird additiv und zunächst *dormant/gated* ausgeliefert; der
+bestehende funktionierende Pfad bleibt maßgeblich, bis sein Ersatz befüllt und
+bewährt ist (Compat-Shim wie in P1). Verhalten ändert sich erst, wenn
+Rollen/Scopes bewusst zugewiesen werden. Der Abbau der Single-Role-Hierarchie
+ist eine eigene, spätere Cleanup-Phase — nie ein Big-Bang.
+
 - **P1 — Rechte-Achse.** Feste Capability-Liste in `roles.ts`; `roles` +
   `role_capabilities` + `role_assignments` (Scope-Feld vorbereitet, zunächst
   nur voll/leer genutzt); Ableitung „Rollen-Set → effektive Capabilities";
   Call-Sites auf `can(user, cap)` umstellen; `suspended` als Status separieren.
   Rollen erst per Seed/Config, Matrix-UI schlank.
-- **P2 — Scope-Achse + Dimensionsfelder.** `profiles.land/bu` +
-  `training_assignments.land_snapshot/bu_snapshot`; Snapshot beim Abschluss;
-  Scope-Auswertung (UND über Dimensionen, ODER über Zuweisungen) in den
-  scoped Loadern. Land/BU zunächst app-befüllbar (Admin/Import). Reitet mit:
-  das optionale Kurs-/Anforderungs-Targeting (§4) an `training-requirements`.
+- **P2 — Scope-Achse + Dimensionsfelder** (zwei einzeln shippbare Teilschritte):
+  - **P2a (rein additiv):** `profiles.land/bu` +
+    `training_assignments.land_snapshot/bu_snapshot`, Snapshot beim Abschluss,
+    Land/BU app-befüllbar (Admin/Import). Keine Verhaltensänderung.
+  - **P2b (gated):** Scope-Auswertung (UND über Dimensionen, ODER über
+    Zuweisungen) in den scoped Loadern — **gated auf vorhandene scoped
+    Zuweisungen**: solange niemand scoped zugewiesen ist, bleibt das Verhalten
+    „curator/admin sehen alles" (heutiger Stand). Erst eine bewusste Zuweisung
+    schaltet die Einschränkung scharf.
+
+  Reitet mit: das optionale Kurs-/Anforderungs-Targeting (§4) an
+  `training-requirements` (P2a-Teil, additiv, Default „alle").
 - **P3 — Namentliche + aggregierte Sicht.** `compliance:view-named` gefiltert
   auf den Scope; eigener PII-freier Aggregat-Loader für
   `compliance:view-aggregate`.

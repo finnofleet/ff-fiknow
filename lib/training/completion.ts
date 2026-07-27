@@ -24,7 +24,7 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
-import { quizAttempts, trainingAssignments } from "@/lib/db/schema";
+import { profiles, quizAttempts, trainingAssignments } from "@/lib/db/schema";
 import { getCourse } from "@/lib/content";
 import { getCourseProgress, progressKey } from "@/lib/progress";
 
@@ -116,12 +116,24 @@ export async function syncCourseCompletion(
     };
   }
 
+  // Land/BU der Person zum Abschlusszeitpunkt einfrieren (ADR 0007 §3,
+  // Phase P2a) — analog courseVersionSnapshot. Kein Profil vorhanden?
+  // Dann bleiben beide Snapshots null; die Completion darf trotzdem
+  // durchlaufen (kein Throw).
+  const [profile] = await db
+    .select({ land: profiles.land, bu: profiles.bu })
+    .from(profiles)
+    .where(eq(profiles.userId, userId))
+    .limit(1);
+
   await db
     .update(trainingAssignments)
     .set({
       completedAt: now,
       courseTitleSnapshot: course.frontmatter.title,
       courseVersionSnapshot: course.frontmatter.version ?? null,
+      landSnapshot: profile?.land ?? null,
+      buSnapshot: profile?.bu ?? null,
       evidence,
     })
     .where(

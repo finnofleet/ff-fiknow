@@ -66,6 +66,13 @@ export const profiles = pgTable(
     userId: uuid("user_id").primaryKey(),
     displayName: text("display_name"),
     role: text("role").notNull().default("learner"),
+    /**
+     * Aktuelle Land-/BU-Zugehörigkeit der Person (ADR 0007 §3),
+     * app-befüllbar (Admin/Import, siehe scripts/set-user-entity.ts).
+     * `null` = unbekannt/nicht gesetzt.
+     */
+    land: text("land"),
+    bu: text("bu"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -395,6 +402,14 @@ export const trainingAssignments = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     courseTitleSnapshot: text("course_title_snapshot"),
     courseVersionSnapshot: text("course_version_snapshot"),
+    /**
+     * Land/BU der Person, eingefroren beim Abschluss (analog
+     * `courseVersionSnapshot`, ADR 0007 §3) — unveränderlicher Fakt.
+     * `null` bei offenen Assignments oder wenn die Person keine
+     * Zugehörigkeit gesetzt hat.
+     */
+    landSnapshot: text("land_snapshot"),
+    buSnapshot: text("bu_snapshot"),
     cycle: integer("cycle").notNull().default(1),
     evidence: jsonb("evidence"),
   },

@@ -382,6 +382,13 @@ Append-only-Prinzip aus ADR 0005 für `training_assignments`):
   *app-seitig* widerrufen werden — hängt direkt am offenen
   DSG-7c-Keycloak-Reconcile (ADR 0006), sonst behält ein Ausgetretener seine
   Sicht bis zum manuellen Entzug.
+- **MCP-/Authoring-Plugin-Abgleich (stehende Regel, alle Phasen).** Der
+  headless Authoring-Pfad (MCP-Server + Plugin, ADR 0001) authentifiziert über
+  Authoring-Tokens (`lib/auth/authoring-token.ts` / `authoring-auth.ts`) — ein
+  von der OIDC-Session und `roles.ts` GETRENNTER Rechte-Pfad. Jede Capability,
+  die Authoring/Content betrifft (z. B. `courses:manage`), muss dort explizit
+  gespiegelt/geprüft werden, nicht nur im Session-Pfad — sonst greifen neue
+  Regeln im MCP-/Plugin-Zugang nicht.
 - **Kein Ersatz für die ROADMAP-Mandantierung.** Entity-Scoping für die
   Compliance-Auswertung, nicht volle Multi-Tenancy.
 

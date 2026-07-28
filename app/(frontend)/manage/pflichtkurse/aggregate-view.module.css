@@ -1,0 +1,73 @@
+/* ------------------------------------------------------------------ */
+/* Aggregat-spezifische Klassen (ADR 0007 §9, Phase P3b)                */
+/* ------------------------------------------------------------------ */
+
+.courseList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  border: 1px solid var(--ink-3);
+  border-radius: 12px;
+  background: var(--bg-2);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--ink-3);
+  white-space: nowrap;
+}
+
+.table th {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.numCell {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.suppressedCell {
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+.footnote {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ink-3);
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}

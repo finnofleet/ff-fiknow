@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
 import { getAppVersion } from "@/lib/app-version";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { canSeeAdmin } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -27,7 +28,16 @@ export default async function AdminLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/manage");
-  if (!canSeeAdmin(user.role)) {
+  // ADR 0007 P3: Zugang zum /manage-Shell haengt an der Legacy-Rolle ODER an
+  // effektiven Capabilities. Scoped Compliance-Betrachter sind per Session
+  // `learner`, bekommen ihre Rechte aber aus role_assignments — der reine
+  // Legacy-Check (canSeeAdmin) sperrte sie faelschlich VOR der Page aus. Rein
+  // additiv: wer bisher rein durfte, darf weiterhin; zusaetzlich duerfen
+  // Traeger irgendeiner Management-Capability rein (leerer Cap-Satz = Lerner
+  // -> weiterhin raus). Die FEINE Berechtigung pro Unterseite
+  // (Kurse/Nutzer/Pflichtkurse) macht jede Page selbst.
+  const caps = await resolveEffectiveCapabilities(user.id, user.role);
+  if (!canSeeAdmin(user.role) && caps.size === 0) {
     redirect("/dashboard?error=no_admin_access");
   }
 

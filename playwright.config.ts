@@ -51,8 +51,17 @@ export default defineConfig({
         storageState: path.resolve(__dirname, "e2e/.auth/curator.json"),
       },
       // api-gating läuft hier zusätzlich, um zu prüfen, dass eingeloggte
-      // Requests NICHT geblockt werden.
+      // Requests NICHT geblockt werden. `compliance` (nicht compliance-rights)
+      // exakt matchen, damit der Rechte-Spec NICHT unter curator-Cookie läuft.
       testMatch: /(compliance|api-gating)\.spec\.ts/,
+    },
+    {
+      // ADR 0007 P2b/P3 — Rechte-/Sichtbarkeits-e2e. Kein projektweiter
+      // storageState: jede describe-Gruppe setzt ihren eigenen Betrachter
+      // (Rhea/Leon/learner) via `test.use({ storageState })`.
+      name: "rights",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /compliance-rights\.spec\.ts/,
     },
   ],
 });

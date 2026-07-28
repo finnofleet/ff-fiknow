@@ -20,7 +20,14 @@ import config from "@payload-config";
 import { getPayload } from "payload";
 
 import { db } from "@/lib/db/client";
-import { enrollments, lessonProgress, profiles } from "@/lib/db/schema";
+import {
+  enrollments,
+  lessonProgress,
+  profiles,
+  roleAssignments,
+  roleCapabilities,
+  roles,
+} from "@/lib/db/schema";
 import { SESSION_COOKIE, signSession } from "@/lib/auth/provider/oidc/session";
 import { markLessonCompleted } from "@/lib/progress";
 import { reconcileAssignments } from "@/lib/training/reconcile";
@@ -43,6 +50,21 @@ const ENNO_ID = "33333333-3333-3333-3333-333333333333"; // learner — started (
 const PIA_ID = "44444444-4444-4444-4444-444444444444"; // learner — started (lesson_progress)
 const NINO_ID = "55555555-5555-5555-5555-555555555555"; // learner — untouched (open)
 const SUSPENDED_ID = "66666666-6666-6666-6666-666666666666"; // suspended
+
+// --- ADR 0007 P2b/P3 — Rechte-/Scope-e2e ------------------------------------
+// Zusaetzliche CH-Lerner, damit der CH-Bucket die k-Anon-Schwelle (5) erreicht
+// und in der Aggregat-Sicht mit echten Zahlen (statt "< 5") erscheint.
+// CH-Kohorte = Dana + Enno + diese drei = 5; DE-Kohorte = Pia + Nino = 2.
+const CH_ANJA_ID = "a1a1a1a1-1111-1111-1111-111111111111"; // learner CH — open
+const CH_BEA_ID = "a2a2a2a2-2222-2222-2222-222222222222"; // learner CH — open
+const CH_CED_ID = "a3a3a3a3-3333-3333-3333-333333333333"; // learner CH — open
+// Betrachter, die per Single-Role NICHTS duerfen (learner) und ihre
+// Compliance-Rechte AUSSCHLIESSLICH ueber eine role_assignment bekommen.
+const RHEA_ID = "a7a7a7a7-7777-7777-7777-777777777777"; // HR regional, view-named, Scope CH
+const LEON_ID = "a8a8a8a8-8888-8888-8888-888888888888"; // Leitung, nur view-aggregate, group
+
+const HR_ROLE_ID = "b1b1b1b1-1111-1111-1111-111111111111";
+const LEITUNG_ROLE_ID = "b2b2b2b2-2222-2222-2222-222222222222";
 
 const COURSE_SLUG = "datenschutz-grundlagen";
 const COURSE_TITLE = "Datenschutz-Grundlagen";
@@ -85,14 +107,79 @@ async function seedProfiles(): Promise<void> {
     .insert(profiles)
     .values([
       { userId: CORA_ID, displayName: "Cora Curator", role: "curator" },
-      { userId: DANA_ID, displayName: "Dana", role: "learner" },
-      { userId: ENNO_ID, displayName: "Enno", role: "learner" },
-      { userId: PIA_ID, displayName: "Pia", role: "learner" },
-      { userId: NINO_ID, displayName: "Nino", role: "learner" },
+      // Land/BU (P2a): Dana+Enno in CH, Pia+Nino in DE — Basis fuer den
+      // Scope-Filter (gegen aktuelle profiles.land, ADR §3) + Aggregat-Buckets.
+      { userId: DANA_ID, displayName: "Dana", role: "learner", land: "CH" },
+      { userId: ENNO_ID, displayName: "Enno", role: "learner", land: "CH" },
+      { userId: PIA_ID, displayName: "Pia", role: "learner", land: "DE" },
+      { userId: NINO_ID, displayName: "Nino", role: "learner", land: "DE" },
       { userId: SUSPENDED_ID, displayName: "Susi Suspended", role: "suspended" },
+      // Weitere CH-Lerner, damit CH die k-Anon-Schwelle 5 erreicht.
+      { userId: CH_ANJA_ID, displayName: "Anja", role: "learner", land: "CH" },
+      { userId: CH_BEA_ID, displayName: "Bea", role: "learner", land: "CH" },
+      { userId: CH_CED_ID, displayName: "Ced", role: "learner", land: "CH" },
+      // Betrachter ohne eigene Land-Zuordnung (sie lernen nicht, sie schauen).
+      { userId: RHEA_ID, displayName: "Rhea Regional", role: "learner" },
+      { userId: LEON_ID, displayName: "Leon Leitung", role: "learner" },
     ])
     .onConflictDoNothing();
   log("Profiles seeded.");
+}
+
+/**
+ * ADR 0007 P2b/P3: Rollen + Rollen×Capability-Matrix + Scope-Zuweisungen fuer
+ * die Rechte-/Sichtbarkeits-e2e. Bewusst NICHT ueber die Legacy-Rolle
+ * (`profiles.role`) — Rhea/Leon sind `learner` und duerfen per Single-Role
+ * NICHTS; ihre Compliance-Rechte kommen ausschliesslich aus diesen
+ * `role_assignments`. Genau der Uebergang „Single-Role -> explizite Grants",
+ * den die e2e durchspielt.
+ */
+async function seedRolesAndAssignments(): Promise<void> {
+  log("Seeding roles + capabilities + scoped assignments …");
+  await db
+    .insert(roles)
+    .values([
+      {
+        id: HR_ROLE_ID,
+        key: "hr-regional",
+        label: "HR Regional",
+        description: "Namentliche Compliance-Sicht, auf ein Land begrenzt.",
+        isSystem: false,
+      },
+      {
+        id: LEITUNG_ROLE_ID,
+        key: "leitung",
+        label: "Leitung",
+        description: "Nur aggregierte (PII-freie) Compliance-Kennzahlen.",
+        isSystem: false,
+      },
+    ])
+    .onConflictDoNothing();
+
+  await db
+    .insert(roleCapabilities)
+    .values([
+      { roleId: HR_ROLE_ID, capability: "compliance:view-named" },
+      { roleId: HR_ROLE_ID, capability: "compliance:export" },
+      { roleId: LEITUNG_ROLE_ID, capability: "compliance:view-aggregate" },
+    ])
+    .onConflictDoNothing();
+
+  await db
+    .insert(roleAssignments)
+    .values([
+      // Rhea: namentliche Sicht, NUR CH (BU offen = alle).
+      { userId: RHEA_ID, roleId: HR_ROLE_ID, scopeLand: ["CH"], scopeBu: null },
+      // Leon: nur Aggregat, group-level (beide Achsen null = sieht alle Laender).
+      {
+        userId: LEON_ID,
+        roleId: LEITUNG_ROLE_ID,
+        scopeLand: null,
+        scopeBu: null,
+      },
+    ])
+    .onConflictDoNothing();
+  log("Roles/assignments seeded.");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -236,6 +323,32 @@ async function writeStorageStates(): Promise<void> {
     maxAgeSec,
   );
 
+  // Rhea/Leon: Session-Rolle ist `learner` (Single-Role) — ihre Compliance-
+  // Rechte kommen zur Laufzeit AUS den role_assignments (resolveEffectiveCapabilities).
+  const rheaCookie = await signSession(
+    {
+      sub: RHEA_ID,
+      email: "rhea@example.test",
+      emailVerified: true,
+      name: "Rhea Regional",
+      role: "learner",
+    },
+    PAYLOAD_SECRET!,
+    maxAgeSec,
+  );
+
+  const leonCookie = await signSession(
+    {
+      sub: LEON_ID,
+      email: "leon@example.test",
+      emailVerified: true,
+      name: "Leon Leitung",
+      role: "learner",
+    },
+    PAYLOAD_SECRET!,
+    maxAgeSec,
+  );
+
   function storageState(cookieValue: string) {
     return {
       cookies: [
@@ -262,6 +375,14 @@ async function writeStorageStates(): Promise<void> {
     path.join(authDir, "curator.json"),
     JSON.stringify(storageState(curatorCookie), null, 2),
   );
+  writeFileSync(
+    path.join(authDir, "rhea.json"),
+    JSON.stringify(storageState(rheaCookie), null, 2),
+  );
+  writeFileSync(
+    path.join(authDir, "leon.json"),
+    JSON.stringify(storageState(leonCookie), null, 2),
+  );
   log("storageState files written.");
 }
 
@@ -272,6 +393,8 @@ async function main(): Promise<void> {
 
   const payload = await getPayload({ config });
   await seedCourseContent(payload);
+
+  await seedRolesAndAssignments();
 
   await seedProgressStates();
   await writeStorageStates();

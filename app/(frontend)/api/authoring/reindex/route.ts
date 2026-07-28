@@ -21,6 +21,7 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
+import { recordAudit } from "@/lib/audit/log";
 import { authenticateAuthoring } from "@/lib/auth/authoring-auth";
 import { isEmbeddingConfigured } from "@/lib/embeddings";
 import {
@@ -86,6 +87,16 @@ export async function POST(request: NextRequest) {
     }
     return jsonError(500, "reindex_failed", { message });
   }
+
+  // Audit: best-effort, blockiert die Response nicht.
+  await recordAudit({
+    action: "reindex.run",
+    actorUserId: user.id,
+    actorRole: user.role,
+    source: user.via === "token" ? "authoring-token" : "session",
+    targetType: slug ? "course" : "all",
+    targetId: slug ?? null,
+  });
 
   const summary = {
     indexed: results.filter((r) => r.status === "indexed").length,

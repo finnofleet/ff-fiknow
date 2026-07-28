@@ -570,3 +570,53 @@ export const roleAssignments = pgTable(
     }),
   ],
 ).enableRLS();
+
+/**
+ * Append-only Audit-Log (ADR 0007 §11). Haelt fest, DASS und von WEM etwas
+ * geschah — NICht den Dateninhalt. PII-arm analog `retention_purge_runs`:
+ * nur Akteur-ID + Rollen-Momentaufnahme, Aktion, Ziel (Typ+ID), optionaler
+ * Land/BU-Kontext, Quelle, Zeitstempel. KEIN Payload/Rohdaten-Feld — bewusst
+ * keine jsonb-Spalte, damit hier nichts Sensibles landen kann.
+ *
+ * Append-only auf Policy-Ebene: NUR eine select-Policy (isStaffRole), KEINE
+ * insert/update/delete-Policy — geschrieben wird ausschliesslich ueber die
+ * privilegierte Server-`db`-Connection (RLS-Bypass), nie vom Client. Die feine
+ * Leseberechtigung (`audit:view`, ADR 0007 §2) erzwingt der App-Code.
+ *
+ * Retention (ADR 0006): audit_log ist als Klasse A (nachweisnah) vorgesehen —
+ * ueberlebt den User-Austritt (der Audit-Trail ist der Zweck). Die endgueltige
+ * Datenklasse + Zeit-Purge-Verdrahtung ist DSB-offen (siehe
+ * lib/privacy/data-classes.ts).
+ */
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    /** Akteur (userId); null bei System/Cron/CLI ohne eingeloggten User. */
+    actorUserId: uuid("actor_user_id"),
+    /** Legacy-Rollen-Momentaufnahme zum Zeitpunkt der Aktion (z. B. "curator"). */
+    actorRole: text("actor_role"),
+    /** Kanonische Aktion, Konvention `<domain>.<verb>` (z. B. "reindex.run"). */
+    action: text("action").notNull(),
+    /** Zieltyp (z. B. "course", "user", "role_assignment"), optional. */
+    targetType: text("target_type"),
+    /** Ziel-ID/Slug, optional. */
+    targetId: text("target_id"),
+    /** Optionaler Land-Kontext. */
+    land: text("land"),
+    /** Optionaler BU-Kontext. */
+    bu: text("bu"),
+    /** Herkunft der Aktion: "session" | "authoring-token" | "cli" | "system". */
+    source: text("source"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("audit_log_created_at_idx").on(t.createdAt),
+    index("audit_log_actor_idx").on(t.actorUserId),
+    pgPolicy("audit_log_select_staff", { for: "select", using: isStaffRole }),
+  ],
+).enableRLS();

@@ -13,6 +13,7 @@
  */
 import { and, count, eq, isNotNull, isNull } from "drizzle-orm";
 
+import { recordAudit } from "@/lib/audit/log";
 import { db, schema } from "@/lib/db/client";
 import { purgeUserData } from "@/lib/privacy/purge-user";
 
@@ -108,6 +109,15 @@ async function main(): Promise<void> {
   const report = await purgeUserData(userId);
   console.log("✓ Purge abgeschlossen. Report:");
   console.log(JSON.stringify(report, null, 2));
+
+  await recordAudit({
+    action: "user.purge",
+    actorUserId: null,
+    source: "cli",
+    targetType: "user",
+    targetId: userId,
+  });
+
   process.exit(0);
 }
 

@@ -18,6 +18,7 @@
  */
 import { and, eq } from "drizzle-orm";
 
+import { recordAudit } from "@/lib/audit/log";
 import { db, schema } from "@/lib/db/client";
 
 const UUID_RE =
@@ -171,6 +172,15 @@ async function main(): Promise<void> {
     );
     console.log(`✓ ${updated.length} Zuweisung(en) aktualisiert.\n`);
   }
+
+  await recordAudit({
+    action: "role.assign",
+    actorUserId: null,
+    actorRole: null,
+    source: "cli",
+    targetType: "user",
+    targetId: userId,
+  });
 
   process.exit(0);
 }

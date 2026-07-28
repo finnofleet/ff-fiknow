@@ -22,6 +22,12 @@
  * lesen oder zu testen).
  */
 
+/**
+ * `audit_log` (ADR 0007 §11) ist konzeptionell ebenfalls Klasse A
+ * (nachweisnah, ueberlebt den User-Austritt), steht hier aber bewusst NOCH
+ * NICHT in `CLASS_A_TABLES`: die zeitbasierte Purge-Verdrahtung + die
+ * finale DSB-Datenklasse sind offen (ADR 0007 §11 / ADR 0006).
+ */
 /** Klasse (A): Nachweis-relevant, fristbasiert aufzubewahren (ADR 0006). */
 export const CLASS_A_TABLES = ["training_assignments"] as const;
 

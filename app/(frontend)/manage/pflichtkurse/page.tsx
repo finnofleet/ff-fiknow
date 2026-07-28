@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Download } from "lucide-react";
 
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getComplianceOverview } from "@/lib/training/compliance";
 import {
@@ -66,7 +67,14 @@ export default async function CompliancePage({
   searchParams: SearchParams;
 }) {
   const me = (await getCurrentUser())!;
-  if (!canManageCourses(me.role)) {
+  const caps = await resolveEffectiveCapabilities(me.id, me.role);
+  // ADR 0007 P3a: Zugang zur namentlichen Sicht haengt an der Capability, nicht
+  // mehr an der Legacy-Rolle. curator/admin passieren via Legacy-Caps
+  // (byte-identisch); scoped Betrachter mit `compliance:view-named` bekommen
+  // ihn neu (auf ihren Scope gefiltert, P2b). Die Aggregat-only-Sicht
+  // (`compliance:view-aggregate`) kommt erst mit P3b — daher hier bewusst NUR
+  // view-named, sonst saehe ein Aggregat-Betrachter die Namenstabelle.
+  if (!can(caps, "compliance:view-named")) {
     redirect("/manage?error=no_compliance_permission");
   }
 

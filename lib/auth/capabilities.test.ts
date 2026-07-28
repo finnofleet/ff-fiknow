@@ -5,6 +5,7 @@ import {
   can,
   capabilitiesForLegacyRole,
   capabilitiesForRoleKeys,
+  mergeDbCapabilities,
   SYSTEM_ROLE_CAPABILITIES,
   type Capability,
 } from "./capabilities";
@@ -93,5 +94,37 @@ describe("SYSTEM_ROLE_CAPABILITIES", () => {
     for (const cap of SYSTEM_ROLE_CAPABILITIES.admin) {
       expect(all.has(cap)).toBe(true);
     }
+  });
+});
+
+describe("mergeDbCapabilities", () => {
+  it("fuegt bekannte Capability-Strings zum Set hinzu", () => {
+    const target = new Set<Capability>();
+    mergeDbCapabilities(target, ["compliance:view-aggregate"]);
+    expect(target).toEqual(new Set<Capability>(["compliance:view-aggregate"]));
+  });
+
+  it("ignoriert unbekannte Strings defensiv", () => {
+    const target = new Set<Capability>();
+    mergeDbCapabilities(target, ["nonsense", "courses:delete-all"]);
+    expect(target).toEqual(new Set());
+  });
+
+  it("uebernimmt bekannte und verwirft unbekannte bei gemischter Eingabe", () => {
+    const target = new Set<Capability>();
+    mergeDbCapabilities(target, ["nonsense", "compliance:view-aggregate"]);
+    expect(target).toEqual(new Set<Capability>(["compliance:view-aggregate"]));
+  });
+
+  it("leeres Array laesst das Set unveraendert", () => {
+    const target = new Set<Capability>(["courses:manage"]);
+    mergeDbCapabilities(target, []);
+    expect(target).toEqual(new Set<Capability>(["courses:manage"]));
+  });
+
+  it("Duplikate/bereits vorhandene Eintraege veraendern das Set nicht (Set-Semantik)", () => {
+    const target = new Set<Capability>(["courses:manage"]);
+    mergeDbCapabilities(target, ["courses:manage", "courses:manage"]);
+    expect(target).toEqual(new Set<Capability>(["courses:manage"]));
   });
 });

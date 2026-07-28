@@ -11,12 +11,12 @@
  * schaltet die Einschraenkung scharf. Im aktuellen Bestand gibt es keine
  * `role_assignments` -> jeder Betrachter ist `unrestricted`.
  *
- * **Fail-open (bewusst, transitional):** schlaegt die Aufloesung fehl, wird
- * `unrestricted` zurueckgegeben und laut geloggt. In P2b erreichen nur
- * curator/admin diesen Pfad (die ohnehin alles sehen duerfen), ein Fehler
- * veraendert ihre Sicht also nicht. **Sobald P3 scoped Nicht-Admins Zugriff
- * gibt, MUSS dies auf fail-closed umgestellt werden** (ADR 0007 §10:
- * App-Code ist bis zur RLS-Haertung die einzige Verteidigungslinie).
+ * **Fail-closed (ADR 0007 §10, seit P3a):** schlaegt die Aufloesung fehl,
+ * wird eine leere Grant-Menge (`scoped`/keine Grants) zurueckgegeben — der
+ * Loader zeigt dann NICHTS statt alles. Seit P3a koennen scoped Nicht-Admins
+ * Zugang haben; ein Fehler darf nicht in einen Cross-Entity-Leak umschlagen.
+ * curator/admin ohne Zuweisungen sind nicht betroffen (erfolgreicher
+ * 0-Zeilen-Fall -> unrestricted, nicht Fehlerfall).
  */
 import { and, eq } from "drizzle-orm";
 
@@ -49,11 +49,17 @@ export async function resolveViewerScope(
       );
     return viewerScopeFromAssignments(rows);
   } catch (err) {
+    // Fail-closed (ADR 0007 §10, ab Phase P3a): kann der Scope nicht aufgeloest
+    // werden, wird NICHTS gezeigt (leere Grant-Menge => passesViewerScope ist
+    // fuer jede Zeile false) statt "sieht alles". Seit P3a koennen scoped
+    // Nicht-Admins Zugang haben; ein Fehler darf dann nicht in einen
+    // Cross-Entity-Leak umschlagen. Ein curator/admin ohne Zuweisungen ist
+    // davon NICHT betroffen — der ist der erfolgreiche 0-Zeilen-Fall
+    // (-> unrestricted), nicht der Fehlerfall.
     console.error(
-      "[training/viewer-scope] resolveViewerScope fehlgeschlagen — " +
-        "fail-open auf unrestricted (siehe Datei-Kopf: vor P3 auf fail-closed umstellen)",
+      "[training/viewer-scope] resolveViewerScope fehlgeschlagen — fail-closed (zeigt nichts)",
       err,
     );
-    return { kind: "unrestricted" };
+    return { kind: "scoped", grants: [] };
   }
 }

@@ -5,7 +5,8 @@
  *   GET /manage/pflichtkurse/export[?driver=<wert>]
  *
  * Gleiches Access-Gate wie das Dashboard (`app/.../pflichtkurse/page.tsx`,
- * `canManageCourses`), dieselbe Compliance-Query (`getComplianceOverview`)
+ * Capability `compliance:export` via `resolveEffectiveCapabilities`),
+ * dieselbe Compliance-Query (`getComplianceOverview`)
  * und derselbe `?driver=`-Filter wie die Dashboard-Seite — kein
  * Parallel-Datenpfad. Eine Zeile pro Teilnehmer × Kurs (Audit-Detailtiefe),
  * RFC-4180-Escaping + UTF-8-BOM (Excel-Umlaute) via `compliance-csv.ts`.
@@ -16,7 +17,8 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getComplianceOverview } from "@/lib/training/compliance";
 import { filterCoursesByDriver } from "@/lib/training/compliance-compute";
@@ -28,10 +30,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "not_logged_in");
-  if (!canManageCourses(user.role)) {
-    return jsonError(403, "insufficient_role", {
-      required: ["curator", "admin"],
-      got: user.role,
+  const caps = await resolveEffectiveCapabilities(user.id, user.role);
+  if (!can(caps, "compliance:export")) {
+    return jsonError(403, "insufficient_capability", {
+      required: "compliance:export",
     });
   }
 

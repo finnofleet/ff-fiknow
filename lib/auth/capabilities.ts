@@ -110,3 +110,21 @@ export function can(
 ): boolean {
   return caps.has(cap);
 }
+
+/**
+ * Fuegt die aus der DB (`role_capabilities.capability`, Freitext-Spalte)
+ * gelesenen Capability-Strings zu einem bestehenden Set hinzu — aber NUR,
+ * wenn sie zur festen `ALL_CAPABILITIES`-Liste gehoeren. Unbekannte Strings
+ * (Tippfehler, kuenftige noch nicht ausgerollte Capabilities) werden ignoriert,
+ * damit die DB keine Rechte "erfinden" kann, die der Code nicht durchsetzt
+ * (ADR 0007 §2 — Capabilities sind code-fest). Mutiert `target` in place.
+ */
+export function mergeDbCapabilities(
+  target: Set<Capability>,
+  dbCapabilities: string[],
+): void {
+  const known = new Set<string>(ALL_CAPABILITIES);
+  for (const c of dbCapabilities) {
+    if (known.has(c)) target.add(c as Capability);
+  }
+}

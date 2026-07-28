@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  describeViewerScope,
   passesEntityScope,
   passesViewerScope,
   viewerScopeFromAssignments,
@@ -224,5 +225,53 @@ describe("passesViewerScope", () => {
         true,
       );
     });
+  });
+});
+
+/**
+ * ADR 0007 §8 — Rechte-Inspektor. Menschenlesbare Beschreibung eines
+ * ViewerScope, rein ohne I/O.
+ */
+describe("describeViewerScope", () => {
+  it("unrestricted -> 'alle (unbeschraenkt)'", () => {
+    expect(describeViewerScope({ kind: "unrestricted" })).toBe(
+      "alle (unbeschraenkt)",
+    );
+  });
+
+  it("scoped mit leeren grants -> 'nichts (kein gueltiger Grant)'", () => {
+    expect(describeViewerScope({ kind: "scoped", grants: [] })).toBe(
+      "nichts (kein gueltiger Grant)",
+    );
+  });
+
+  it("ein Grant {land:[CH], bu:[]} -> 'CH / alle BUs'", () => {
+    expect(
+      describeViewerScope({
+        kind: "scoped",
+        grants: [{ land: ["CH"], bu: [] }],
+      }),
+    ).toBe("CH / alle BUs");
+  });
+
+  it("ein Grant {land:[], bu:[Payments]} -> 'alle Laender / Payments'", () => {
+    expect(
+      describeViewerScope({
+        kind: "scoped",
+        grants: [{ land: [], bu: ["Payments"] }],
+      }),
+    ).toBe("alle Laender / Payments");
+  });
+
+  it("zwei Grants -> per ' oder ' verbunden", () => {
+    expect(
+      describeViewerScope({
+        kind: "scoped",
+        grants: [
+          { land: ["CH"], bu: [] },
+          { land: [], bu: ["Payments"] },
+        ],
+      }),
+    ).toBe("CH / alle BUs oder alle Laender / Payments");
   });
 });

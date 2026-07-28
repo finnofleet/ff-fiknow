@@ -64,5 +64,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       testMatch: /compliance-rights\.spec\.ts/,
     },
+    {
+      // ADR 0007 P5a — Rechte-Inspektor. Kein projektweiter storageState:
+      // Admin (adam) vs. Kurator (Denial) je describe via `test.use`.
+      name: "rights-inspector",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /rights-inspector\.spec\.ts/,
+    },
   ],
 });

@@ -44,6 +44,18 @@ export const ALL_CAPABILITIES: Capability[] = [
 ];
 
 /**
+ * Die *scoped* Capabilities (ADR 0007 §2): laufen ueber entitaets-eigene
+ * Daten und werten daher einen Sicht-Scope aus (§3). Alle anderen sind
+ * plattformweit und kennen keinen Scope. Genutzt vom Rechte-Inspektor (§8),
+ * um je scoped Capability den aufgeloesten Scope anzuzeigen.
+ */
+export const SCOPED_CAPABILITIES: Capability[] = [
+  "compliance:view-named",
+  "compliance:view-aggregate",
+  "compliance:export",
+];
+
+/**
  * Capability-Set der beiden heutigen System-Rollen. `admin` = `curator`-Set
  * + `users:manage` + `audit:view` (Curator-Rechte plus Nutzerverwaltung +
  * Audit-Log-Einsicht). Diese Konstante ist die Quelle für den DB-Seed.

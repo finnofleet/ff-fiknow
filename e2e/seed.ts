@@ -62,6 +62,7 @@ const CH_CED_ID = "a3a3a3a3-3333-3333-3333-333333333333"; // learner CH — open
 // Compliance-Rechte AUSSCHLIESSLICH ueber eine role_assignment bekommen.
 const RHEA_ID = "a7a7a7a7-7777-7777-7777-777777777777"; // HR regional, view-named, Scope CH
 const LEON_ID = "a8a8a8a8-8888-8888-8888-888888888888"; // Leitung, nur view-aggregate, group
+const ADAM_ID = "a9a9a9a9-9999-9999-9999-999999999999"; // admin (Legacy-Rolle) — users:manage, fuer Rechte-Inspektor
 
 const HR_ROLE_ID = "b1b1b1b1-1111-1111-1111-111111111111";
 const LEITUNG_ROLE_ID = "b2b2b2b2-2222-2222-2222-222222222222";
@@ -121,6 +122,8 @@ async function seedProfiles(): Promise<void> {
       // Betrachter ohne eigene Land-Zuordnung (sie lernen nicht, sie schauen).
       { userId: RHEA_ID, displayName: "Rhea Regional", role: "learner" },
       { userId: LEON_ID, displayName: "Leon Leitung", role: "learner" },
+      // Admin (Legacy-Rolle) — traegt users:manage, fuer den Rechte-Inspektor.
+      { userId: ADAM_ID, displayName: "Adam Admin", role: "admin" },
     ])
     .onConflictDoNothing();
   log("Profiles seeded.");
@@ -349,6 +352,18 @@ async function writeStorageStates(): Promise<void> {
     maxAgeSec,
   );
 
+  const adamCookie = await signSession(
+    {
+      sub: ADAM_ID,
+      email: "adam@example.test",
+      emailVerified: true,
+      name: "Adam Admin",
+      role: "admin",
+    },
+    PAYLOAD_SECRET!,
+    maxAgeSec,
+  );
+
   function storageState(cookieValue: string) {
     return {
       cookies: [
@@ -382,6 +397,10 @@ async function writeStorageStates(): Promise<void> {
   writeFileSync(
     path.join(authDir, "leon.json"),
     JSON.stringify(storageState(leonCookie), null, 2),
+  );
+  writeFileSync(
+    path.join(authDir, "adam.json"),
+    JSON.stringify(storageState(adamCookie), null, 2),
   );
   log("storageState files written.");
 }

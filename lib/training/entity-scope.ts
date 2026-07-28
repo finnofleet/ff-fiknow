@@ -104,3 +104,19 @@ export function passesViewerScope(
   if (scope.kind === "unrestricted") return true;
   return scope.grants.some((g) => passesEntityScope(subject, g.land, g.bu));
 }
+
+/**
+ * Menschenlesbare Beschreibung eines ViewerScope fuer den Rechte-Inspektor
+ * (ADR 0007 §8). Rein, ohne I/O.
+ */
+export function describeViewerScope(scope: ViewerScope): string {
+  if (scope.kind === "unrestricted") return "alle (unbeschraenkt)";
+  if (scope.grants.length === 0) return "nichts (kein gueltiger Grant)";
+  return scope.grants
+    .map((g) => {
+      const land = g.land.length ? g.land.join(", ") : "alle Laender";
+      const bu = g.bu.length ? g.bu.join(", ") : "alle BUs";
+      return land + " / " + bu;
+    })
+    .join(" oder ");
+}

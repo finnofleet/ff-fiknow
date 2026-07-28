@@ -1,7 +1,10 @@
 # ADR 0008 — RLS-Härtung: DB-seitige Durchsetzung als Defense-in-Depth
 
-- **Status:** Proposed / **Diskussion** — Trade-offs, noch NICHT entschieden,
-  noch KEIN Code. Dieser Aufriss ist die Vorbereitung für ADR 0007 **P7**.
+- **Status:** **Entschieden (2026-07-28): RLS-Durchsetzung (P7) zurückgestellt,
+  Risiko bewusst getragen** — keine echte Mandantierung, kein REST-Loch (siehe
+  Angriffsflächen-Analyse). Als kleinere, separate Härtung ist ein
+  Least-Privilege-App-User *vorgeschlagen* (noch nicht entschieden — hängt an
+  einer IT-Feasibility-Frage). Kein RLS-Enforcement-Code.
 - **Datum:** 2026-07-28
 - **Kontext-Phase:** Sicherheit / Mandantentrennung / Defense-in-Depth
 - **Verwandt:** [[0007-mandanten-scoping-und-auswerte-ebenen]] (§10, P7),
@@ -19,6 +22,68 @@ App-Code** durchgesetzt; die DB ist keine zweite Verteidigungslinie. P7 soll das
 härten. Dieser Aufriss klärt zuerst den Ist-Zustand (auf Code-/Deploy-Ebene
 verifiziert), dann die Optionen und die offenen Entscheidungen — bevor Code
 entsteht.
+
+## Entscheidung (2026-07-28) — audit-relevant
+
+**RLS-Durchsetzung (P7) wird bewusst zurückgestellt; das Restrisiko wird
+getragen.** Begründung:
+
+- **Keine echte Mandantierung.** FIKNOW ist Single-Tenant mit Entitäts-*Sicht*-
+  Filtern (Land/BU), keine harte Mandantentrennung — der Schutzbedarf, den RLS
+  klassisch adressiert, ist entsprechend geringer.
+- **Kein direktes REST-/Tabellen-Schlupfloch** (Angriffsflächen-Analyse unten):
+  RLS wäre hier kein Gate gegen einen offenen Kanal, sondern nur ein Backstop
+  gegen eigene App-Bugs.
+- Die eigentliche Zugriffskontrolle (Capabilities + Scope, ADR 0007) liegt
+  vollständig und e2e-geprüft im App-Code.
+
+Dies ist eine **bewusste, begründete Risikoübernahme, kein Versäumnis** — so für
+ein etwaiges **Security-Audit** dokumentiert. ADR 0006 hatte die RLS-Lücke offen
+benannt; diese ADR schließt die Frage mit „bewusst getragen". **Neu bewerten,
+falls** hinzukommt: echte Mandantierung, ein direkt-exponierter Daten-Endpoint,
+oder eine DSB-/Audit-Auflage zu DB-seitigem Defense-in-Depth.
+
+## Angriffsflächen-Analyse (warum das Risiko tragbar ist)
+
+Anders als bei Supabase (PostgREST exponiert Tabellen roh über HTTP, RLS ist das
+einzige Gate) gibt es hier **keinen generischen Tabellen-/SQL-Endpoint**:
+
+- Die DB ist **nicht browser-erreichbar** — nur der Server-Prozess verbindet
+  sich (privates Netz/Connection-String). Der Client spricht ausschließlich mit
+  Next.js-HTTP-Endpunkten.
+- **Jeder** Datenpfad läuft durch App-Code (Server-Components/Route-Handler/
+  Server-Actions) inkl. dessen Scope-Filter + Gates.
+- Die einzige tabellennahe HTTP-Fläche ist die **Payload-REST-API** — hinter dem
+  `proxy.ts`-Login-Gate, mit Payloads eigener Access-Control, auf dem separaten
+  `payload`-Schema (Content/Users), NICHT den Scope-Daten im `public`-Schema.
+
+**Restrisiko, das RLS abfinge:** ausschließlich App-Code-Bugs (vergessener
+Filter, neuer Endpoint ohne Gate, Injection). RLS hilft NICHT gegen einen
+geleakten Connection-String / direkten DB-Zugriff (Owner umgeht ohnehin; ein
+Angreifer mit Creds ist von RLS unberührt).
+
+## Kleinere, separate Härtung: least-privilege App-User (vorgeschlagen)
+
+Unabhängig von RLS und deutlich billiger: den heutigen **Owner** (DDL,
+Migrationen) von einem **App-User** trennen, der nur Daten lesen/schreiben darf
+(kein DDL). Reduziert den Blast-Radius — Injection/Pod-Kompromittierung kann
+keine Tabellen droppen, kein Schema ändern, keine RLS-Policies abschalten. Zwei
+Haken:
+
+- **Migrationen laufen heute beim Boot** (`instrumentation.ts` →
+  `runAutoMigrations`). Ein DML-only-User kann kein DDL → Migrationen in einen
+  separaten, als Root laufenden Schritt herauslösen (App-Pods `SKIP_MIGRATIONS`).
+  Das Muster ist im e2e-Harness bereits bewiesen (Migrate-Setup getrennt vom
+  Runtime via `SKIP_MIGRATIONS`).
+- **RLS-Wechselwirkung:** ein Nicht-Owner unterliegt RLS automatisch; da
+  `request.jwt.claims` nie gesetzt ist, sähe er auf RLS-Tabellen NICHTS. Ausweg:
+  **`BYPASSRLS`** auf den App-User (Nicht-Owner, aber Bypass wie heute) —
+  **Gating-Frage für IT: lässt Managed-Postgres (IBM Cloud) `BYPASSRLS` an einen
+  Nicht-Superuser vergeben?** Andernfalls zieht die Idee P7 (Claims) nach vorn.
+
+Sequenz falls verfolgt: (1) IT-Feasibility `BYPASSRLS`, (2) Migrations-Job als
+Root + `SKIP_MIGRATIONS` auf App-Pods, (3) App-User (DML + `BYPASSRLS`) anlegen,
+`DATABASE_URL` umbiegen. Additiv, e2e-verifizierbar, verbaut P7 nicht.
 
 ## Ist-Analyse (verifiziert)
 
@@ -141,7 +206,11 @@ Big-Bang.
    Durchsetzung, RLS wird die zweite Ebene darunter.
 5. **Nie** `FORCE RLS` global auf dem Owner-Pool in einem Schritt.
 
-## Offene Entscheidungen (Input nötig, bevor Code)
+## Entscheidungen für den Fall einer Neubewertung (durch obige Entscheidung vorerst obsolet)
+
+> Punkte 1–2 sind durch die Zurückstellung gegenstandslos; 3–4 nur relevant,
+> falls P7 später doch gebaut wird. Belassen als Referenz.
+
 1. **Umfang v1:** nur Ownership/Staff-RLS wirksam (empfohlen) — oder doch
    scope-aware (Land/BU) DB-seitig (groß, semantisch heikel, m. E. nein)?
 2. **Mechanismus:** Option A (zwei Rollen/Pools, empfohlen) vs. B (FORCE +

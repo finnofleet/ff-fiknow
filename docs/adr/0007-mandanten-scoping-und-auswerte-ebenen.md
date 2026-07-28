@@ -446,7 +446,10 @@ ist eine eigene, spätere Cleanup-Phase — nie ein Big-Bang.
   **Vorbedingung**, bevor Scoping als DB-seitig sicher gelten darf. Je
   frei-konfigurierbarer der Scope (ab P2b), desto größer die Fläche, auf der ein
   App-Bug zum Cross-Entity-Leak würde — P7 ist das Sicherheitsnetz darunter.
-  Schließt die in ADR 0006/§10 offen benannte RLS-Lücke.
+  Schließt die in ADR 0006/§10 offen benannte RLS-Lücke. **Stand 2026-07-28:
+  bewusst zurückgestellt / Risiko getragen (keine echte Mandantierung, kein
+  REST-Loch) — Entscheidung + Angriffsflächen-Analyse in
+  [[0008-rls-haertung]].**
 
 ## Offene Org-/DSB-/IT-Fragen (nicht Teil dieser Entscheidung)
 

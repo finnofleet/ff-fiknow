@@ -28,8 +28,9 @@ function participantKey(userId: string, courseSlug: string): string {
  * darf ein Fehlschlag dabei das Dashboard NIE zum Absturz bringen (nur
  * geloggt, dann mit dem vorhandenen Stand weiter).
  *
- * `opts.viewerScope` (ADR 0007 P2b) filtert die Nachweis-Zeilen auf den
- * Sicht-Scope des Betrachters (Land/BU-Snapshot). Fehlt er oder ist er
+ * `opts.viewerScope` (ADR 0007 P2b/P3) filtert die Nachweis-Zeilen auf den
+ * Sicht-Scope des Betrachters — gegen die AKTUELLE Land/BU-Zugehoerigkeit
+ * (profiles), nicht den Nachweis-Snapshot (ADR §3). Fehlt er oder ist er
  * `unrestricted`, bleibt das Verhalten unveraendert (heutiger Stand: alles).
  */
 export async function getComplianceOverview(
@@ -52,36 +53,47 @@ export async function getComplianceOverview(
       courseVersionSnapshot: trainingAssignments.courseVersionSnapshot,
       cycle: trainingAssignments.cycle,
       evidence: trainingAssignments.evidence,
-      landSnapshot: trainingAssignments.landSnapshot,
-      buSnapshot: trainingAssignments.buSnapshot,
     })
     .from(trainingAssignments);
 
   if (assignmentRows.length === 0) return [];
 
-  // ADR 0007 P2b: Sicht-Scope anwenden. `unrestricted` (Default / kein
-  // Betrachter-Scope) laesst alle Zeilen durch = heutiges Verhalten. Ein
-  // scoped Betrachter sieht nur Nachweise, deren Land/BU-Snapshot mindestens
-  // einen seiner Grants erfuellt (strikt: Zeilen ohne Snapshot fallen raus).
+  // Profile zuerst laden — liefert die Anzeigenamen UND die AKTUELLE
+  // Land/BU-Zugehoerigkeit, gegen die der Sicht-Scope aufgeloest wird.
+  const profileRows = await db
+    .select({
+      userId: profiles.userId,
+      displayName: profiles.displayName,
+      land: profiles.land,
+      bu: profiles.bu,
+    })
+    .from(profiles);
+  const displayNames = new Map<string, string>();
+  const userEntity = new Map<string, { land: string | null; bu: string | null }>();
+  for (const row of profileRows) {
+    if (row.displayName) displayNames.set(row.userId, row.displayName);
+    userEntity.set(row.userId, { land: row.land, bu: row.bu });
+  }
+
+  // ADR 0007 P2b/P3: Sicht-Scope gegen die AKTUELLE Org (profiles.land/bu),
+  // NICHT gegen den Nachweis-Snapshot (ADR §3: „Sichtbarkeit wird zur
+  // Query-Zeit gegen die aktuelle Org aufgeloest"). Der Snapshot ist der
+  // unveraenderliche Audit-Fakt, kein Sichtfilter — und er ist nur bei
+  // abgeschlossenen Nachweisen gesetzt; ein scoped Betrachter muss aber gerade
+  // die noch OFFENEN Faelle seines Scopes sehen. `unrestricted` (Default)
+  // laesst alle Zeilen durch = heutiges Verhalten. User ohne Profil-Eintrag
+  // gelten als {land:null, bu:null} (matchen keinen gesetzten Scope, strikt).
   const viewerScope: ViewerScope = opts.viewerScope ?? { kind: "unrestricted" };
   const scopedRows =
     viewerScope.kind === "unrestricted"
       ? assignmentRows
       : assignmentRows.filter((row) =>
           passesViewerScope(
-            { land: row.landSnapshot, bu: row.buSnapshot },
+            userEntity.get(row.userId) ?? { land: null, bu: null },
             viewerScope,
           ),
         );
   if (scopedRows.length === 0) return [];
-
-  const profileRows = await db
-    .select({ userId: profiles.userId, displayName: profiles.displayName })
-    .from(profiles);
-  const displayNames = new Map<string, string>();
-  for (const row of profileRows) {
-    if (row.displayName) displayNames.set(row.userId, row.displayName);
-  }
 
   const enrollmentRows = await db
     .select({ userId: enrollments.userId, courseSlug: enrollments.courseSlug, startedAt: enrollments.startedAt })
@@ -131,7 +143,7 @@ export async function getComplianceOverview(
   return computeCompliance({
     // `evidence` kommt aus Drizzle typlos (jsonb) — cast auf die reine
     // `CompletionEvidence`-Form, die completion.ts beim Abschluss schreibt.
-    assignments: scopedRows.map(({ landSnapshot, buSnapshot, ...row }) => ({
+    assignments: scopedRows.map((row) => ({
       ...row,
       evidence: row.evidence as CourseCompliance["participants"][number]["evidence"],
     })),

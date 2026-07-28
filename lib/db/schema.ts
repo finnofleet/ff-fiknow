@@ -26,10 +26,10 @@ import {
  * Drizzle sich kein Schema teilen. Konsistenz wird Application-seitig
  * sichergestellt.
  *
- * RLS-Policies sind first-class hier deklariert (statt in setup-auth.sql),
- * damit `drizzle-kit push` sie als Owner sieht und nicht versehentlich
- * droppt. Die auth.uid()-Funktion wird vom GoTrue-Setup bereitgestellt
- * (siehe scripts/setup-auth.sql) und hier per raw SQL referenziert.
+ * RLS-Policies sind first-class hier deklariert, damit `drizzle-kit push`
+ * sie als Owner sieht und nicht versehentlich droppt. auth.uid()/auth.role()
+ * werden inline von lib/db/auto-migrate.ts angelegt und hier per raw SQL
+ * referenziert.
  */
 
 const ownsRow = sql`auth.uid() = user_id`;
@@ -46,7 +46,7 @@ const ownsRow = sql`auth.uid() = user_id`;
 const isStaffRole = sql`auth.role() in ('curator', 'admin')`;
 
 /**
- * Profil pro Supabase-Auth-User. Wir verlassen uns nicht auf auth.users-FK,
+ * Profil pro Auth-User (OIDC/Keycloak-sub). Wir verlassen uns nicht auf auth.users-FK,
  * weil diese in einem anderen Schema liegt — RLS-Policies referenzieren
  * auth.uid() direkt.
  *

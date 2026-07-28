@@ -33,7 +33,7 @@ const dirname = path.dirname(filename);
  * - Versioning + Drafts auf allen Content-Collections
  *
  * Auth (Phase 1): Standard-Email+Passwort über Users-Collection.
- * Phase 1.5 ergänzt eine Custom-Strategy gegen GoTrue-JWT (SSO).
+ * Phase 1.5 ergänzt die OIDC-Session-Strategy (oidc-session, SSO).
  */
 export default buildConfig({
   typescript: {

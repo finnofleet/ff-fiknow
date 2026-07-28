@@ -2,7 +2,8 @@
  * Course-Bundle-Upload-Endpoint.
  *
  *   POST /api/authoring/import
- *     Auth:    GoTrue-Session-Cookie (Editor- oder Admin-Rolle)
+ *     Auth:    authenticateAuthoring — cat_-Token ODER OIDC-Session-Cookie
+ *              (Editor- oder Admin-Rolle)
  *     Body:    multipart/form-data
  *                bundle      File (ZIP)   — Pflicht
  *                courseSlug  string       — Pflicht

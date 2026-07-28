@@ -6,8 +6,7 @@
  * dokumentiert; in v3.4 wird `sslmode=require` ohne weitere Options
  * gegen Self-Signed-Certs mit `DEPTH_ZERO_SELF_SIGNED_CERT` abgelehnt).
  * Wir setzen ssl deshalb programmatisch und konsistent für alle Clients
- * (postgres-js: lib/db/client.ts + payload/auth/gotrue-strategy.ts,
- *  node-postgres-Pool: payload.config.ts).
+ * (postgres-js: lib/db/client.ts, node-postgres-Pool: payload.config.ts).
  *
  * Mapping:
  *   sslmode=disable   → false              (keine Verschlüsselung)

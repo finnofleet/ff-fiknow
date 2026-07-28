@@ -3,12 +3,12 @@
  *
  * Phase-1-Modell:
  *   - Anonyme Besucher und Lerner sehen nur published Inhalte
- *     (Lerner = später User aus GoTrue-SSO; aktuell nur Editors da)
+ *     (Lerner = später User aus OIDC/Keycloak-SSO; aktuell nur Editors da)
  *   - Editoren (Records in `users`-Collection) sehen alles inkl. Drafts
  *   - Mutationen (create/update/delete) nur für Editoren
  *
  * Phase 1.5 (SSO-Bridge):
- *   - GoTrue-User landen mit anderer collection als 'users' im req.user
+ *   - OIDC/Keycloak-User landen mit anderer collection als 'users' im req.user
  *   - Damit greift dieselbe Logik weiter: nur 'users' (=Editoren)
  *     sehen Drafts und dürfen schreiben, Lerner sehen Published
  */

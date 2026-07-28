@@ -65,7 +65,7 @@ const nextConfig: NextConfig = {
     //   für Drag&Drop-Previews
     // - font-src 'self' data:  → next/font/google self-hostet bei Build,
     //   data: für Inline-Fonts (z.B. Lucide)
-    // - connect-src 'self' + Supabase-URL  → fetch zu GoTrue + Plattform-API
+    // - connect-src 'self' (+ in Dev ws:/http: fuer HMR)
     // - frame-ancestors 'none'  → keine iframe-Einbettung von aussen
     // - base-uri 'self'  → blockt <base>-Tag-Hijacks
     // - form-action 'self'  → Formulare gehen nur an eigene Origin
@@ -73,10 +73,6 @@ const nextConfig: NextConfig = {
     // Bewusst NICHT auf /admin und /api angewandt: Payload-Admin nutzt
     // unsafe-eval u.a. — separate Source-Regel mit nur den anderen
     // Security-Headern.
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    const supabaseOrigin = supabaseUrl
-      ? new URL(supabaseUrl).origin
-      : "";
 
     // In Development braucht React/Turbopack 'unsafe-eval' für HMR +
     // Stack-Reconstruction. Prod-Builds nutzen kein eval() — dort
@@ -89,7 +85,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
-      `connect-src 'self'${supabaseOrigin ? " " + supabaseOrigin : ""}${isDev ? " ws: http:" : ""}`,
+      `connect-src 'self'${isDev ? " ws: http:" : ""}`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

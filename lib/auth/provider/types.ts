@@ -5,10 +5,10 @@ import type { Role } from "@/lib/auth/roles";
 /**
  * Server-seitig aufgelöste Identität des eingeloggten Users.
  *
- * `id` ist der stabile Subject-Identifier (`sub`-Claim) — derselbe Wert,
- * auf dem die Postgres-RLS via `auth.uid()` aufsetzt (siehe
- * scripts/setup-auth.sql). Provider-unabhängig: GoTrue liefert die
- * GoTrue-User-ID, OIDC den `sub` aus dem Keycloak-Token.
+ * `id` ist der stabile Subject-Identifier — der `sub`-Claim aus dem
+ * Keycloak-Token —, derselbe Wert, auf dem die Postgres-RLS via
+ * `auth.uid()` aufsetzt (auth-Schema wird inline von
+ * lib/db/auto-migrate.ts gebootstrapt).
  */
 export type ServerIdentity = {
   id: string;
@@ -24,16 +24,11 @@ export type ServerIdentity = {
  * die Quelle der Rolle — hinter einer Schnittstelle, damit der restliche
  * Code (Lerner-App + Payload-Admin) providerunabhängig bleibt.
  *
- * Aktive Implementierungen (gewählt über Env-Var AUTH_PROVIDER, siehe
- * lib/auth/provider/index.ts):
+ * Aktive Implementierung (siehe lib/auth/provider/index.ts — kein
+ * AUTH_PROVIDER-Schalter mehr, liefert fest den OIDC-Provider):
  *
- *   - `gotrue` (Default): Supabase-GoTrue. Rolle kommt aus public.profiles.
- *     Pfad für verstande.ch und Bestands-Deployments — unverändert.
- *   - `oidc`:             OIDC-Relying-Party (z.B. Keycloak hinter Entra).
- *     Rolle wird aus den Token-Claims gemappt (Keycloak = Source of Truth).
- *
- * Wer GoTrue später ablösen will, löscht schlicht die GoTrue-Implementierung
- * — die OIDC-Implementierung ist dann die einzige. Nichts geht verloren.
+ *   - `oidc`: OIDC-Relying-Party (z.B. Keycloak hinter Entra). Rolle wird
+ *     aus den Token-Claims gemappt (Keycloak = Source of Truth).
  */
 export interface AuthProvider {
   /** Stabiler Bezeichner, für Logs/Diagnose. */

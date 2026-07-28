@@ -90,7 +90,7 @@ type AssignmentInsert = {
   cycle: number;
 };
 
-// Lockere UUID-Prüfung (GoTrue-UUIDs) — für die Requirement-Zielgruppe
+// Lockere UUID-Prüfung (OIDC/Keycloak-sub-UUIDs) — für die Requirement-Zielgruppe
 // "Einzelne User" und für reconcileForUser(userId).
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

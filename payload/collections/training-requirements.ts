@@ -113,7 +113,7 @@ export const TrainingRequirements: CollectionConfig = {
               required: true,
               label: "User-ID",
               admin: {
-                description: "GoTrue-UUID des Users.",
+                description: "OIDC-sub (Keycloak-UUID) des Users.",
               },
             },
           ],

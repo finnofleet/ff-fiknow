@@ -2,9 +2,9 @@
  * Next.js Instrumentation-Hook — läuft einmal pro Server-Boot.
  *
  * Hier triggern wir das Auto-Migrate beim Start: Drizzle-Schema +
- * setup-auth.sql + Payload-Migrationen, gegen die in DATABASE_URL
- * konfigurierte DB. Damit kommt jede neue Brand-Deployment-Instanz
- * mit korrektem Schema hoch, ohne manuelle Bootstrap-Schritte.
+ * auth-Schema-Bootstrap (inline) + Payload-Migrationen, gegen die in
+ * DATABASE_URL konfigurierte DB. Damit kommt jede neue Brand-Deployment-
+ * Instanz mit korrektem Schema hoch, ohne manuelle Bootstrap-Schritte.
  *
  * Siehe lib/db/auto-migrate.ts für Details + Skip-Flags
  * (SKIP_MIGRATIONS=true).

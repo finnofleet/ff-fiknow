@@ -2,7 +2,8 @@
  * Course-Publish-Endpoint.
  *
  *   POST /api/authoring/publish
- *     Auth:  GoTrue-Session-Cookie (Editor- oder Admin-Rolle)
+ *     Auth:  authenticateAuthoring — cat_-Token ODER OIDC-Session-Cookie
+ *            (Editor- oder Admin-Rolle)
  *     Body:  { courseId: number, includeChildren?: boolean }
  *
  *   Response 200:

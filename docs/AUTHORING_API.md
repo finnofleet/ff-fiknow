@@ -36,7 +36,7 @@ Scoped Authoring-Token, erzeugt über die
 
 ### 2. Session-Cookie (Browser-Fallback)
 
-GoTrue-Session wie bisher — wird verwendet, wenn kein
+OIDC-Session wie bisher — wird verwendet, wenn kein
 `Authorization`-Header vorhanden ist.
 
 ### Gemeinsam für beide Wege
@@ -64,7 +64,7 @@ antwortet der Server mit `409 version_conflict` (Optimistic Locking).
 
 ### Auth
 
-Bearer-Token **oder** GoTrue-Session-Cookie (siehe
+Bearer-Token **oder** OIDC-Session-Cookie (siehe
 [Authentifizierung](#authentifizierung)). Rolle: `curator` oder `admin`.
 Rolle wird bei jeder Anfrage frisch geprüft.
 
@@ -122,7 +122,7 @@ Konflikt-Erkennung laufen serverseitig.
 
 ### Auth
 
-Bearer-Token **oder** GoTrue-Session-Cookie (siehe
+Bearer-Token **oder** OIDC-Session-Cookie (siehe
 [Authentifizierung](#authentifizierung)). Rolle: `curator` oder `admin`.
 
 ### Request
@@ -192,7 +192,7 @@ Schaltet einen Course (und optional alle seine Sections + Lessons) von
 
 ### Auth
 
-Bearer-Token **oder** GoTrue-Session-Cookie (siehe
+Bearer-Token **oder** OIDC-Session-Cookie (siehe
 [Authentifizierung](#authentifizierung)). Rolle: `curator` oder `admin`.
 
 ### Request

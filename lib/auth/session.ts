@@ -2,9 +2,8 @@
  * Server-Side-Helper für Auth + Role-Lookup.
  *
  * Dünne, providerunabhängige Fassade über den aktiven Auth-Provider
- * (lib/auth/provider). Die konkrete Session-Auflösung (GoTrue via Supabase-SSR
- * oder OIDC) liegt im Provider; hier nur der stabile Vertrag, den der Rest des
- * Codes nutzt:
+ * (lib/auth/provider). Die konkrete Session-Auflösung (OIDC) liegt im
+ * Provider; hier nur der stabile Vertrag, den der Rest des Codes nutzt:
  *
  *   1. Session auflösen (Provider)
  *   2. Capability-Check (lib/auth/roles)

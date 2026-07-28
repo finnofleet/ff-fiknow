@@ -2,7 +2,7 @@
  * Tutor-Endpoint — „Erklär diese Selektion" (ADR 0002 · RAG-Retrieval ADR 0003).
  *
  *   POST /api/tutor/explain
- *     Auth:  GoTrue-Session (Lerner+)
+ *     Auth:  OIDC-Session (Lerner+)
  *     Body:  { courseSlug, sectionSlug, lessonSlug, selection, question?, mode? }
  *
  * Grounding (ADR 0003, Phase 2 + Nachtrag „Allgemeinwissen-Button"):

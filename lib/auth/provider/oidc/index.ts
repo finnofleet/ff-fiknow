@@ -60,10 +60,10 @@ export function resolveRole(claims: OidcClaims): Role {
 }
 
 /**
- * Schreibt das profiles-Profil beim Login. Ohne GoTrue gibt es keinen
- * on_auth_user_created-Trigger — die Anlage passiert hier (idempotent).
- * Rolle wird IMMER aus Keycloak überschrieben (SoT); display_name nur, wenn
- * der IdP einen Wert liefert (sonst bestehenden Wert nicht nullen).
+ * Schreibt das profiles-Profil beim Login (JIT-Provisioning, idempotent) —
+ * es gibt keinen DB-Trigger, der das für uns tut. Rolle wird IMMER aus
+ * Keycloak überschrieben (SoT); display_name nur, wenn der IdP einen Wert
+ * liefert (sonst bestehenden Wert nicht nullen).
  */
 export async function provisionProfile(
   claims: OidcClaims,
@@ -86,8 +86,8 @@ export async function provisionProfile(
  * Rolle LIVE aus profiles lesen (nicht aus dem Cookie). Das Cookie liefert nur
  * die Identität (sub); die Rolle muss pro Request frisch kommen, damit ein
  * Admin-Suspend/-Demote SOFORT greift (sonst bliebe die beim Login eingebackene
- * Cookie-Rolle bis zum Ablauf gültig). Spiegelt das GoTrue-Verhalten.
- * Beim Login wird die Keycloak-Rolle (SoT) nach profiles geschrieben.
+ * Cookie-Rolle bis zum Ablauf gültig). Beim Login wird die Keycloak-Rolle
+ * (SoT) nach profiles geschrieben.
  */
 async function liveRole(sub: string): Promise<Role> {
   const [row] = await db
@@ -125,8 +125,8 @@ const payloadStrategy: AuthStrategy = {
     // (nicht aus dem Cookie), damit ein Entzug sofort greift.
     if (!canSeeAdmin(await liveRole(session.sub))) return { user: null };
 
-    // Payload-Editor-Record über externalId=sub finden, sonst verknüpfen/anlegen
-    // (JIT) — analog zur GoTrue-Strategy.
+    // Payload-Editor-Record über externalId=sub finden, sonst beim Login
+    // JIT ins profiles/users schreiben (verknüpfen oder neu anlegen).
     const existing = await payload.find({
       collection: "users",
       where: { externalId: { equals: session.sub } },

@@ -4,7 +4,7 @@
  *
  * Akzeptiert ZWEI Wege:
  *   1. `Authorization: Bearer cat_…`  → Scoped Authoring-Token (Plugin/CLI)
- *   2. GoTrue-Session-Cookie          → Browser-UI (Fallback)
+ *   2. OIDC-Session-Cookie            → Browser-UI (Fallback)
  *
  * In BEIDEN Fällen wird die Rolle frisch geprüft (`canManageCourses`) — der
  * Token backt keine Berechtigung ein, Rollenentzug wirkt sofort.

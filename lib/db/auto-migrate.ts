@@ -39,11 +39,10 @@ const LOG_PREFIX = "[auto-migrate]";
 
 let migrationsRan = false;
 
-// Minimaler, GoTrue-freier Teil von scripts/setup-auth.sql: nur auth-Schema +
-// die uid/role-Helper, die die RLS-Policies referenzieren. Muss VOR den
-// Drizzle-Migrationen laufen (Policies brauchen auth.uid()). Idempotent.
-// Canonical-Definition: scripts/setup-auth.sql — bei Änderungen dort
-// mitziehen.
+// Kanonische Definition von auth-Schema + uid/role-Helper, die die
+// RLS-Policies referenzieren (kein separates setup-auth.sql — dieser
+// Inline-String IST die Quelle). Muss VOR den Drizzle-Migrationen laufen
+// (Policies brauchen auth.uid()). Idempotent.
 const AUTH_SCHEMA_BOOTSTRAP = `
 create schema if not exists auth;
 create or replace function auth.uid() returns uuid language sql stable as $$
@@ -61,9 +60,9 @@ $$;
 `;
 
 /**
- * Legt auth-Schema + uid/role-Helper an. Auf Supabase fehlen dem postgres-User
- * ggf. die Rechte am auth-Schema (42501) — dort stellt Supabase die Helfer
- * selbst bereit, also tolerieren wir das und gehen weiter.
+ * Legt auth-Schema + uid/role-Helper an. Auf Managed-Postgres, wo der
+ * App-User keine Rechte am auth-Schema hat (42501), tolerieren wir das und
+ * gehen weiter.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function applyAuthSchemaBootstrap(sql: any): Promise<void> {
@@ -73,7 +72,7 @@ async function applyAuthSchemaBootstrap(sql: any): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((err as any)?.code === "42501") {
       console.warn(
-        `${LOG_PREFIX} auth-Schema-Bootstrap: permission denied (vermutlich Supabase) — übersprungen`,
+        `${LOG_PREFIX} auth-Schema-Bootstrap: permission denied (vermutlich Managed-Postgres ohne Rechte am auth-Schema) — übersprungen`,
       );
     } else {
       throw err;
@@ -121,11 +120,9 @@ export async function runAutoMigrations(): Promise<void> {
       await sql`CREATE SCHEMA IF NOT EXISTS payload`;
 
       // --- 2b. auth-Schema + uid/role-Helper (VOR den Drizzle-Policies) ---
-      // Die RLS-Policies in drizzle/ referenzieren auth.uid(). Auf Supabase
-      // stellt GoTrue das auth-Schema bereit; auf plain Postgres
-      // (AUTH_PROVIDER=oidc) muss es VOR den Policies existieren, sonst bricht
-      // CREATE POLICY mit „schema auth does not exist". Der Trigger-Teil aus
-      // setup-auth.sql bleibt NACH den Migrationen (er braucht public.profiles).
+      // Die RLS-Policies in drizzle/ referenzieren auth.uid(). Es muss VOR
+      // den Policies existieren, sonst bricht CREATE POLICY mit „schema auth
+      // does not exist".
       await applyAuthSchemaBootstrap(sql);
 
       // --- 3. Drizzle migrations -------------------------------------

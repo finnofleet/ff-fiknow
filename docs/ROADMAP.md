@@ -76,9 +76,9 @@ markenspezifischen Content-Style-Overlay, sondern hierher).
 
 **Schon vorbereitet (damit es keine Refactoring-Bombe wird):**
 
-- **Self-hosted GoTrue/Supabase läuft von Tag 1** als Auth-System
-  (`lib/supabase/*`, OAuth-Callback-Route da) — Entra kommt später als
-  *zusätzlicher* OAuth-Provider obendrauf, ersetzt das Auth-System nicht.
+- **OIDC/Keycloak ist der Auth-Provider** (Keycloak hinter Entra ID, siehe
+  `lib/auth/provider/oidc/*`) — der frühere GoTrue/Supabase-Ansatz ist mit
+  dem Headless-Pivot entfallen.
 - **Postgres-Schema** über den Payload-Postgres-Adapter (Drizzle darunter),
   Migrationen hand-authored (Projekt-Memory `payload-migration-hand-authoring`).
 - **Eigenes Image** via GHCR, kein Vercel-Lock-in.
@@ -90,7 +90,7 @@ markenspezifischen Content-Style-Overlay, sondern hierher).
 **Der Bedarf besteht** (mehrere Autor:innen, Rollen, Draft→Review→Publish),
 **aber die Lösungsform hat sich mit dem Headless-Pivot geändert.** Der ursprüngliche
 Plan „Payload-CMS-Admin als Editor-UI" ist **verworfen** (siehe unten) — `/admin`
-ist abgeschaltet (Proxy-Redirect → `/manage`, `lib/supabase/proxy.ts`). Payload
+ist abgeschaltet (Proxy-Redirect → `/manage`, `proxy.ts`). Payload
 bleibt **Daten-/Content-Layer**, nicht Autoren-UI.
 
 Stattdessen baut Multi-Author auf dem bestehenden **headless Authoring-Pfad** auf
@@ -108,22 +108,11 @@ für später:
 
 ### 2. Entra (Azure AD) als SSO-Provider
 
-**Pattern: geteiltes GoTrue als zentrale Auth — Entra als zusätzlicher
-OAuth-Provider.** Architektonisch weiterhin gültig (GoTrue/OAuth-Callback stehen).
-
-GoTrue-Env-Vars:
-```
-GOTRUE_EXTERNAL_AZURE_ENABLED=true
-GOTRUE_EXTERNAL_AZURE_CLIENT_ID=<aus Azure-App-Registration>
-GOTRUE_EXTERNAL_AZURE_SECRET=<...>
-GOTRUE_EXTERNAL_AZURE_REDIRECT_URI=https://<host>/auth/callback
-GOTRUE_EXTERNAL_AZURE_URL=https://login.microsoftonline.com/<tenant-id>/v2.0
-```
-
-App-seitig: auf `/login` ein „Mit Microsoft anmelden"-Button
-(`signInWithOAuth({ provider: 'azure', options: { redirectTo: '/auth/callback' }})`),
-Email/Passwort-Flow bleibt parallel. Tenant-Restriktion (nur FINNOFLEET) via
-Tenant-ID statt `common` in der URL. Aufwand: ~30 Min nach Azure-App-Registrierung.
+**Bereits erledigt:** Auth läuft heute über OIDC gegen Keycloak, das seinerseits
+hinter Entra ID sitzt (`lib/auth/provider/oidc/*`, Login-Flow unter
+`app/(frontend)/auth/oidc/*`). Der frühere Plan „geteiltes GoTrue als zentrale
+Auth, Entra als zusätzlicher OAuth-Provider obendrauf" ist mit dem
+Headless-Pivot entfallen — GoTrue/Supabase wurde vollständig entfernt.
 
 ### 3. Single Identity (Lerner = Editor, ein Account)
 

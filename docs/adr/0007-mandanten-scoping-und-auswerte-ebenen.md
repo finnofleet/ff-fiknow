@@ -302,8 +302,10 @@ getan, als erzwänge RLS die Trennung.
 die Fläche, auf der ein App-Bug zu einem Cross-Entity-Leak wird — bis zur
 RLS-Härtung ist der App-Code die einzige Verteidigungslinie. Die **RLS-Härtung**
 (SSO-Claims in die DB-Session heben, ggf. ein weniger privilegierter Pool/Role
-je Scope) ist ein separater, hier referenzierter Track und **Vorbedingung**,
-bevor Scoping als DB-seitig erzwungen (Defense-in-Depth) gelten darf.
+je Scope) ist ein separater, hier referenzierter Track (**P7**, eigener
+Querschnitts-Track — getrennt vom optionalen Manager-Scope P6) und
+**Vorbedingung**, bevor Scoping als DB-seitig erzwungen (Defense-in-Depth)
+gelten darf.
 
 ### 11. Append-only Audit-Log (breiter Scope, Punkt 6 des Reviews)
 
@@ -429,9 +431,22 @@ ist eine eigene, spätere Cleanup-Phase — nie ein Big-Bang.
 - **P5 — Rechte-Inspektor + Adapter-Provenienz.** `/manage`-Inspektor;
   optionaler Claim-Import für Land/BU, *nachdem* der empirische Claim-Check
   gezeigt hat, was Entra→KC liefert.
-- **P6 (optional) — Manager/Team-Scope + RLS-Härtung.** Team-Modell für einen
-  Manager-Scope (baut auf dem in ADR 0005 fehlenden Gruppen-/Team-Modell auf);
-  RLS-Härtung als Vorbedingung für DB-seitiges Defense-in-Depth.
+- **P6 (optional) — Manager-/Team-Scope.** Eine zusätzliche Scope-Art:
+  ein:e Vorgesetzte:r sieht die Nachweise der direkten Reports — NICHT nach
+  Land/BU, sondern nach *Führungsbeziehung*. Baut auf einem Team-/Führungsmodell
+  auf, das heute fehlt (ADR 0005 hat bewusst kein Gruppen-/Team-Konzept) und ist
+  **blockiert auf eine HR-Datenquelle für Führungsbeziehungen** (offene Frage
+  unten). Optional/nachrangig: der primäre Betrachterkreis (HR/Leitung/CC via
+  Land/BU) ist mit P2–P5 abgedeckt. Unabhängig von P7.
+- **P7 — RLS-Härtung (eigener Querschnitts-Track, nicht sequenziell).** Hebt
+  SSO-Identität/Scope in die DB-Session (ggf. ein weniger privilegierter
+  Pool/Role je Scope), sodass die Mandantentrennung **auch DB-seitig erzwungen**
+  wird — echtes Defense-in-Depth statt „App-Code ist die einzige
+  Verteidigungslinie" (§10). Anders als P6 nicht fremdabhängig, sondern baubar;
+  **Vorbedingung**, bevor Scoping als DB-seitig sicher gelten darf. Je
+  frei-konfigurierbarer der Scope (ab P2b), desto größer die Fläche, auf der ein
+  App-Bug zum Cross-Entity-Leak würde — P7 ist das Sicherheitsnetz darunter.
+  Schließt die in ADR 0006/§10 offen benannte RLS-Lücke.
 
 ## Offene Org-/DSB-/IT-Fragen (nicht Teil dieser Entscheidung)
 

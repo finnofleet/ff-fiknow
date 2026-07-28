@@ -15,6 +15,13 @@ import { auditLog } from "@/lib/db/schema";
 /** Herkunft der Aktion. */
 export type AuditSource = "session" | "authoring-token" | "cli" | "system";
 
+/** Wer die Aktion ausloest — durch die Authoring-Funktionen gereicht. */
+export type AuditActor = {
+  userId: string | null;
+  role: string | null;
+  source: AuditSource;
+};
+
 export type AuditEntry = {
   /** Kanonische Aktion, Konvention `<domain>.<verb>` (z. B. "course.publish"). */
   action: string;

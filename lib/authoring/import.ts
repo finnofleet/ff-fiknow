@@ -29,6 +29,7 @@ import {
   killTransaction,
 } from "payload";
 
+import { recordAudit, type AuditActor } from "../audit/log";
 import { assertSafeMdx } from "../mdx/validate";
 import { indexCourse } from "../rag/indexing";
 import { clearStaging, getStagedAsset, sha256Hex } from "./asset-staging";
@@ -51,11 +52,16 @@ export async function importFromExtractedBundle(
   courseSlug: string,
   files: Map<string, Buffer>,
   options: ImportOptions = {},
+  actor: AuditActor,
 ): Promise<ImportSummary> {
   const bundle = parseBundleFromFiles(courseSlug, files);
   // Die entpackte ZIP-Map IST das Roh-Bundle → direkt als Source-of-Truth
   // in den Storage.
-  return importBundle(bundle, { ...options, rawFiles: options.rawFiles ?? files });
+  return importBundle(
+    bundle,
+    { ...options, rawFiles: options.rawFiles ?? files },
+    actor,
+  );
 }
 
 /** Eine Asset-Referenz aus dem MCP-Import (Asset-by-Reference, ADR 0004). */
@@ -85,6 +91,7 @@ export async function importFromTextAndAssetRefs(
   textFiles: TextFile[],
   assetRefs: AssetRef[],
   options: ImportOptions = {},
+  actor: AuditActor,
 ): Promise<ImportSummary> {
   const payload = options.payload ?? (await loadPayload());
 
@@ -115,7 +122,12 @@ export async function importFromTextAndAssetRefs(
     }
   }
 
-  const summary = await importFromExtractedBundle(courseSlug, files, options);
+  const summary = await importFromExtractedBundle(
+    courseSlug,
+    files,
+    options,
+    actor,
+  );
   // Erfolgreich importiert → gestagte Assets sind jetzt byte-treu im
   // Bundle-Storage. Den Staging-Store best-effort leeren (verwaiste Bytes
   // wären harmlos, aber unnötig).
@@ -156,6 +168,7 @@ async function loadCurrentBundleByHash(
 export async function importBundle(
   bundle: ParsedBundle,
   options: ImportOptions = {},
+  actor: AuditActor,
 ): Promise<ImportSummary> {
   const payload = options.payload ?? (await loadPayload());
 
@@ -449,6 +462,19 @@ export async function importBundle(
       );
     }
   }
+
+  // Audit-Log — GENAU HIER, weil sowohl importFromExtractedBundle (ZIP-Upload)
+  // als auch importFromTextAndAssetRefs (MCP, ruft importFromExtractedBundle
+  // auf) hier muenden. Ein Import wird also unabhaengig vom Aufrufpfad genau
+  // einmal geloggt.
+  await recordAudit({
+    action: "course.import",
+    targetType: "course",
+    targetId: bundle.courseSlug,
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
+  });
 
   return summary;
 }

@@ -29,6 +29,7 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
+import { type AuditActor } from "@/lib/audit/log";
 import { authenticateAuthoring } from "@/lib/auth/authoring-auth";
 import { verifyBundleUploadToken } from "@/lib/authoring/asset-upload-token";
 import { VersionConflictError } from "@/lib/authoring/errors";
@@ -53,6 +54,10 @@ export async function POST(request: NextRequest) {
   const token = searchParams.get("token");
   let principalId: string;
   let tokenCourseSlug: string | null = null;
+  // Actor fuers Audit-Log — beim presigned Bundle-Upload-Token gibt es keinen
+  // authenticateAuthoring-principal (kein Cookie/Bearer, nur der signierte
+  // Query-Scope), darum dort role:null + source "authoring-token" fest.
+  let actor: AuditActor;
   if (token) {
     const qSlug = searchParams.get("courseSlug") ?? "";
     if (!/^[a-z0-9-]+$/.test(qSlug)) {
@@ -62,10 +67,20 @@ export async function POST(request: NextRequest) {
     if (!v.ok) return jsonError(401, "invalid_upload_token", { reason: v.reason });
     principalId = `bundle-token:${qSlug}`;
     tokenCourseSlug = qSlug;
+    // actor_user_id ist eine uuid-Spalte — der synthetische Rate-Limit-Key
+    // `bundle-token:<slug>` waere kein gueltiges uuid und liesse das Insert
+    // (still, weil best-effort) scheitern. Kein echter User -> userId null;
+    // die Herkunft traegt `source`.
+    actor = { userId: null, role: null, source: "authoring-token" };
   } else {
     const auth = await authenticateAuthoring(request);
     if (!auth.ok) return jsonError(auth.status, auth.error, auth.extra);
     principalId = auth.principal.id;
+    actor = {
+      userId: auth.principal.id,
+      role: auth.principal.role,
+      source: auth.principal.via === "token" ? "authoring-token" : "session",
+    };
   }
 
   // 2. Rate-Limit (pro Principal)
@@ -142,7 +157,12 @@ export async function POST(request: NextRequest) {
 
   // 5. Import via geteiltem Helper
   try {
-    const summary = await importFromExtractedBundle(courseSlug, files);
+    const summary = await importFromExtractedBundle(
+      courseSlug,
+      files,
+      {},
+      actor,
+    );
     return NextResponse.json({ ok: true, summary });
   } catch (err) {
     // Optimistic-Locking-Konflikt → 409 mit strukturiertem Diff-Hinweis.

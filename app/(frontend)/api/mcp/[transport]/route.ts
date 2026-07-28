@@ -46,6 +46,7 @@ import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
+import { type AuditActor } from "@/lib/audit/log";
 import { authenticateAuthoring } from "@/lib/auth/authoring-auth";
 import { sha256Hex } from "@/lib/authoring/asset-staging";
 import {
@@ -139,6 +140,20 @@ function jsonResult(data: unknown): ToolResult {
 
 function errorResult(message: string): ToolResult {
   return { content: [{ type: "text", text: message }], isError: true };
+}
+
+/**
+ * Baut den Audit-Actor aus dem MCP-Tool-Callback-`extra`. MCP laeuft IMMER
+ * ueber Token-Auth (kein Cookie/Session) — `extra.authInfo.clientId` ist die
+ * Principal-ID aus `verifyToken` unten (== `auth.principal.id`). Eine Rolle
+ * ist an dieser Stelle nicht verfuegbar, darum `null`.
+ */
+function actorFromExtra(extra: { authInfo?: AuthInfo }): AuditActor {
+  return {
+    userId: extra.authInfo?.clientId ?? null,
+    role: null,
+    source: "authoring-token",
+  };
 }
 
 const mcpHandler = createMcpHandler(
@@ -267,12 +282,14 @@ const mcpHandler = createMcpHandler(
             .describe("Binär-Assets als Hash-Referenzen (kein base64)"),
         },
       },
-      async ({ courseSlug, files, assets }): Promise<ToolResult> => {
+      async ({ courseSlug, files, assets }, extra): Promise<ToolResult> => {
         try {
           const summary = await importFromTextAndAssetRefs(
             courseSlug,
             files,
             assets ?? [],
+            {},
+            actorFromExtra(extra),
           );
           return jsonResult({
             ok: true,
@@ -472,10 +489,14 @@ const mcpHandler = createMcpHandler(
           "Schaltet einen Kurs samt Sections und Lessons live (_status=published).",
         inputSchema: { slug: z.string().describe("Kurs-Slug") },
       },
-      async ({ slug }): Promise<ToolResult> => {
+      async ({ slug }, extra): Promise<ToolResult> => {
         const course = (await listManagedCourses()).find((c) => c.slug === slug);
         if (!course) return errorResult(`Kein Kurs mit Slug "${slug}".`);
-        const res = await publishCourseCascade(course.id);
+        const res = await publishCourseCascade(
+          course.id,
+          true,
+          actorFromExtra(extra),
+        );
         return jsonResult({
           ok: true,
           slug,
@@ -517,9 +538,9 @@ const mcpHandler = createMcpHandler(
             .describe("Kurse in gewünschter Reihenfolge (Position = Reihenfolge im Pfad)"),
         },
       },
-      async (input): Promise<ToolResult> => {
+      async (input, extra): Promise<ToolResult> => {
         try {
-          const res = await upsertLearningPath(input);
+          const res = await upsertLearningPath(input, actorFromExtra(extra));
           return jsonResult({
             ok: true,
             ...res,
@@ -569,8 +590,8 @@ const mcpHandler = createMcpHandler(
         description: "Schaltet einen Pfad live (_status=published).",
         inputSchema: { slug: z.string().describe("Pfad-Slug") },
       },
-      async ({ slug }): Promise<ToolResult> => {
-        const ok = await publishLearningPath(slug);
+      async ({ slug }, extra): Promise<ToolResult> => {
+        const ok = await publishLearningPath(slug, actorFromExtra(extra));
         if (!ok) return errorResult(`Kein Lernpfad mit Slug "${slug}".`);
         return jsonResult({ ok: true, slug, status: "published" });
       },
@@ -585,8 +606,8 @@ const mcpHandler = createMcpHandler(
           "Nimmt einen Pfad vom Netz (zurück auf Draft) — reversibel, kein Datenverlust. Für Lerner unsichtbar, für Autoren/Admins weiter testbar.",
         inputSchema: { slug: z.string().describe("Pfad-Slug") },
       },
-      async ({ slug }): Promise<ToolResult> => {
-        const ok = await unpublishLearningPath(slug);
+      async ({ slug }, extra): Promise<ToolResult> => {
+        const ok = await unpublishLearningPath(slug, actorFromExtra(extra));
         if (!ok) return errorResult(`Kein Lernpfad mit Slug "${slug}".`);
         return jsonResult({ ok: true, slug, status: "draft" });
       },
@@ -601,8 +622,8 @@ const mcpHandler = createMcpHandler(
           "Löscht einen Lernpfad endgültig. Berührt keine Kurse (ein Pfad referenziert sie nur). Zum bloßen Offline-Nehmen stattdessen unpublish_path.",
         inputSchema: { slug: z.string().describe("Pfad-Slug") },
       },
-      async ({ slug }): Promise<ToolResult> => {
-        const ok = await deleteLearningPath(slug);
+      async ({ slug }, extra): Promise<ToolResult> => {
+        const ok = await deleteLearningPath(slug, actorFromExtra(extra));
         if (!ok) return errorResult(`Kein Lernpfad mit Slug "${slug}".`);
         return jsonResult({ ok: true, slug, deleted: true });
       },

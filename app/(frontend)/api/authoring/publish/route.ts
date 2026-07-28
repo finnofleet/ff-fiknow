@@ -23,6 +23,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getPayload } from "payload";
 
 import payloadConfig from "@/payload.config";
+import { type AuditActor } from "@/lib/audit/log";
 import { authenticateAuthoring } from "@/lib/auth/authoring-auth";
 import { publishCourseCascade } from "@/lib/authoring/lifecycle";
 import { rateLimit } from "@/lib/rate-limit";
@@ -87,7 +88,12 @@ export async function POST(request: NextRequest) {
   // 5. Course (+ optional Sections/Lessons) publishen — geteilte Lifecycle-
   //    Logik (dieselbe Funktion nutzt /manage/courses → genau EINE Publish-
   //    Wahrheit, kein Drift zwischen CLI-Pfad und Manage-UI).
-  const children = await publishCourseCascade(courseId, includeChildren);
+  const actor: AuditActor = {
+    userId: user.id,
+    role: user.role,
+    source: user.via === "token" ? "authoring-token" : "session",
+  };
+  const children = await publishCourseCascade(courseId, includeChildren, actor);
 
   return NextResponse.json({
     ok: true,

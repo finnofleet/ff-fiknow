@@ -18,6 +18,7 @@
 import { getPayload } from "payload";
 
 import payloadConfig from "@/payload.config";
+import { recordAudit, type AuditActor } from "@/lib/audit/log";
 
 import { deleteBundle } from "./bundle-storage";
 import { type PathInputRaw, validatePathInput } from "./validate-path-input";
@@ -77,7 +78,8 @@ export type PublishCascadeResult = { sections: number; lessons: number };
  */
 export async function publishCourseCascade(
   courseId: number,
-  includeChildren = true,
+  includeChildren: boolean,
+  actor: AuditActor,
 ): Promise<PublishCascadeResult> {
   const payload = await client();
 
@@ -89,43 +91,52 @@ export async function publishCourseCascade(
   });
 
   const children: PublishCascadeResult = { sections: 0, lessons: 0 };
-  if (!includeChildren) return children;
-
-  const sections = await payload.find({
-    collection: "sections",
-    where: { course: { equals: courseId } },
-    limit: 1000,
-    depth: 0,
-    overrideAccess: true,
-    draft: true,
-  });
-  for (const section of sections.docs) {
-    await payload.update({
+  if (includeChildren) {
+    const sections = await payload.find({
       collection: "sections",
-      id: section.id,
-      data: { _status: "published" },
-      overrideAccess: true,
-    });
-    children.sections += 1;
-
-    const lessons = await payload.find({
-      collection: "lessons",
-      where: { section: { equals: section.id } },
+      where: { course: { equals: courseId } },
       limit: 1000,
       depth: 0,
       overrideAccess: true,
       draft: true,
     });
-    for (const lesson of lessons.docs) {
+    for (const section of sections.docs) {
       await payload.update({
-        collection: "lessons",
-        id: lesson.id,
+        collection: "sections",
+        id: section.id,
         data: { _status: "published" },
         overrideAccess: true,
       });
-      children.lessons += 1;
+      children.sections += 1;
+
+      const lessons = await payload.find({
+        collection: "lessons",
+        where: { section: { equals: section.id } },
+        limit: 1000,
+        depth: 0,
+        overrideAccess: true,
+        draft: true,
+      });
+      for (const lesson of lessons.docs) {
+        await payload.update({
+          collection: "lessons",
+          id: lesson.id,
+          data: { _status: "published" },
+          overrideAccess: true,
+        });
+        children.lessons += 1;
+      }
     }
   }
+
+  await recordAudit({
+    action: "course.publish",
+    targetType: "course",
+    targetId: String(courseId),
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
+  });
 
   return children;
 }
@@ -138,13 +149,25 @@ export async function publishCourseCascade(
  * alle Lessons unerreichbar. Kinder bleiben published → Re-Publish ist sofort
  * wieder live, ohne erneute Kaskade.
  */
-export async function unpublishCourse(courseId: number): Promise<void> {
+export async function unpublishCourse(
+  courseId: number,
+  actor: AuditActor,
+): Promise<void> {
   const payload = await client();
   await payload.update({
     collection: "courses",
     id: courseId,
     data: { _status: "draft" },
     overrideAccess: true,
+  });
+
+  await recordAudit({
+    action: "course.unpublish",
+    targetType: "course",
+    targetId: String(courseId),
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
   });
 }
 
@@ -154,7 +177,10 @@ export async function unpublishCourse(courseId: number): Promise<void> {
  * Course. Räumt zusätzlich das byte-treu gespeicherte Bundle der aktuellen
  * Version weg (best-effort; ältere Versionen sind nicht im DB-Index verlinkt).
  */
-export async function deleteCourseCascade(courseId: number): Promise<void> {
+export async function deleteCourseCascade(
+  courseId: number,
+  actor: AuditActor,
+): Promise<void> {
   const payload = await client();
 
   // Slug + Version vorab lesen, fürs Bundle-Cleanup nach dem DB-Delete.
@@ -217,6 +243,15 @@ export async function deleteCourseCascade(courseId: number): Promise<void> {
       // Bundle-Cleanup ist best-effort — ein verwaister Ordner ist harmlos.
     }
   }
+
+  await recordAudit({
+    action: "course.delete",
+    targetType: "course",
+    targetId: String(courseId),
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
+  });
 }
 
 /**
@@ -228,6 +263,7 @@ export async function deleteCourseCascade(courseId: number): Promise<void> {
 export async function setTutorEnabled(
   courseId: number,
   enabled: boolean,
+  actor: AuditActor,
 ): Promise<void> {
   const payload = await client();
   const course = await payload.findByID({
@@ -244,6 +280,15 @@ export async function setTutorEnabled(
     id: courseId,
     data: { tutorEnabled: enabled, _status: status },
     overrideAccess: true,
+  });
+
+  await recordAudit({
+    action: enabled ? "course.tutor-enable" : "course.tutor-disable",
+    targetType: "course",
+    targetId: String(courseId),
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
   });
 }
 
@@ -351,6 +396,7 @@ export async function getManagedPath(
  */
 export async function upsertLearningPath(
   input: PathInputRaw,
+  actor: AuditActor,
 ): Promise<PathUpsertResult> {
   const known = (await listManagedCourses()).map((c) => c.slug);
   const res = validatePathInput(input, known);
@@ -369,6 +415,7 @@ export async function upsertLearningPath(
     _status: "draft" as const,
   };
 
+  let result: PathUpsertResult;
   if (existing) {
     await payload.update({
       collection: "learning-paths",
@@ -376,19 +423,33 @@ export async function upsertLearningPath(
       data,
       overrideAccess: true,
     });
-    return { slug: v.slug, action: "updated", courseCount: v.courses.length };
+    result = { slug: v.slug, action: "updated", courseCount: v.courses.length };
+  } else {
+    await payload.create({
+      collection: "learning-paths",
+      data,
+      overrideAccess: true,
+    });
+    result = { slug: v.slug, action: "created", courseCount: v.courses.length };
   }
 
-  await payload.create({
-    collection: "learning-paths",
-    data,
-    overrideAccess: true,
+  await recordAudit({
+    action: "path.upsert",
+    targetType: "learning_path",
+    targetId: v.slug,
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
   });
-  return { slug: v.slug, action: "created", courseCount: v.courses.length };
+
+  return result;
 }
 
 /** Schaltet einen Pfad live. Keine Kaskade (Pfade haben keine Kinder). */
-export async function publishLearningPath(slug: string): Promise<boolean> {
+export async function publishLearningPath(
+  slug: string,
+  actor: AuditActor,
+): Promise<boolean> {
   const doc = await findPathDoc(slug);
   if (!doc) return false;
   const payload = await client();
@@ -398,11 +459,24 @@ export async function publishLearningPath(slug: string): Promise<boolean> {
     data: { _status: "published" },
     overrideAccess: true,
   });
+
+  await recordAudit({
+    action: "path.publish",
+    targetType: "learning_path",
+    targetId: slug,
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
+  });
+
   return true;
 }
 
 /** Nimmt einen Pfad offline (zurück auf Draft) — reversibel, kein Datenverlust. */
-export async function unpublishLearningPath(slug: string): Promise<boolean> {
+export async function unpublishLearningPath(
+  slug: string,
+  actor: AuditActor,
+): Promise<boolean> {
   const doc = await findPathDoc(slug);
   if (!doc) return false;
   const payload = await client();
@@ -412,11 +486,24 @@ export async function unpublishLearningPath(slug: string): Promise<boolean> {
     data: { _status: "draft" },
     overrideAccess: true,
   });
+
+  await recordAudit({
+    action: "path.unpublish",
+    targetType: "learning_path",
+    targetId: slug,
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
+  });
+
   return true;
 }
 
 /** Löscht einen Pfad hart. Berührt keine Kurse (nur Referenzen). */
-export async function deleteLearningPath(slug: string): Promise<boolean> {
+export async function deleteLearningPath(
+  slug: string,
+  actor: AuditActor,
+): Promise<boolean> {
   const doc = await findPathDoc(slug);
   if (!doc) return false;
   const payload = await client();
@@ -425,5 +512,15 @@ export async function deleteLearningPath(slug: string): Promise<boolean> {
     id: doc.id,
     overrideAccess: true,
   });
+
+  await recordAudit({
+    action: "path.delete",
+    targetType: "learning_path",
+    targetId: slug,
+    actorUserId: actor.userId,
+    actorRole: actor.role,
+    source: actor.source,
+  });
+
   return true;
 }

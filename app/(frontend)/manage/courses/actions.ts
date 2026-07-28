@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { type AuditActor } from "@/lib/audit/log";
 import { canManageCourses } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
@@ -32,6 +33,11 @@ async function requireCurator() {
   return user;
 }
 
+/** Baut den Audit-Actor aus dem eingeloggten Kurator (Session-Pfad). */
+function toActor(user: { id: string; role: string }): AuditActor {
+  return { userId: user.id, role: user.role, source: "session" };
+}
+
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
 function toCourseId(raw: number): number {
@@ -47,8 +53,8 @@ export async function publishCourseAction(
   courseId: number,
 ): Promise<ActionResult> {
   try {
-    await requireCurator();
-    await publishCourseCascade(toCourseId(courseId), true);
+    const user = await requireCurator();
+    await publishCourseCascade(toCourseId(courseId), true, toActor(user));
     revalidatePath("/manage/courses");
     return { ok: true };
   } catch (err) {
@@ -61,8 +67,8 @@ export async function unpublishCourseAction(
   courseId: number,
 ): Promise<ActionResult> {
   try {
-    await requireCurator();
-    await unpublishCourse(toCourseId(courseId));
+    const user = await requireCurator();
+    await unpublishCourse(toCourseId(courseId), toActor(user));
     revalidatePath("/manage/courses");
     return { ok: true };
   } catch (err) {
@@ -75,8 +81,8 @@ export async function deleteCourseAction(
   courseId: number,
 ): Promise<ActionResult> {
   try {
-    await requireCurator();
-    await deleteCourseCascade(toCourseId(courseId));
+    const user = await requireCurator();
+    await deleteCourseCascade(toCourseId(courseId), toActor(user));
     revalidatePath("/manage/courses");
     return { ok: true };
   } catch (err) {
@@ -90,8 +96,8 @@ export async function toggleTutorAction(
   enabled: boolean,
 ): Promise<ActionResult> {
   try {
-    await requireCurator();
-    await setTutorEnabled(toCourseId(courseId), Boolean(enabled));
+    const user = await requireCurator();
+    await setTutorEnabled(toCourseId(courseId), Boolean(enabled), toActor(user));
     revalidatePath("/manage/courses");
     return { ok: true };
   } catch (err) {

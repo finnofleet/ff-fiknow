@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Download } from "lucide-react";
 
+import { complianceAuditEnabled, recordAudit } from "@/lib/audit/log";
 import { can } from "@/lib/auth/capabilities";
 import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -87,6 +88,17 @@ export default async function CompliancePage({
       "compliance:view-aggregate",
     );
     const aggregate = await getComplianceAggregate({ viewerScope: aggregateScope });
+    // ADR 0007 P4b: Compliance-Zugriff protokollieren — NUR wenn per Flag
+    // freigegeben (BR-Mitbestimmung, §11). Best-effort.
+    if (complianceAuditEnabled()) {
+      await recordAudit({
+        action: "compliance.view-aggregate",
+        actorUserId: me.id,
+        actorRole: me.role,
+        source: "session",
+        targetType: "compliance",
+      });
+    }
     return <ComplianceAggregateView aggregate={aggregate} />;
   }
 
@@ -95,6 +107,17 @@ export default async function CompliancePage({
 
   const viewerScope = await resolveViewerScope(me.id, "compliance:view-named");
   const fullOverview = await getComplianceOverview({ viewerScope });
+  // ADR 0007 P4b: Compliance-Zugriff protokollieren — NUR wenn per Flag
+  // freigegeben (BR-Mitbestimmung, §11). Best-effort.
+  if (complianceAuditEnabled()) {
+    await recordAudit({
+      action: "compliance.view-named",
+      actorUserId: me.id,
+      actorRole: me.role,
+      source: "session",
+      targetType: "compliance",
+    });
+  }
   const driverOptions = collectDriverOptions(fullOverview);
   const overview = filterCoursesByDriver(fullOverview, driver);
 

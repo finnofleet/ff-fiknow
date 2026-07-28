@@ -15,6 +15,17 @@ import { auditLog } from "@/lib/db/schema";
 /** Herkunft der Aktion. */
 export type AuditSource = "session" | "authoring-token" | "cli" | "system";
 
+/**
+ * Feature-Flag fuer das Compliance-ZUGRIFFS-Logging (ADR 0007 §11): zu
+ * protokollieren, WER Nachweise einsieht, ist selbst Beschaeftigten-
+ * Ueberwachung (§ 87 Abs. 1 Nr. 6 BetrVG) und daher mitbestimmungspflichtig.
+ * Bis zur BR-Freigabe bleibt es DEAKTIVIERT (Default aus). Authoring-/Admin-
+ * Logging (P4a) ist davon NICHT betroffen und laeuft immer.
+ */
+export function complianceAuditEnabled(): boolean {
+  return process.env.AUDIT_COMPLIANCE_ACCESS === "true";
+}
+
 /** Wer die Aktion ausloest — durch die Authoring-Funktionen gereicht. */
 export type AuditActor = {
   userId: string | null;

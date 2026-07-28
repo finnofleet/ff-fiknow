@@ -53,7 +53,8 @@ export default defineConfig({
       // api-gating läuft hier zusätzlich, um zu prüfen, dass eingeloggte
       // Requests NICHT geblockt werden. `compliance` (nicht compliance-rights)
       // exakt matchen, damit der Rechte-Spec NICHT unter curator-Cookie läuft.
-      testMatch: /(compliance|api-gating)\.spec\.ts/,
+      // `audit` prüft den Audit-Schreibpfad (curator-Cookie -> namentliche Sicht).
+      testMatch: /(compliance|api-gating|audit)\.spec\.ts/,
     },
     {
       // ADR 0007 P2b/P3 — Rechte-/Sichtbarkeits-e2e. Kein projektweiter

@@ -17,6 +17,7 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
+import { complianceAuditEnabled, recordAudit } from "@/lib/audit/log";
 import { can } from "@/lib/auth/capabilities";
 import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -43,6 +44,19 @@ export async function GET(request: NextRequest) {
   const overview = await getComplianceOverview({ viewerScope });
   const filtered = filterCoursesByDriver(overview, driver);
   const csv = buildComplianceCsv(filtered);
+
+  // ADR 0007 P4b: CSV-Export protokollieren — NUR wenn per Flag freigegeben
+  // (BR-Mitbestimmung, §11). Best-effort.
+  if (complianceAuditEnabled()) {
+    await recordAudit({
+      action: "compliance.export",
+      actorUserId: user.id,
+      actorRole: user.role,
+      source: "session",
+      targetType: "compliance",
+      targetId: driver,
+    });
+  }
 
   const dateStamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 

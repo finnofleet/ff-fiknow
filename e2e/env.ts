@@ -14,6 +14,10 @@ export const E2E_BOOT_ENV: Record<string, string> = {
   OIDC_CLIENT_SECRET: "e2e",
   OIDC_REDIRECT_BASE: "http://localhost:3100",
   SKIP_MIGRATIONS: "true",
+  // ADR 0007 P4b: Compliance-Zugriffs-Logging fuer den E2E-Lauf scharf
+  // schalten (in Prod default aus, BR-Freigabe). So verifiziert audit.spec.ts
+  // den kompletten recordAudit->audit_log-Schreibpfad end-to-end.
+  AUDIT_COMPLIANCE_ACCESS: "true",
 };
 
 export const E2E_PG_CONTAINER = "fiknow-e2e-pg";

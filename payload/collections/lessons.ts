@@ -151,5 +151,20 @@ export const Lessons: CollectionConfig = {
           "Mindestanteil korrekter Antworten (z. B. 0.7 = 70 %).",
       },
     },
+    {
+      name: "finalExam",
+      type: "checkbox",
+      label:
+        "Abschlusstest (summativ — Bestehen ist fuer den Nachweis verbindlich)",
+      defaultValue: false,
+      admin: {
+        condition: (data) => data?.type === "quiz",
+        description:
+          "Wenn aktiv, wird die Bewertung server-seitig aus dem Lesson-Body " +
+          "neu berechnet (Client-Werte sind fuer einen verbindlichen Test " +
+          "nicht vertrauenswuerdig) — ein Nichtbestehen markiert die Lektion " +
+          "NICHT als erledigt.",
+      },
+    },
   ],
 };

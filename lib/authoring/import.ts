@@ -562,6 +562,7 @@ function mapLessonFields(
     summary: fm.summary,
     body,
     passingScore: fm.passing_score,
+    finalExam: fm.final_exam,
     videoUrl: fm.video_url,
     transcript: fm.transcript,
     _status: status,

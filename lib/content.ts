@@ -81,6 +81,8 @@ export type LessonFrontmatter = {
   video_url?: string;
   transcript?: string;
   passing_score?: number;
+  /** Abschlusstest (summativ) — server-seitige Bewertung + Gate (ADR 0005, Phase 7a). */
+  final_exam?: boolean;
 };
 
 export type Course = {
@@ -376,5 +378,6 @@ function lessonFrontmatterFromDoc(d: any): LessonFrontmatter {
     video_url: (d.videoUrl as string) ?? undefined,
     transcript: (d.transcript as string) ?? undefined,
     passing_score: (d.passingScore as number) ?? undefined,
+    final_exam: Boolean(d.finalExam),
   };
 }

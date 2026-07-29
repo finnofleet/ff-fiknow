@@ -228,6 +228,12 @@ async function seedCourseContent(payload: any): Promise<void> {
   });
   log(`Lesson created: id=${lesson.id}`);
 
+  // finalExam: true — macht aus dieser Uebungs-Quiz-Lesson zugleich den
+  // Abschlusstest-Regressionsfall (ADR 0005 Phase 7a): server-seitiges
+  // Grading + Nicht-bestanden->nicht-erledigt-Gate. QUIZ_BODY hat eine
+  // Single-Frage mit genau einer korrekten Option, das bestehende
+  // quiz.spec.ts (klickt die korrekte Antwort) bleibt davon unberuehrt, weil
+  // es nur das clientseitige Sofort-Feedback prueft, nie den Submit-Button.
   const quizLesson = await payload.create({
     collection: "lessons",
     data: {
@@ -237,6 +243,7 @@ async function seedCourseContent(payload: any): Promise<void> {
       orderIndex: 2,
       type: "quiz",
       body: QUIZ_BODY,
+      finalExam: true,
       _status: "published",
     },
     overrideAccess: true,

@@ -12,7 +12,7 @@
   „Umsetzung in Phasen" unten). **Phase 6a–6d umgesetzt und verifiziert,
   2026-07-24**: `next build` grün, 129/129 Vitest, e2e 2/2, Migration real
   gegen Postgres angewendet inkl. sauberem Down. **Nachtrag 2026-07-26
-  (geplant, noch nicht gebaut):** Abschlusstest-Modell — Pflichtkurs-Nachweis
+  (7a/7b umgesetzt 2026-07-29; 7c als Frage-Domäne ADR 0009 umgesetzt):** Abschlusstest-Modell — Pflichtkurs-Nachweis
   koppelt künftig an einen dedizierten, summativen Abschlusstest statt an
   „alle Quiz-Lektionen bestanden"; ausgelöst durch eine Kollegen-Review, siehe
   Abschnitt „Nachtrag 2026-07-26" am Dateiende.
@@ -299,7 +299,9 @@ eine Mail-Infrastruktur (weiterhin nicht vorhanden). Der Kern-Zustand
 
 ## Nachtrag 2026-07-26 — Abschlusstest statt Quiz-Summe (Kollegen-Review)
 
-**Status: geplant (ADR) — noch nicht gebaut.** Ausgelöst durch eine
+**Status: 7a/7b umgesetzt + gepusht (2026-07-29); 7c als eigene Frage-Domäne
+umgesetzt (siehe [[0009-frage-domaene]]).** Offen: Options-Shuffle + Migration
+bestehender inline-Prüfungen auf Pools. Ausgelöst durch eine
 Kollegen-Review des bestehenden Nachweis-Modells (BR-Kontext) und mit Yves
 entschieden, 2026-07-26. Zwei Schwächen des heutigen Abschluss-Gates
 (Abschnitt 4 + Abschnitt 6, Entscheidung 3): (1) Die Quiz-Lektionen, an die
@@ -389,18 +391,20 @@ in Abschnitt 6.
    sobald ein Kurs sowohl Pflichtkurs ist als auch eine
    `final_exam`-Lektion enthält.
 
-**Umsetzung in Phasen (Vorschlag, geplant):**
+**Umsetzung in Phasen (Umsetzungsstand 2026-07-30):**
 
-- **Phase 7a — `final_exam`-Flag + Gate-Umstellung.** `final_exam: true` im
-  Quiz-Lesson-Frontmatter; `decideCourseCompletion` zielt auf die
-  Abschlusstest-Lektion(en) statt auf „alle Quizze";
-  `evidence.assessment`-Umbau inkl. Score-Entfernung + Guard-Kommentar
-  (Entscheidung 4). Klein/mittel, sofort machbar.
-- **Phase 7b — Versuchszähler.** Anzahl Versuche bis Bestehen im `evidence`
-  mitführen (Entscheidung 4).
-- **Phase 7c — Fragen-Pool + Randomisierung.** Authoring-Format-Erweiterung
-  (Pool von M Fragen) + Runtime-Auswahl/-Mischung mit Versuchs-Seed
-  (Entscheidung 3). Großer Brocken, eigener Schritt.
+- ✅ **Phase 7a — `final_exam`-Flag + Gate-Umstellung + SERVER-Grading** (2026-07-29).
+  `final_exam: true` im Quiz-Lesson-Frontmatter; verbindliches Gate in
+  `decideCourseCompletion`; server-seitige Bewertung (Client-`passed` nicht mehr
+  vertraut, `lib/quiz/exam-grade.ts`); `evidence.assessment` score-frei +
+  Guard-Kommentar (Score-Leak-Fix). e2e-verifiziert.
+- ✅ **Phase 7b — Versuchszähler** (2026-07-29). Versuche bis Bestehen im
+  score-freien `evidence.assessment.finalExam.attempts`.
+- ✅ **Phase 7c — Fragen-Pool + Randomisierung** — als eigene **Frage-Domäne**
+  umgesetzt (siehe [[0009-frage-domaene]]): wiederverwendbare Bundle-Frage-Blöcke
+  → `questions`-Index → `question_pool`/`questions_per_attempt`, deterministische
+  Seed-Ziehung + Index-Grading (`lib/quiz/pool.ts`), e2e-verifiziert. **Noch
+  offen:** Options-Shuffle (Mikro-Aufsatz) + Migration bestehender inline-Prüfungen.
 
 **Abhängigkeit:** Die Score-Sichtbarkeit aus Phase 7a hängt inhaltlich an
 [[0007-mandanten-scoping-und-auswerte-ebenen]] — die dort geplante gescopete

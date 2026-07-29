@@ -59,7 +59,30 @@ Validierung:
   - `type: video` → `video_url: string` Pflicht
 - Empfohlen: `summary` für SEO + Lesson-Karte
 
-### 6. Asset-Referenzen
+### 6. Frage-Blöcke (`questions/<slug>.mdx`, optional, ADR 0009)
+
+- Datei-Name/`id`-Frontmatter → Slug muss matchen `^[a-z0-9-]+$`
+- Slug ist eindeutig **pro Kurs** (kein Frage-Block-Slug doppelt vergeben)
+- Body enthält genau EIN `<Question>`-Element (gleiche Regeln wie inline,
+  siehe Abschnitt 7)
+
+### 7. Abschlusstest-Lesson mit Fragen-Pool (`question_pool`, ADR 0009)
+
+Wenn eine `type: quiz`-Lesson `question_pool` im Frontmatter setzt:
+
+- Jeder Slug in `question_pool` muss auf einen im Bundle vorhandenen
+  Frage-Block (`questions/<slug>.mdx`) zeigen — Fehler bei unbekanntem Slug
+- `questions_per_attempt` (falls gesetzt) muss ≥ 1 und ≤ Pool-Größe sein
+- `question_pool` gesetzt ⇒ `final_exam: true` erwartet (Konsistenz-Fehler
+  sonst)
+- Diese Lesson braucht KEIN inline `<Question>` im Body — die Fragen kommen
+  zur Laufzeit aus dem Pool
+
+**Guidance für neue Abschlusstests:** immer als Pool kuratieren
+(`final_exam: true` + `question_pool`), kein neues inline-Quiz-Autoring für
+Abschlusstests. Inline `<Question>` bleibt gültig für **formative** Quizze.
+
+### 8. Asset-Referenzen
 
 - Suche im MDX-Body nach `src="assets/..."` oder `](assets/...)`
 - Für jeden Pfad: prüfen ob die Datei tatsächlich unter `<bundle>/assets/...`
@@ -67,7 +90,7 @@ Validierung:
 - Warnung bei Asset-Files die im Bundle liegen aber nirgends referenziert
   werden (Tote Files)
 
-### 7. MDX-Komponenten
+### 9. MDX-Komponenten
 
 - Suche nach `<Question`, `<Option`, `<Callout`, `<Figure`, `<Steps`,
   `<KeyTakeaways>`, `<Definition`, `<DefinitionList`, `<Pullquote`

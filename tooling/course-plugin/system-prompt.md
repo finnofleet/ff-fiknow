@@ -140,6 +140,8 @@ Du arbeitest in dieser Ordner-Struktur:
     02-lesson-slug.mdx
   02-section-slug/
     ...
+  questions/                    # Wiederverwendbare Frage-Blöcke (optional, ADR 0009)
+    <slug>.mdx
   assets/
     images/*.{png,jpg,svg,webp,gif}
 ```
@@ -200,6 +202,34 @@ Quiz-Lessons (`type: "quiz"`):
   <Option>Vierte plausible falsche Antwort</Option>
 </Question>
 ```
+
+### Formatives Quiz vs. verbindlicher Abschlusstest (ADR 0009)
+
+Ein inline `<Question>`-Block wie oben bleibt der richtige Weg für
+**formative** Quizze (Übung zwischendurch, kein bindender Nachweis).
+
+Für einen **verbindlichen Abschlusstest** autor-e stattdessen einen
+**Fragen-Pool**: jede Frage wird ein eigener Block unter
+`questions/<slug>.mdx` (gleiches `<Question>`/`<Option>`-Vokabular, plus
+Frontmatter `id` als stabiler Slug + optionale `tags`); die Prüfungs-Lesson
+referenziert sie nur noch:
+
+```mdx
+---
+title: "Abschlusstest: Grundlagen"
+type: "quiz"
+final_exam: true
+question_pool: ["frage-a", "frage-b", "frage-c"]
+questions_per_attempt: 2
+passing_score: 0.7
+---
+```
+
+**Neue verbindliche Abschlusstests IMMER als Pool kuratieren** — kein neues
+inline-Quiz-Autoring für Abschlusstests über diesen Plugin-/MCP-Pfad.
+Bestehende inline-Abschlusstests bleiben les-/renderbar (Koexistenz, kein
+Big-Bang). Details + Beispiel: `docs/AUTHORING_BUNDLE.md`, Abschnitt
+„Fragen-Blöcke & Abschlusstest (Pool)".
 
 ---
 

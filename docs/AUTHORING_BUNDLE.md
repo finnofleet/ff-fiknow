@@ -27,6 +27,9 @@ Dieses Dokument ist die Referenz für:
     <MM>-<lesson-slug>.mdx
   <NN>-<section-slug>/
     ...
+  questions/                          # Wiederverwendbare Frage-Blöcke (optional, ADR 0009)
+    <slug>.mdx
+    <slug>.mdx
   assets/                             # Bilder + andere Medien (optional)
     images/
       *.{png,jpg,svg,webp,gif}
@@ -170,8 +173,90 @@ passing_score: 0.7
 | `estimated_minutes` | number | – | Lesezeit / Dauer |
 | `summary` | string | – | Kurze Beschreibung, taucht in Lektion-Karten + Meta auf |
 | `passing_score` | number | – | Nur `quiz`: 0–1, wird zur Bestehensgrenze (default 0.7) |
+| `final_exam` | bool | – | Nur `quiz`: markiert die Lektion als **verbindlichen Abschlusstest** (ADR 0009). `true` ⇒ `question_pool` erwartet. |
+| `question_pool` | Liste (Frage-Slugs) | – | Nur `quiz` + `final_exam: true`: Slugs von Frage-Blöcken aus `questions/`, aus denen pro Versuch gezogen wird. |
+| `questions_per_attempt` | number | – | Nur mit `question_pool`: Anzahl Fragen, die pro Versuch deterministisch (Seed) aus dem Pool gezogen werden. Muss ≥ 1 und ≤ Pool-Größe sein. |
 | `video_url` | string | – | Nur `video`: URL der Video-Quelle |
 | `transcript` | string | – | Nur `video`: vollständiger Transkript-Text |
+
+**Inline vs. Pool:** Ein `<Question>`-Block direkt im Lesson-Body ist ein
+**formatives** Quiz (Übung, kein bindender Nachweis). Ein **verbindlicher
+Abschlusstest** wird als **Pool** autor-t: `final_exam: true` +
+`question_pool: [...]` statt eines inline `<Question>`-Bodys. Beide Formen
+sind gültig und koexistieren (ADR 0009, Entscheidung 3) — aber neue
+Abschlusstests sollen als Pool entstehen, nicht mehr inline.
+
+---
+
+## Fragen-Blöcke & Abschlusstest (Pool)
+
+ADR 0009 macht Fragen zu eigenständigen, wiederverwendbaren Bundle-Blöcken —
+statt (nur) inline im Lesson-Body zu leben, können sie unter `questions/`
+autor-t und per stabilem Slug in einen Abschlusstest eingebunden werden.
+
+### `questions/<slug>.mdx` (Frage-Block)
+
+```yaml
+---
+id: "a2-geo-zonen"
+tags: ["geo-zonen", "recht"]
+---
+
+<Question
+  prompt="Wo gilt die Geo-Zone CTR?"
+  explanation="CTRs umgeben Flugplätze mit Tower-Verkehr."
+  type="single"
+>
+  <Option correct={true}>Rund um kontrollierte Flugplätze</Option>
+  <Option>Über allen Stadtgebieten</Option>
+  <Option>Nur über Nationalparks</Option>
+</Question>
+```
+
+| Feld | Typ | Pflicht | Beschreibung |
+|---|---|---|---|
+| `id` | string | – | Autor-vergebener, stabiler Slug (menschenlesbar, wie ein Lesson-Slug). **Fehlt er**, wird der Slug aus dem Dateinamen abgeleitet (`<slug>.mdx` → `<slug>`). Dies ist der Referenz-Key, den `question_pool` (unten) verwendet — beim Umbenennen verwaist die alte Referenz, siehe „Slugs stabil halten". |
+| `tags` | Liste (string) | – | Optionale Themen-Metadaten (z. B. für spätere Spaced-Repetition-Auswahl). Kein Einfluss auf den Pool-Mechanismus selbst. |
+
+Der Body besteht aus **genau einem** `<Question>`-Element (dasselbe
+gehärtete `<Question>`/`<Option>`-Vokabular wie beim inline-Quiz, siehe
+unten — Labels dürfen rich-Markdown enthalten). Beim Upload wird der Block
+zusätzlich in den `questions`-Index gespiegelt (generierter Index, nicht im
+Bundle-Format sichtbar).
+
+### Abschlusstest-Lesson (Pool-Referenz)
+
+```yaml
+---
+title: "Abschlusstest: A2-Theorie"
+type: "quiz"
+estimated_minutes: 15
+summary: "Verbindlicher Abschlusstest — 10 von 20 Fragen pro Versuch."
+final_exam: true
+question_pool: ["a2-geo-zonen", "a2-gewicht", "a2-versicherung"]
+questions_per_attempt: 2
+passing_score: 0.7
+---
+
+# Abschlusstest: A2-Theorie
+
+Kurzer Einleitungstext (optional) — die Fragen selbst kommen NICHT als
+`<Question>`-Body, sondern werden zur Laufzeit aus dem Pool gezogen.
+```
+
+Pro Versuch zieht der Server `questions_per_attempt` Fragen aus
+`question_pool` deterministisch per Seed und grade't server-seitig gegen
+den `questions`-Index — es gibt keinen inline `<Question>`-Body in dieser
+Lesson.
+
+### Koexistenz: inline vs. Pool
+
+- **Inline** `<Question>` im Lesson-Body bleibt gültig — für **formative**
+  Quizze (Übung zwischendurch, kein bindender Nachweis).
+- **Neue verbindliche Abschlusstests** sollen als **Pool** autor-t werden
+  (`final_exam: true` + `question_pool`) statt inline — das Authoring-
+  Plugin/MCP kuratiert Neues nur noch so (ADR 0009, Entscheidung 3).
+  Bestehende inline-Abschlusstests bleiben les-/renderbar; kein Big-Bang.
 
 ---
 

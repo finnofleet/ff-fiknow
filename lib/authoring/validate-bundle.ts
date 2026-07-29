@@ -13,6 +13,12 @@
  *     die Struktur kaputt, lässt sich der Rest ohnehin nicht zuverlässig lesen.
  *   - MDX-Bodies werden ALLE geprüft und alle Verstöße gesammelt — das ist der
  *     häufige Autorenfall („3 Syntaxfehler über mehrere Lessons verteilt").
+ *
+ * ADR 0009 (Phase D3) ergänzt eine rein referenzielle Prüfung für Pool-
+ * Abschlusstests: `question_pool`-Slugs müssen auf vorhandene Frage-Blöcke
+ * zeigen, `questions_per_attempt` muss zur Pool-Größe passen, und ein Pool
+ * verlangt `final_exam: true`. Keine neue MDX-Härtung — reine Frontmatter-
+ * Referenz-Konsistenz.
  */
 import { assertSafeMdx, MdxValidationError } from "../mdx/validate";
 import { parseQuestionBlock } from "../quiz/question-parse";
@@ -86,6 +92,70 @@ export async function validateBundleFiles(
       });
     } else {
       seenSlugs.set(question.slug, file);
+    }
+  }
+
+  // 4. Pool-Abschlusstest-Referenzen (ADR 0009, Phase D3) — eine `type: quiz`-
+  // Lesson kann statt eines inline <Question>-Bodys einen Fragen-POOL per
+  // Frontmatter referenzieren (`question_pool: [slug, ...]`). Drei
+  // domänenspezifische Konsistenz-Prüfungen, rein auf Frontmatter-Ebene
+  // (keine MDX-Härtung nötig, das ist reine YAML-Referenz-Prüfung):
+  //   a) jeder referenzierte Slug muss ein im Bundle vorhandener Frage-Block
+  //      sein (sonst zieht der Server zur Laufzeit ins Leere)
+  //   b) `questions_per_attempt` (falls gesetzt) muss zwischen 1 und der
+  //      Pool-Größe liegen (sonst kann der Server nicht genug/sinnvoll ziehen)
+  //   c) `question_pool` gesetzt ⇒ `final_exam: true` erwartet — ein Pool
+  //      ohne diesen Marker wäre ein inkonsistent autor-ter Abschlusstest
+  const knownQuestionSlugs = new Set(seenSlugs.keys());
+  for (const section of bundle.sections) {
+    for (const lesson of section.lessons) {
+      const fm = lesson.frontmatter;
+      const pool: unknown = fm.question_pool;
+      if (pool == null) continue;
+
+      const file = `${section.slug}/${lesson.slug}.mdx`;
+
+      if (!Array.isArray(pool)) {
+        findings.push({
+          file,
+          message: `question_pool muss eine Liste von Frage-Slugs sein.`,
+        });
+        continue;
+      }
+
+      for (const slug of pool) {
+        if (typeof slug !== "string" || !knownQuestionSlugs.has(slug)) {
+          findings.push({
+            file,
+            message: `question_pool referenziert unbekannten Frage-Slug '${String(slug)}'.`,
+          });
+        }
+      }
+
+      const poolSize = pool.length;
+      const perAttempt: unknown = fm.questions_per_attempt;
+      if (perAttempt != null) {
+        if (
+          typeof perAttempt !== "number" ||
+          !Number.isFinite(perAttempt) ||
+          perAttempt < 1 ||
+          perAttempt > poolSize
+        ) {
+          findings.push({
+            file,
+            message:
+              `questions_per_attempt (${String(perAttempt)}) muss zwischen 1 ` +
+              `und der Pool-Größe (${poolSize}) liegen.`,
+          });
+        }
+      }
+
+      if (fm.final_exam !== true) {
+        findings.push({
+          file,
+          message: `question_pool gesetzt, aber final_exam ist nicht true — ein Fragen-Pool erwartet final_exam: true.`,
+        });
+      }
     }
   }
 

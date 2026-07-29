@@ -205,7 +205,17 @@ So gehst du vor (Details je Topic über \`get_authoring_guide\` oder die Resourc
 4. **Ablauf** — Topic \`workflow\` (welche Tools in welcher Reihenfolge).
 
 Wichtig: Binär-Assets NIE als base64 durch den Kontext schleusen — dafür gibt es
-\`request_asset_upload_url\` (direkter Upload per curl). Siehe \`workflow\`.`;
+\`request_asset_upload_url\` (direkter Upload per curl). Siehe \`workflow\`.
+
+**Fragen/Abschlusstests (ADR 0009):** Fragen können als eigene, wieder-
+verwendbare Blöcke unter \`questions/<slug>.mdx\` autor-t werden (gleiches
+\`<Question>/<Option>\`-Vokabular wie inline). Ein Abschlusstest referenziert
+sie per \`final_exam: true\` + \`question_pool: [slug, ...]\` +
+\`questions_per_attempt: N\` im Lesson-Frontmatter statt sie inline zu
+schreiben — Details in Topic \`bundle-format\`, Abschnitt „Fragen-Blöcke &
+Abschlusstest (Pool)". **Neue verbindliche Abschlusstests IMMER als Pool
+autor-en, nicht mehr inline** — inline \`<Question>\` bleibt nur für
+formative (übende) Quizze gültig.`;
 
 const WORKFLOW = `# Authoring-Workflow (MCP-Tools)
 
@@ -219,6 +229,10 @@ const WORKFLOW = `# Authoring-Workflow (MCP-Tools)
    Fallback ohne Shell: \`upload_asset\` (base64) — langsam, nur für kleine Bilder.
 5. \`validate_bundle(courseSlug, files, assets?)\` — Format prüfen, OHNE zu
    schreiben; liefert \`[{file, line?, message}]\`. Vor dem Import aufrufen.
+   Prüft bei Fragen-Pools zusätzlich die Referenzen: jeder Slug in
+   \`question_pool\` muss auf einen mitgeschickten \`questions/<slug>.mdx\`-Block
+   zeigen, \`questions_per_attempt\` muss zur Pool-Größe passen, und
+   \`question_pool\` verlangt \`final_exam: true\`.
 6. \`import_course(courseSlug, files, assets)\` — als **Draft** hochladen.
    \`files\` = Text-Dateien; \`assets\` = \`{path, sha256}\`-Referenzen (unveränderte
    Assets nie neu übertragen). Bei Versions-Konflikt NICHT überschreiben.

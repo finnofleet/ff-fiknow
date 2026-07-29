@@ -1,8 +1,9 @@
 # ADR 0009 — Frage-Domäne: wiederverwendbare, im Bundle autor-te Frage-Blöcke (DB als Index, per Referenz eingebettet)
 
-- **Status:** Proposed / **Diskussion** — Trade-offs, noch NICHT entschieden,
-  noch KEIN Code. Ausgelöst durch die 7c-Vorbereitung (ADR 0005) + den Bedarf
-  für Repetitionsfragen (Spaced Repetition, ROADMAP).
+- **Status:** **Richtung entschieden (2026-07-29 mit Yves)** — ein Detail offen
+  (Pool-Zugehörigkeit: Tag vs. Ort), danach implementierbar. Noch KEIN Code.
+  Ausgelöst durch die 7c-Vorbereitung (ADR 0005) + den Bedarf für
+  Repetitionsfragen (Spaced Repetition, ROADMAP).
 - **Datum:** 2026-07-29
 - **Kontext-Phase:** Content-Modell / Assessment / Wiederverwendung
 - **Verwandt:** [[0001-mdx-bundle-als-source-of-truth-db-als-index]] (Prinzip +
@@ -129,22 +130,35 @@ nicht.
   ist bewusst NICHT Teil davon (Datensparsamkeit; der Nachweis sagt „Test
   bestanden", nicht „Frage 7 richtig").
 
-## Offene Entscheidungen (Input nötig, bevor Code)
+## Entscheidungen (2026-07-29, mit Yves)
 
-1. **Authoring-Format der Frage-Blöcke:** (a) MDX-Dateien mit `<Question>`-Block
-   + `id`/`tags`-Frontmatter in `questions/` (reuse Härtung + rich Optionen,
-   Autoren-Vertrautheit) — vs. (b) strukturiertes YAML/JSON-Fragen-Bank — vs.
-   (c) `<Question>` inline lassen, nur `id` + `pool`-Referenz ergänzen. *(Neige
-   zu (a).)*
-2. **Einbettung:** Pool per Lesson-Frontmatter (`question_pool`+`questions_per_attempt`)
-   vs. Referenz-Tag `<Question ref="id"/>` im Body vs. beides.
-3. **Migration:** automatisiert Big-Bang (alle inline-Quizze → Blöcke) vs.
-   Koexistenz (inline weiter erlaubt, Pools neu) — Übergangsdauer.
-4. **Umfang ADR 0009:** nur die Domäne + 7c-Konsum (empfohlen) — vs. gleich den
-   Spaced-Repetition-Scheduler mitdenken (eigene Phase/ADR, konsumiert die
-   Domäne; die Domäne muss ihn aber vorsehen: Identität + Tags).
-5. **`questions` als Drizzle-Index (empfohlen, ADR-0001-konform) — bestätigt?**
-   (Alternative „Payload-Collection" wäre ein zweiter Schreibpfad → abgelehnt.)
+1. **Authoring-Format: (a) MDX-Block mit `id`/`tags`-Frontmatter im
+   `questions/`-Ordner.** Reuse der bestehenden Härtung + rich Optionen. (Die
+   bisherige inline-Struktur ist unkritisch, weil Preview/Render ohnehin
+   server-seitig passiert.)
+2. **Einbettung: Pool per Prüfungs-Frontmatter + Runtime-Ziehung.** Die
+   Prüfungs-Lektion deklariert im Frontmatter ihren Pool + `questions_per_attempt: N`;
+   pro Versuch zieht der Server N daraus per Seed (Ziehung = Runtime, NICHT im
+   Frontmatter). **Offenes Detail (siehe unten):** wie die Pool-Zugehörigkeit
+   benannt wird (Tag/Thema vs. Ort) — da IDs maschinell (Write-back) vergeben
+   werden, ist eine handgepflegte ID-Liste unhandlich.
+3. **Migration: Koexistenz** — bestehende inline-Quizze bleiben les-/renderbar;
+   ABER das **Authoring-Plugin/MCP kuratiert Neues nur noch als Pool** (kein
+   neues inline-Quiz-Autoring über den Plugin-/MCP-Pfad). Bestand wird bei
+   Bedarf re-autor-t; kein Big-Bang.
+4. **Umfang: nur Frage-Domäne + 7c-Konsum.** Der Spaced-Repetition-Scheduler ist
+   eine spätere eigene Phase; die Domäne sieht ihn aber vor (Frage-Identität +
+   `tags` + Platz für ein künftiges `question_reviews`-State-Table).
+5. **`questions` als Drizzle-Index, KEINE Payload-Collection** — bestätigt (kein
+   zweiter Schreibpfad, ADR-0001-konform).
+
+## Einzig offene Frage (vor Implementierung)
+
+**Pool-Zugehörigkeit (Entscheidung 2):** per **(i) Tag/Thema** (alle Fragen mit
+Tag X = Pool; deckt sich mit den Tags, die Spaced Repetition ohnehin braucht)
+vs. **(ii) Ort** (alle Blöcke einer questions-Datei/eines Ordners = Pool).
+Tendenz: **(i) Tags** — eine Achse, die 7c-Pool UND Spaced Repetition zugleich
+bedient.
 
 ## Bezug zu 7c (aus der Diskussion)
 

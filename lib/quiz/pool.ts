@@ -27,6 +27,14 @@ export type PoolQuestion = {
   prompt: string;
   type: "single" | "multi";
   options: { label: string; correct: boolean }[];
+  /**
+   * Optionale Erklaerung (aus dem `questions`-Index, Spalte `explanation`,
+   * Phase D1). Fliesst NICHT ins Grading ein (nur `options[].correct` zaehlt)
+   * — wird ausschliesslich fuer die MDX-Rekonstruktion beim Rendern
+   * durchgereicht (Phase D2-ii-a, `lib/quiz/pool-render.ts`). `undefined`/
+   * `null`, wenn keine Erklaerung hinterlegt ist.
+   */
+  explanation?: string | null;
 };
 
 export type PoolGradeResult = {

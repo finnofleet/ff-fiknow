@@ -166,5 +166,35 @@ export const Lessons: CollectionConfig = {
           "NICHT als erledigt.",
       },
     },
+    // Fragen-Pool (ADR 0009, D2-ii-a): Alternative zu einem fest im Body
+    // verdrahteten Abschlusstest — die Fragen liegen strukturiert im
+    // `questions`-Index (D1), pro Versuch werden `questionsPerAttempt` davon
+    // deterministisch gezogen. Nur sinnvoll fuer Abschlusstest-Quizze, daher
+    // an `finalExam` gekoppelt (admin.condition).
+    {
+      name: "questionPool",
+      type: "text",
+      hasMany: true,
+      label: "Fragen-Pool (Slugs, nur bei Abschlusstest)",
+      admin: {
+        condition: (data) => data?.type === "quiz" && Boolean(data?.finalExam),
+        description:
+          "Autor-Slugs von Fragen aus dem questions-Index (questions/<slug>.mdx " +
+          "im Bundle). Pro Versuch werden davon `questionsPerAttempt` Fragen " +
+          "deterministisch gezogen, statt eines fest im Body verdrahteten Tests.",
+      },
+    },
+    {
+      name: "questionsPerAttempt",
+      type: "number",
+      label: "Fragen pro Versuch (nur bei Fragen-Pool)",
+      min: 1,
+      admin: {
+        condition: (data) => data?.type === "quiz" && Boolean(data?.finalExam),
+        description:
+          "Anzahl Fragen, die pro Versuch aus questionPool gezogen werden. " +
+          "Leer = alle Pool-Fragen.",
+      },
+    },
   ],
 };

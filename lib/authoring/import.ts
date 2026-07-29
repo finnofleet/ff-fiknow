@@ -584,6 +584,8 @@ function mapLessonFields(
     body,
     passingScore: fm.passing_score,
     finalExam: fm.final_exam,
+    questionPool: fm.question_pool,
+    questionsPerAttempt: fm.questions_per_attempt,
     videoUrl: fm.video_url,
     transcript: fm.transcript,
     _status: status,

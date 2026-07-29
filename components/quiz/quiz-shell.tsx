@@ -17,6 +17,13 @@ type Props = {
   nextHref: string | null;
   /** Kurs-Flag `confirmationRequired` — Checkbox nur auf der letzten Lektion. */
   confirmationRequired: boolean;
+  /**
+   * Nur bei Fragen-Pool-Praefungen gesetzt (ADR 0009, D2-ii-a): der Seed, mit
+   * dem die auf DIESER Seite gerenderten Fragen gezogen wurden
+   * (`selectPoolQuestions`). Wird beim Submit mitgeschickt, damit der Server
+   * dieselbe Ziehung reproduzieren und server-seitig neu bewerten kann.
+   */
+  seed?: string;
   children: ReactNode;
 };
 
@@ -28,6 +35,7 @@ export function QuizShell({
   questionCount,
   nextHref,
   confirmationRequired,
+  seed,
   children,
 }: Props) {
   const [results, setResults] = useState<Map<string, QuestionResult>>(new Map());
@@ -61,6 +69,7 @@ export function QuizShell({
       sectionSlug,
       lessonSlug,
       confirmed,
+      seed,
     };
     await submitQuizAttemptAction(payload);
     // Action navigiert weiter — kein setSubmitting(false) nötig

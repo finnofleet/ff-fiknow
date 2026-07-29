@@ -9,6 +9,7 @@ import * as migration_20260703_120300_add_training_mandatory_fields from './2026
 import * as migration_20260724_083651_add_training_art4_fields from './20260724_083651_add_training_art4_fields';
 import * as migration_20260727_174500_add_training_requirement_scope from './20260727_174500_add_training_requirement_scope';
 import * as migration_20260729_100456_add_lesson_final_exam from './20260729_100456_add_lesson_final_exam';
+import * as migration_20260729_182348_add_lesson_question_pool from './20260729_182348_add_lesson_question_pool';
 
 export const migrations = [
   {
@@ -64,6 +65,11 @@ export const migrations = [
   {
     up: migration_20260729_100456_add_lesson_final_exam.up,
     down: migration_20260729_100456_add_lesson_final_exam.down,
-    name: '20260729_100456_add_lesson_final_exam'
+    name: '20260729_100456_add_lesson_final_exam',
+  },
+  {
+    up: migration_20260729_182348_add_lesson_question_pool.up,
+    down: migration_20260729_182348_add_lesson_question_pool.down,
+    name: '20260729_182348_add_lesson_question_pool'
   },
 ];

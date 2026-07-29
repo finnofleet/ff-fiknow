@@ -83,6 +83,14 @@ export type LessonFrontmatter = {
   passing_score?: number;
   /** Abschlusstest (summativ) — server-seitige Bewertung + Gate (ADR 0005, Phase 7a). */
   final_exam?: boolean;
+  /**
+   * Fragen-Pool (ADR 0009, D2-ii-a): Autor-Slugs aus dem `questions`-Index
+   * statt eines fest im Body verdrahteten Abschlusstests. Nur gesetzt bei
+   * Pool-Praefungen — inline-Abschlusstests (7a) lassen dieses Feld leer.
+   */
+  question_pool?: string[];
+  /** Anzahl Fragen, die pro Versuch aus `question_pool` gezogen werden. */
+  questions_per_attempt?: number;
 };
 
 export type Course = {
@@ -379,5 +387,9 @@ function lessonFrontmatterFromDoc(d: any): LessonFrontmatter {
     transcript: (d.transcript as string) ?? undefined,
     passing_score: (d.passingScore as number) ?? undefined,
     final_exam: Boolean(d.finalExam),
+    question_pool: Array.isArray(d.questionPool)
+      ? (d.questionPool as string[])
+      : undefined,
+    questions_per_attempt: (d.questionsPerAttempt as number) ?? undefined,
   };
 }

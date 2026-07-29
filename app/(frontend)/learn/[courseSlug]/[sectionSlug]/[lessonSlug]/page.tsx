@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { Metadata } from "next";
 import { Circle, CircleCheck, CircleDot } from "lucide-react";
 import { MDXRemote } from "next-mdx-remote/rsc";
@@ -14,6 +16,9 @@ import { brand } from "@/lib/brand";
 import { getCourse, getLesson } from "@/lib/content";
 import { getCurrentUser, viewerCanSeeDrafts } from "@/lib/auth/session";
 import { truncateDescription } from "@/lib/seo";
+import { selectPoolQuestions } from "@/lib/quiz/pool";
+import { getPoolQuestions } from "@/lib/quiz/pool-loader";
+import { renderPoolQuestionsToMdx } from "@/lib/quiz/pool-render";
 import {
   getCourseProgress,
   markLessonInProgress,
@@ -121,10 +126,32 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
     : null;
 
   const isQuiz = lesson.frontmatter.type === "quiz";
-  const questionCount = isQuiz
+  const passingScore = lesson.frontmatter.passing_score ?? 0.7;
+
+  // Fragen-Pool-Praefung (ADR 0009, D2-ii-a): Fragen kommen aus dem
+  // `questions`-Index statt fest im Lesson-Body verdrahtet zu sein.
+  // Koexistenz mit 7a: ohne `question_pool` bleibt der bisherige inline-Pfad
+  // (lesson.body) unveraendert.
+  const poolSlugs = lesson.frontmatter.question_pool;
+  const isPoolExam = isQuiz && Boolean(poolSlugs?.length);
+
+  let quizBody = lesson.body;
+  let questionCount = isQuiz
     ? (lesson.body.match(/<Question[\s>]/g) ?? []).length
     : 0;
-  const passingScore = lesson.frontmatter.passing_score ?? 0.7;
+  // Seed pro Render (nicht pro Versuch persistiert): der Client schickt ihn
+  // beim Submit zurueck, der Server reproduziert damit dieselbe Ziehung.
+  let seed: string | undefined;
+
+  if (isPoolExam && poolSlugs) {
+    const version = course.frontmatter.version ?? "";
+    seed = randomUUID();
+    const n = lesson.frontmatter.questions_per_attempt ?? poolSlugs.length;
+    const drawn = selectPoolQuestions(poolSlugs, n, seed);
+    const poolQs = await getPoolQuestions(courseSlug, version, drawn);
+    quizBody = renderPoolQuestionsToMdx(poolQs);
+    questionCount = poolQs.length;
+  }
 
   return (
     <div className={styles.shell}>
@@ -238,10 +265,11 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
               passingScore={passingScore}
               nextHref={nextHref}
               confirmationRequired={Boolean(course.frontmatter.confirmation_required)}
+              seed={seed}
             >
               <div className={styles.prose} data-tutor-prose>
                 <MDXRemote
-                  source={lesson.body}
+                  source={quizBody}
                   components={mdxComponents}
                   options={hardenedRscOptions}
                 />

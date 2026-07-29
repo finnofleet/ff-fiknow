@@ -18,6 +18,7 @@ function baseInput(over: Partial<CompletionInput> = {}): CompletionInput {
     confirmed: false,
     finalExam: null,
     finalExamPassed: false,
+    finalExamAttempts: 0,
     ...over,
   };
 }
@@ -151,16 +152,33 @@ describe("decideCourseCompletion — Abschlusstest-Gate (final_exam, Phase 7a 1b
     expect(d.complete).toBe(false);
   });
 
-  it("finalExam gesetzt und bestanden + alle Lektionen erledigt → abgeschlossen, evidence.assessment.finalExam gesetzt, kein score irgendwo", () => {
+  it("finalExam gesetzt und bestanden + alle Lektionen erledigt → abgeschlossen, evidence.assessment.finalExam gesetzt (mit attempts), kein score irgendwo", () => {
     const d = decideCourseCompletion(
-      baseInput({ finalExam, finalExamPassed: true }),
+      baseInput({ finalExam, finalExamPassed: true, finalExamAttempts: 3 }),
     );
     expect(d.complete).toBe(true);
     if (d.complete) {
       expect(d.evidence.type).toBe("all_lessons_and_assessment");
-      expect(d.evidence.assessment?.finalExam).toEqual(finalExam);
+      expect(d.evidence.assessment?.finalExam).toEqual({
+        ...finalExam,
+        attempts: 3,
+      });
       expect(d.evidence.assessment?.quizzes).toBeUndefined();
       expect(JSON.stringify(d.evidence)).not.toContain('"score"');
+    }
+  });
+
+  it("finalExam bestanden, aber finalExamAttempts: 0 → evidence.assessment.finalExam.attempts bleibt weg (kein Feld)", () => {
+    const d = decideCourseCompletion(
+      baseInput({ finalExam, finalExamPassed: true, finalExamAttempts: 0 }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.assessment?.finalExam).toEqual(finalExam);
+      expect(d.evidence.assessment?.finalExam?.attempts).toBeUndefined();
+      expect("attempts" in (d.evidence.assessment?.finalExam ?? {})).toBe(
+        false,
+      );
     }
   });
 

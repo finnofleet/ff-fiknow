@@ -49,7 +49,16 @@ export type CompletionEvidence = {
    */
   assessment?: {
     /** Verbindlicher Abschlusstest (final_exam), falls der Kurs einen hat. */
-    finalExam?: { sectionSlug: string; lessonSlug: string; passingScore: number };
+    finalExam?: {
+      sectionSlug: string;
+      lessonSlug: string;
+      passingScore: number;
+      /**
+       * Anzahl Versuche bis zum ersten Bestehen (aus quiz_attempts). NUR
+       * Zaehler — kein Score/keine Rohantworten (staff-lesbar).
+       */
+      attempts?: number;
+    };
     /** Formatives Lernkontroll-Gate (assessmentRequired, 6b): bestandene Quizze — OHNE Score. */
     quizzes?: { sectionSlug: string; lessonSlug: string }[];
   };
@@ -89,6 +98,8 @@ export type CompletionInput = {
   finalExam: { sectionSlug: string; lessonSlug: string; passingScore: number } | null;
   /** Existiert ein server-bestandener Versuch fuer den Abschlusstest? */
   finalExamPassed: boolean;
+  /** Versuche bis Bestehen; 0 wenn kein final_exam oder nicht bestanden. */
+  finalExamAttempts: number;
 };
 
 const quizKey = (q: { sectionSlug: string; lessonSlug: string }): string =>
@@ -146,6 +157,9 @@ export function decideCourseCompletion(
         sectionSlug: input.finalExam.sectionSlug,
         lessonSlug: input.finalExam.lessonSlug,
         passingScore: input.finalExam.passingScore,
+        ...(input.finalExamAttempts > 0
+          ? { attempts: input.finalExamAttempts }
+          : {}),
       },
     };
 

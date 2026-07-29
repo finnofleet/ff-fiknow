@@ -28,7 +28,7 @@
  * Bedingung entkoppelt, da ein Abschlusstest das formative Lernkontroll-Gate
  * ersetzt statt es zu ergänzen (siehe `decideCourseCompletion`).
  */
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
 import { profiles, quizAttempts, trainingAssignments } from "@/lib/db/schema";
@@ -113,9 +113,13 @@ export async function syncCourseCompletion(
   // existiert — unabhaengig von assessmentRequired (das Abschlusstest-Gate
   // ersetzt das formative Gate, siehe decideCourseCompletion).
   let finalExamPassed = false;
+  // Versuche bis zum ersten Bestehen (Phase 7b) — Zaehler, kein Score. Alle
+  // Versuche der final_exam-Lesson chronologisch laden und die Position des
+  // ersten bestandenen Versuchs bestimmen (1-basiert). Kein Bestehen -> 0.
+  let finalExamAttempts = 0;
   if (finalExam) {
-    const [row] = await db
-      .select({ id: quizAttempts.id })
+    const attemptRows = await db
+      .select({ attemptedAt: quizAttempts.attemptedAt, passed: quizAttempts.passed })
       .from(quizAttempts)
       .where(
         and(
@@ -123,11 +127,12 @@ export async function syncCourseCompletion(
           eq(quizAttempts.courseSlug, courseSlug),
           eq(quizAttempts.sectionSlug, finalExam.sectionSlug),
           eq(quizAttempts.lessonSlug, finalExam.lessonSlug),
-          eq(quizAttempts.passed, true),
         ),
       )
-      .limit(1);
-    finalExamPassed = Boolean(row);
+      .orderBy(asc(quizAttempts.attemptedAt));
+    const firstPassIdx = attemptRows.findIndex((r) => r.passed);
+    finalExamPassed = firstPassIdx >= 0;
+    finalExamAttempts = firstPassIdx >= 0 ? firstPassIdx + 1 : 0;
   }
 
   const confirmationRequired = Boolean(course.frontmatter.confirmation_required);
@@ -143,6 +148,7 @@ export async function syncCourseCompletion(
     confirmationRequired,
     finalExam,
     finalExamPassed,
+    finalExamAttempts,
     confirmed: opts?.confirmed ?? false,
   });
 

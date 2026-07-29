@@ -66,11 +66,6 @@ function tileLabel(fm: CourseSummary["frontmatter"]): string {
 const roadmap: { status: "in-arbeit" | "geplant" | "später"; title: string; desc: string }[] = [
   {
     status: "geplant",
-    title: "Lernpfade",
-    desc: "Mehrere Kurse zu Reihen bündeln, mit eigenem Fortschrittstracking — der Mehrwert, den die meisten MOOCs auslassen.",
-  },
-  {
-    status: "geplant",
     title: "Repetitionsfragen",
     desc: "Spaced Repetition: Fragen aus abgeschlossenen Lektionen tauchen wieder auf, wenn sie reif sind.",
   },

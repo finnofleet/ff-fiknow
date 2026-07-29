@@ -16,6 +16,8 @@ function baseInput(over: Partial<CompletionInput> = {}): CompletionInput {
     estimatedMinutes: null,
     confirmationRequired: false,
     confirmed: false,
+    finalExam: null,
+    finalExamPassed: false,
     ...over,
   };
 }
@@ -83,6 +85,12 @@ describe("decideCourseCompletion — Lernkontroll-Gate (opt-in)", () => {
     if (d.complete) {
       expect(d.evidence.type).toBe("all_lessons_and_assessment");
       expect(d.evidence.assessment?.quizzes).toHaveLength(2);
+      // Score-frei (STAFF-lesbares evidence, ADR 0005 Entscheidung 4).
+      expect(
+        d.evidence.assessment?.quizzes?.every(
+          (q) => !("score" in q),
+        ),
+      ).toBe(true);
     }
   });
 
@@ -112,7 +120,7 @@ describe("decideCourseCompletion — Lernkontroll-Gate (opt-in)", () => {
     expect(d.complete).toBe(false);
   });
 
-  it("nimmt den besten Score je Quiz in den Nachweis auf", () => {
+  it("dedupliziert mehrere bestandene Versuche derselben Quiz-Lesson (score-frei im Nachweis)", () => {
     const d = decideCourseCompletion(
       baseInput({
         assessmentRequired: true,
@@ -123,8 +131,100 @@ describe("decideCourseCompletion — Lernkontroll-Gate (opt-in)", () => {
     expect(d.complete).toBe(true);
     if (d.complete) {
       expect(d.evidence.assessment?.quizzes).toEqual([
-        { sectionSlug: "s1", lessonSlug: "q1", score: 0.95 },
+        { sectionSlug: "s1", lessonSlug: "q1" },
       ]);
+    }
+  });
+});
+
+describe("decideCourseCompletion — Abschlusstest-Gate (final_exam, Phase 7a 1b-ii)", () => {
+  const finalExam = {
+    sectionSlug: "s1",
+    lessonSlug: "final",
+    passingScore: 0.7,
+  };
+
+  it("finalExam gesetzt, aber nicht bestanden → nicht abgeschlossen (auch bei allen Lektionen erledigt)", () => {
+    const d = decideCourseCompletion(
+      baseInput({ finalExam, finalExamPassed: false }),
+    );
+    expect(d.complete).toBe(false);
+  });
+
+  it("finalExam gesetzt und bestanden + alle Lektionen erledigt → abgeschlossen, evidence.assessment.finalExam gesetzt, kein score irgendwo", () => {
+    const d = decideCourseCompletion(
+      baseInput({ finalExam, finalExamPassed: true }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.type).toBe("all_lessons_and_assessment");
+      expect(d.evidence.assessment?.finalExam).toEqual(finalExam);
+      expect(d.evidence.assessment?.quizzes).toBeUndefined();
+      expect(JSON.stringify(d.evidence)).not.toContain('"score"');
+    }
+  });
+
+  it("finalExam überstimmt assessmentRequired: bestanden, aber ein formatives Quiz NICHT bestanden → trotzdem abgeschlossen", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        finalExam,
+        finalExamPassed: true,
+        assessmentRequired: true,
+        quizLessons: [{ sectionSlug: "s1", lessonSlug: "q1" }],
+        passedQuizzes: [], // formatives Quiz NICHT bestanden
+      }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.type).toBe("all_lessons_and_assessment");
+      expect(d.evidence.assessment?.finalExam).toEqual(finalExam);
+    }
+  });
+
+  it("kein finalExam → Regression: assessmentRequired-Gate wie bisher, evidence-quizzes ohne score", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        finalExam: null,
+        finalExamPassed: false,
+        assessmentRequired: true,
+        quizLessons: [{ sectionSlug: "s1", lessonSlug: "q1" }],
+        passedQuizzes: [quiz("s1", "q1", 0.9)],
+      }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.assessment?.quizzes).toEqual([
+        { sectionSlug: "s1", lessonSlug: "q1" },
+      ]);
+      expect(JSON.stringify(d.evidence)).not.toContain('"score"');
+    }
+  });
+
+  it("finalExam gesetzt + bestanden, aber confirmationRequired && !confirmed → nicht abgeschlossen", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        finalExam,
+        finalExamPassed: true,
+        confirmationRequired: true,
+        confirmed: false,
+      }),
+    );
+    expect(d.complete).toBe(false);
+  });
+
+  it("finalExam gesetzt + bestanden + confirmationRequired && confirmed → abgeschlossen mit Confirmation-Nachweis", () => {
+    const d = decideCourseCompletion(
+      baseInput({
+        finalExam,
+        finalExamPassed: true,
+        confirmationRequired: true,
+        confirmed: true,
+      }),
+    );
+    expect(d.complete).toBe(true);
+    if (d.complete) {
+      expect(d.evidence.confirmation?.confirmed).toBe(true);
+      expect(d.evidence.assessment?.finalExam).toEqual(finalExam);
     }
   });
 });

@@ -110,7 +110,7 @@ describe("buildComplianceCsv", () => {
             userId: "u-pass",
             evidence: {
               type: "all_lessons_and_assessment",
-              assessment: { quizzes: [{ sectionSlug: "s1", lessonSlug: "l1", score: 1 }] },
+              assessment: { quizzes: [{ sectionSlug: "s1", lessonSlug: "l1" }] },
             },
           }),
           participantFixture({ userId: "u-none", evidence: null }),

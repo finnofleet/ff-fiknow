@@ -20,6 +20,13 @@
  * gesetzt ist. Bei Abschluss ergänzt diese I/O-Schicht `confirmedAt` im
  * eingefrorenen `evidence.confirmation` — die reine `decideCourseCompletion`
  * kennt nur `confirmed: true`, keine Zeitstempel.
+ *
+ * Abschlusstest-Gate (Phase 7a, 1b-ii): existiert im Kurs eine Lesson mit
+ * `frontmatter.final_exam === true`, wird deren server-gewerteter
+ * Bestehens-Status (`quiz_attempts.passed`) IMMER geladen — unabhängig von
+ * `assessmentRequired`. Der Ladevorgang ist bewusst von der `assessmentRequired`-
+ * Bedingung entkoppelt, da ein Abschlusstest das formative Lernkontroll-Gate
+ * ersetzt statt es zu ergänzen (siehe `decideCourseCompletion`).
  */
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
@@ -46,6 +53,10 @@ export async function syncCourseCompletion(
   let totalLessons = 0;
   let completedLessons = 0;
   const quizLessons: QuizLessonRef[] = [];
+  // Abschlusstest-Lesson des Kurses (falls vorhanden) — erste gefundene
+  // final_exam-Lesson gewinnt, robust falls mehrere markiert waeren.
+  let finalExam: { sectionSlug: string; lessonSlug: string; passingScore: number } | null =
+    null;
   for (const section of course.sections) {
     for (const lesson of section.lessons) {
       totalLessons += 1;
@@ -56,6 +67,13 @@ export async function syncCourseCompletion(
           sectionSlug: section.slug,
           lessonSlug: lesson.slug,
         });
+      }
+      if (!finalExam && lesson.frontmatter.final_exam) {
+        finalExam = {
+          sectionSlug: section.slug,
+          lessonSlug: lesson.slug,
+          passingScore: lesson.frontmatter.passing_score ?? 0.7,
+        };
       }
     }
   }
@@ -91,6 +109,27 @@ export async function syncCourseCompletion(
     }));
   }
 
+  // Abschlusstest-Bestehens-Status IMMER laden, wenn ein final_exam
+  // existiert — unabhaengig von assessmentRequired (das Abschlusstest-Gate
+  // ersetzt das formative Gate, siehe decideCourseCompletion).
+  let finalExamPassed = false;
+  if (finalExam) {
+    const [row] = await db
+      .select({ id: quizAttempts.id })
+      .from(quizAttempts)
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.courseSlug, courseSlug),
+          eq(quizAttempts.sectionSlug, finalExam.sectionSlug),
+          eq(quizAttempts.lessonSlug, finalExam.lessonSlug),
+          eq(quizAttempts.passed, true),
+        ),
+      )
+      .limit(1);
+    finalExamPassed = Boolean(row);
+  }
+
   const confirmationRequired = Boolean(course.frontmatter.confirmation_required);
 
   const decision = decideCourseCompletion({
@@ -102,6 +141,8 @@ export async function syncCourseCompletion(
     drivers: course.frontmatter.compliance_drivers ?? [],
     estimatedMinutes: course.frontmatter.estimated_minutes ?? null,
     confirmationRequired,
+    finalExam,
+    finalExamPassed,
     confirmed: opts?.confirmed ?? false,
   });
 

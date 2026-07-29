@@ -1,7 +1,11 @@
 # ADR 0009 — Frage-Domäne: wiederverwendbare, im Bundle autor-te Frage-Blöcke (DB als Index, per Referenz eingebettet)
 
-- **Status:** **Entschieden / implementierbar (2026-07-29 mit Yves)** — Richtung
-  + alle offenen Punkte geklärt; Umsetzung in Slices folgt (noch KEIN Code).
+- **Status:** **Umgesetzt (D1–D3, 2026-07-29)** — Frage-Domäne gebaut +
+  e2e-verifiziert: `questions`-Index + Bundle-Frage-Blöcke (D1), Referenz-Render
+  + 7c-Pool-Grading gegen den Index (D2), Autoren-Doku + Pool-Validierung (D3).
+  Koexistenz mit inline-Quizzen bleibt. **Offen/spätere Phase:** Options-Shuffle
+  (Mikro-Aufsatz auf D2), Spaced-Repetition-Scheduler (nutzt die Domäne),
+  Migration bestehender inline-Prüfungen auf Pools.
   Ausgelöst durch die 7c-Vorbereitung (ADR 0005) + den Bedarf für
   Repetitionsfragen (Spaced Repetition, ROADMAP).
 - **Datum:** 2026-07-29

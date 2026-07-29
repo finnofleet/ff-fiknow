@@ -36,6 +36,7 @@ import { clearStaging, getStagedAsset, sha256Hex } from "./asset-staging";
 import { deleteBundle, getBundle, putBundle } from "./bundle-storage";
 import { parseBundleFromFiles } from "./bundle-parser";
 import { VersionConflictError } from "./errors";
+import { replaceQuestions } from "./question-index";
 import type {
   Frontmatter,
   ImportOptions,
@@ -182,6 +183,11 @@ export async function importBundle(
     for (const lesson of section.lessons) {
       await assertSafeMdx(lesson.body, `${section.slug}/${lesson.slug}.mdx`);
     }
+  }
+  // Frage-Block-Bodies (ADR 0009, D1) laufen durch dieselbe Härtung wie
+  // Lesson-Bodies — auch sie sind MDX-Daten, kein Code.
+  for (const question of bundle.questions) {
+    await assertSafeMdx(question.body, `questions/${question.slug}.mdx`);
   }
 
   const summary: ImportSummary = {
@@ -461,6 +467,21 @@ export async function importBundle(
         (err as Error).message,
       );
     }
+  }
+
+  // Frage-Index-Sync (ADR 0009, Phase D1) — NACH dem Commit, best-effort wie
+  // der RAG-Index: der Content ist live, ein Fehler beim Frage-Index darf den
+  // Upload nicht nachträglich "scheitern" lassen. Der Index ist in D1 noch
+  // DORMANT (nichts liest ihn), ein verpasster Sync ist also folgenlos bis
+  // zum nächsten erfolgreichen Upload.
+  try {
+    await replaceQuestions(bundle.courseSlug, newVersion, bundle.questions);
+  } catch (err) {
+    console.error(
+      `[import] Frage-Index für ${bundle.courseSlug} fehlgeschlagen ` +
+        `(Upload bleibt erfolgreich):`,
+      (err as Error).message,
+    );
   }
 
   // Audit-Log — GENAU HIER, weil sowohl importFromExtractedBundle (ZIP-Upload)

@@ -588,6 +588,49 @@ export const roleAssignments = pgTable(
  * Datenklasse + Zeit-Purge-Verdrahtung ist DSB-offen (siehe
  * lib/privacy/data-classes.ts).
  */
+/**
+ * Generierter Index über die Frage-Blöcke des Bundles (ADR 0009), versions-
+ * gekeyt; kein personenbezogener Datensatz (analog lesson_chunks — NICHT in
+ * data-classes.ts). Wird beim Upload ganzer-Kurs-ersetzt.
+ *
+ * Fragen sind (ADR 0009) first-class Bundle-Blöcke unter `questions/<slug>.mdx`
+ * (autor-vergebener, stabiler `question_slug` — analog Lesson-Slugs, NICHT die
+ * generierte `id`-Spalte). `options` speichert je Option Label (MDX-Fragment,
+ * gehärtet wie inline-Options) + `correct`-Flag als jsonb, weil die Options
+ * KEINE eigene relationale Identität brauchen (sie leben nur zusammen mit der
+ * Frage, keine eigenständige Referenz von außen).
+ *
+ * `.enableRLS()` OHNE Policies = wie `lesson_chunks`: für Browser-Rollen
+ * unsichtbar, nur die serverseitige `db`-Connection (Owner, RLS-Bypass) liest/
+ * schreibt.
+ */
+export const questions = pgTable(
+  "questions",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    courseSlug: text("course_slug").notNull(),
+    version: text("version").notNull(),
+    questionSlug: text("question_slug").notNull(), // Autor-Slug (stabiler Ref-Key)
+    prompt: text("prompt").notNull(),
+    type: text("type").notNull(), // "single" | "multi"
+    options: jsonb("options").notNull(), // [{ label: string(MDX), correct: boolean }]
+    explanation: text("explanation"),
+    tags: text("tags").array(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("questions_course_version_slug_idx").on(
+      t.courseSlug,
+      t.version,
+      t.questionSlug,
+    ),
+    index("questions_course_version_idx").on(t.courseSlug, t.version),
+    // Wie lesson_chunks: enableRLS OHNE Policies — nur Server-Connection liest/schreibt.
+  ],
+).enableRLS();
+
 export const auditLog = pgTable(
   "audit_log",
   {

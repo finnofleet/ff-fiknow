@@ -15,6 +15,7 @@
  *     häufige Autorenfall („3 Syntaxfehler über mehrere Lessons verteilt").
  */
 import { assertSafeMdx, MdxValidationError } from "../mdx/validate";
+import { parseQuestionBlock } from "../quiz/question-parse";
 import { parseBundleFromFiles } from "./bundle-parser";
 
 export type BundleValidationFinding = {
@@ -56,6 +57,35 @@ export async function validateBundleFiles(
         lesson.body,
         `${section.slug}/${lesson.slug}.mdx`,
       );
+    }
+  }
+
+  // 3. Frage-Blöcke (ADR 0009, Phase D1) — dieselbe MDX-Härtung wie Lesson-
+  // Bodies, plus zwei domänenspezifische Prüfungen: das Format-Vertrag
+  // (genau ein <Question> pro Datei) und Slug-Eindeutigkeit je Kurs (der
+  // Frage-Slug ist der stabile Ref-Key im Index — ein Duplikat würde beim
+  // Insert den Unique-Index verletzen bzw. eine Frage im Index verdecken).
+  const seenSlugs = new Map<string, string>(); // slug -> erste Datei, die ihn nutzt
+  for (const question of bundle.questions) {
+    const file = `questions/${question.slug}.mdx`;
+    await collectMdx(findings, question.body, file);
+
+    const parsed = parseQuestionBlock(question.body);
+    if (!parsed) {
+      findings.push({
+        file,
+        message: `Frage-Block: kein <Question>-Element gefunden (erwartet genau eins).`,
+      });
+    }
+
+    const firstFile = seenSlugs.get(question.slug);
+    if (firstFile) {
+      findings.push({
+        file,
+        message: `Frage-Block: Slug "${question.slug}" ist nicht eindeutig (bereits in ${firstFile} verwendet).`,
+      });
+    } else {
+      seenSlugs.set(question.slug, file);
     }
   }
 

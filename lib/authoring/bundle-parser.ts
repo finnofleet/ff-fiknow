@@ -19,6 +19,7 @@ import type {
   ParsedAsset,
   ParsedBundle,
   ParsedLesson,
+  ParsedQuestion,
   ParsedSection,
 } from "./types";
 
@@ -107,6 +108,7 @@ export function parseBundleFromFiles(
   // Sections nach Ordnern gruppieren
   const sectionMap = new Map<string, Map<string, Buffer>>();
   const assetEntries: Array<{ key: string; buf: Buffer }> = [];
+  const questionEntries: Array<{ key: string; buf: Buffer }> = [];
 
   for (const [key, buf] of files.entries()) {
     if (key === "course.mdx") continue;
@@ -114,6 +116,19 @@ export function parseBundleFromFiles(
       const basename = path.posix.basename(key);
       if (isIgnoredAssetFile(basename)) continue;
       assetEntries.push({ key, buf });
+      continue;
+    }
+    if (key.startsWith("questions/")) {
+      // Top-level `questions/`-Ordner (ADR 0009) — KEINE Section: hat kein
+      // `NN-`-Präfix und keine `section.mdx`/Lesson-Struktur, sondern eine
+      // Datei pro Frage. Muss VOR der Section-Erkennung abgezweigt werden,
+      // sonst würde der Ordner unten (kein NN-Präfix) nur still übersprungen.
+      const basename = path.posix.basename(key);
+      if (isIgnoredAssetFile(basename)) continue;
+      const parts = key.split("/");
+      if (parts.length !== 2) continue; // Phase 1: keine Unterordner unter questions/
+      if (!basename.endsWith(".mdx")) continue;
+      questionEntries.push({ key, buf });
       continue;
     }
     const parts = key.split("/");
@@ -164,5 +179,21 @@ export function parseBundleFromFiles(
     mimeType: inferMimeType(key),
   }));
 
-  return { courseSlug, course, sections, assets };
+  const questions: ParsedQuestion[] = questionEntries
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .map(({ key, buf }) => {
+      const { frontmatter, body } = parseFrontmatter(buf.toString("utf8"));
+      const fileBase = path.posix.basename(key).replace(/\.mdx$/, "");
+      const slug =
+        typeof frontmatter.id === "string" && frontmatter.id.trim().length > 0
+          ? frontmatter.id.trim()
+          : fileBase;
+      assertValidSlug(slug, `Frage-Block "${key}"`);
+      const tags = Array.isArray(frontmatter.tags)
+        ? frontmatter.tags.filter((t): t is string => typeof t === "string")
+        : [];
+      return { slug, tags, body };
+    });
+
+  return { courseSlug, course, sections, assets, questions };
 }

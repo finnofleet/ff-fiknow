@@ -37,12 +37,28 @@ export type ParsedAsset = {
   mimeType: string;
 };
 
+/**
+ * Ein Frage-Block (ADR 0009, Phase D1) — eine Datei unter `questions/<slug>.mdx`
+ * im Bundle-Root. `questions/` ist KEINE Section (kein `NN-`-Präfix, keine
+ * Lessons) — siehe bundle-parser.ts für die Abgrenzung.
+ */
+export type ParsedQuestion = {
+  /** Autor-Slug aus Frontmatter `id`; fehlt er, aus dem Dateinamen abgeleitet. */
+  slug: string;
+  /** Frontmatter `tags` (Liste), leer falls nicht gesetzt. */
+  tags: string[];
+  /** Roher MDX-Body nach Frontmatter — erwartet genau ein <Question>-Element. */
+  body: string;
+};
+
 export type ParsedBundle = {
   /** Course-Slug, abgeleitet aus dem Ordner-Namen des Bundle-Roots. */
   courseSlug: string;
   course: { frontmatter: Frontmatter; body: string };
   sections: ParsedSection[];
   assets: ParsedAsset[];
+  /** Frage-Blöcke aus dem top-level `questions/`-Ordner (ADR 0009, D1). */
+  questions: ParsedQuestion[];
 };
 
 export type ImportOptions = {

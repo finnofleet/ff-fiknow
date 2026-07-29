@@ -1,7 +1,7 @@
 # ADR 0009 — Frage-Domäne: wiederverwendbare, im Bundle autor-te Frage-Blöcke (DB als Index, per Referenz eingebettet)
 
-- **Status:** **Richtung entschieden (2026-07-29 mit Yves)** — ein Detail offen
-  (Pool-Zugehörigkeit: Tag vs. Ort), danach implementierbar. Noch KEIN Code.
+- **Status:** **Entschieden / implementierbar (2026-07-29 mit Yves)** — Richtung
+  + alle offenen Punkte geklärt; Umsetzung in Slices folgt (noch KEIN Code).
   Ausgelöst durch die 7c-Vorbereitung (ADR 0005) + den Bedarf für
   Repetitionsfragen (Spaced Repetition, ROADMAP).
 - **Datum:** 2026-07-29
@@ -136,12 +136,17 @@ nicht.
    `questions/`-Ordner.** Reuse der bestehenden Härtung + rich Optionen. (Die
    bisherige inline-Struktur ist unkritisch, weil Preview/Render ohnehin
    server-seitig passiert.)
-2. **Einbettung: Pool per Prüfungs-Frontmatter + Runtime-Ziehung.** Die
-   Prüfungs-Lektion deklariert im Frontmatter ihren Pool + `questions_per_attempt: N`;
-   pro Versuch zieht der Server N daraus per Seed (Ziehung = Runtime, NICHT im
-   Frontmatter). **Offenes Detail (siehe unten):** wie die Pool-Zugehörigkeit
-   benannt wird (Tag/Thema vs. Ort) — da IDs maschinell (Write-back) vergeben
-   werden, ist eine handgepflegte ID-Liste unhandlich.
+2. **Einbettung: Pool per EXPLIZITER Slug-Liste im Prüfungs-Frontmatter +
+   Runtime-Ziehung.** Jeder Frage-Block trägt einen **autor-vergebenen `id`/Slug**
+   (stabil, menschenlesbar — wie ein Lesson-Slug; NICHT die generierte DB-ID).
+   Die Prüfungs-Lektion listet ihren Pool explizit:
+   `question_pool: [slug-a, slug-b, …]` + `questions_per_attempt: N`. Pro Versuch
+   zieht der Server N daraus per Seed (Ziehung = Runtime). Referenz per Slug ist
+   konsistent mit der Slug-Referenz-Konvention im Repo (Lernpfade → Kurse per
+   Slug, ADR 0001/0005) und uploaded-together (kein Henne-Ei mit generierten IDs).
+   **`tags`** bleiben orthogonale Metadaten am Frage-Block — primär für Spaced
+   Repetition (Fragen nach Thema), optional als Kurzform für große Pools
+   (`question_pool_tags: [x]`), nicht der Primärmechanismus.
 3. **Migration: Koexistenz** — bestehende inline-Quizze bleiben les-/renderbar;
    ABER das **Authoring-Plugin/MCP kuratiert Neues nur noch als Pool** (kein
    neues inline-Quiz-Autoring über den Plugin-/MCP-Pfad). Bestand wird bei
@@ -152,13 +157,12 @@ nicht.
 5. **`questions` als Drizzle-Index, KEINE Payload-Collection** — bestätigt (kein
    zweiter Schreibpfad, ADR-0001-konform).
 
-## Einzig offene Frage (vor Implementierung)
+## Aufgelöst (2026-07-29)
 
-**Pool-Zugehörigkeit (Entscheidung 2):** per **(i) Tag/Thema** (alle Fragen mit
-Tag X = Pool; deckt sich mit den Tags, die Spaced Repetition ohnehin braucht)
-vs. **(ii) Ort** (alle Blöcke einer questions-Datei/eines Ordners = Pool).
-Tendenz: **(i) Tags** — eine Achse, die 7c-Pool UND Spaced Repetition zugleich
-bedient.
+Die zuvor offene „Pool-Zugehörigkeit"-Frage ist mit Entscheidung 2 geklärt:
+**explizite Slug-Liste** im Prüfungs-Frontmatter (autor-vergebene Frage-Slugs),
+`tags` nur als komplementäre Metadaten. Damit ist die Richtung vollständig
+festgelegt und implementierbar (Slicing folgt vor dem Bau).
 
 ## Bezug zu 7c (aus der Diskussion)
 

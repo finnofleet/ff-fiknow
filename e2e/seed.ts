@@ -24,6 +24,7 @@ import {
   enrollments,
   lessonProgress,
   profiles,
+  questions,
   roleAssignments,
   roleCapabilities,
   roles,
@@ -72,6 +73,20 @@ const COURSE_TITLE = "Datenschutz-Grundlagen";
 const SECTION_SLUG = "grundlagen";
 const LESSON_SLUG = "was-ist-datenschutz";
 const QUIZ_LESSON_SLUG = "quiz-bausteine";
+
+// --- ADR 0009 D2-ii-b — Fragen-Pool-Abschlusstest-e2e -----------------------
+// Eigener, isolierter Kurs (NICHT datenschutz-grundlagen anfassen — sonst
+// brechen quiz.spec.ts/final-exam.spec.ts, die auf dessen fixen Inhalt zaehlen).
+// mandatory:false, damit dieser Kurs NICHT als Pflichtkurs auftaucht und keine
+// bestehenden Compliance-/Aggregat-/Rechte-Zaehl-Asserts kippt.
+const POOL_COURSE_SLUG = "pool-demo";
+const POOL_COURSE_TITLE = "Pool-Demo";
+const POOL_COURSE_VERSION = "v1";
+const POOL_SECTION_SLUG = "pruefung";
+const POOL_LESSON_SLUG = "final";
+const POOL_QUESTION_SLUGS = ["pq1", "pq2", "pq3"];
+const POOL_QUESTIONS_PER_ATTEMPT = 2;
+const POOL_PASSING_SCORE = 0.5;
 
 /**
  * Quiz-Lesson-Body für den RSC-Grading-Regressionstest (ADR 0007-Umfeld, Bug
@@ -265,6 +280,115 @@ async function seedCourseContent(payload: any): Promise<void> {
   log(`Training-requirement created: id=${requirement.id}`);
 }
 
+/**
+ * ADR 0009 D2-ii-b — Fragen-Pool-Abschlusstest-e2e: eigener, isolierter Kurs.
+ * Legt Course/Section/Lesson ueber die Payload-Local-API an (analog
+ * `seedCourseContent`) UND schreibt drei Fragen direkt in den `questions`-
+ * Index (Drizzle) — das ist der Pfad, den D1/D2 fuer Fragen-Pool-Praefungen
+ * vorsieht (Fragen leben strukturiert im Index, NICHT im Lesson-Body).
+ *
+ * Jede Frage hat genau EINE korrekte Option, deren Label eindeutig den Text
+ * "KORREKT" enthaelt (die falschen "FALSCH-a"/"FALSCH-b") — so kann die e2e
+ * unabhaengig davon, WELCHE 2 von 3 Fragen gezogen werden, je gerenderter
+ * Frage die richtige Option per Text finden und klicken.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedPoolExamCourse(payload: any): Promise<void> {
+  log(`Creating pool-exam course "${POOL_COURSE_TITLE}" (${POOL_COURSE_SLUG}) …`);
+  const course = await payload.create({
+    collection: "courses",
+    data: {
+      title: POOL_COURSE_TITLE,
+      slug: POOL_COURSE_SLUG,
+      // Version EXPLIZIT gesetzt (sonst readOnly/server-managed nur beim
+      // Bundle-Import) — die questions-Index-Zeilen muessen dieselbe Version
+      // tragen, damit getPoolQuestions() sie findet (courseSlug + version).
+      version: POOL_COURSE_VERSION,
+      mandatory: false,
+      _status: "published",
+    },
+    overrideAccess: true,
+  });
+  log(`Pool-exam course created: id=${course.id}`);
+
+  const section = await payload.create({
+    collection: "sections",
+    data: {
+      title: "Pruefung",
+      slug: POOL_SECTION_SLUG,
+      course: course.id,
+      orderIndex: 1,
+      _status: "published",
+    },
+    overrideAccess: true,
+  });
+  log(`Pool-exam section created: id=${section.id}`);
+
+  const lesson = await payload.create({
+    collection: "lessons",
+    data: {
+      title: "Abschlusstest",
+      slug: POOL_LESSON_SLUG,
+      section: section.id,
+      orderIndex: 1,
+      type: "quiz",
+      _status: "published",
+      finalExam: true,
+      questionPool: POOL_QUESTION_SLUGS,
+      questionsPerAttempt: POOL_QUESTIONS_PER_ATTEMPT,
+      passingScore: POOL_PASSING_SCORE,
+      // Body ohne inline-Fragen — die kommen aus dem questions-Index (Pool).
+      body: "# Abschlusstest\n",
+    },
+    overrideAccess: true,
+  });
+  log(`Pool-exam lesson created: id=${lesson.id}`);
+
+  log("Seeding questions-index rows (pq1/pq2/pq3) …");
+  await db
+    .insert(questions)
+    .values([
+      {
+        courseSlug: POOL_COURSE_SLUG,
+        version: POOL_COURSE_VERSION,
+        questionSlug: "pq1",
+        prompt: "Pool-Frage 1",
+        type: "single",
+        options: [
+          { label: "FALSCH-a", correct: false },
+          { label: "KORREKT", correct: true },
+          { label: "FALSCH-b", correct: false },
+        ],
+      },
+      {
+        courseSlug: POOL_COURSE_SLUG,
+        version: POOL_COURSE_VERSION,
+        questionSlug: "pq2",
+        prompt: "Pool-Frage 2",
+        type: "single",
+        options: [
+          { label: "FALSCH-a", correct: false },
+          { label: "FALSCH-b", correct: false },
+          { label: "KORREKT", correct: true },
+        ],
+      },
+      {
+        courseSlug: POOL_COURSE_SLUG,
+        version: POOL_COURSE_VERSION,
+        questionSlug: "pq3",
+        prompt: "Pool-Frage 3",
+        type: "single",
+        options: [
+          { label: "KORREKT", correct: true },
+          { label: "FALSCH-a", correct: false },
+          { label: "FALSCH-b", correct: false },
+        ],
+      },
+    ])
+    .onConflictDoNothing();
+  log("Pool-exam questions-index seeded.");
+}
+
 async function seedProgressStates(): Promise<void> {
   log("Reconciling assignments for all learners …");
   await reconcileAssignments();
@@ -419,6 +543,7 @@ async function main(): Promise<void> {
 
   const payload = await getPayload({ config });
   await seedCourseContent(payload);
+  await seedPoolExamCourse(payload);
 
   await seedRolesAndAssignments();
 

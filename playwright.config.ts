@@ -42,7 +42,7 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         storageState: path.resolve(__dirname, "e2e/.auth/learner.json"),
       },
-      testMatch: /(meine-pflichtschulungen|quiz|final-exam)\.spec\.ts/,
+      testMatch: /(meine-pflichtschulungen|quiz|final-exam|pool-exam)\.spec\.ts/,
     },
     {
       name: "curator",

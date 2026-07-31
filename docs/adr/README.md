@@ -21,3 +21,6 @@ Architecture Decision Records (ADRs) halten bedeutsame, schwer umkehrbare Archit
 | 0005 | [Pflichtkurse & Compliance-Nachweis](0005-pflichtkurse-und-compliance-nachweis.md) | Accepted | 2026-07-03 |
 | 0006 | [Datenschutz: Aufbewahrung & Löschung](0006-datenschutz-aufbewahrung-und-loeschung.md) | Accepted (teilw. umgesetzt) | 2026-07-24 |
 | 0007 | [Mandanten-Scoping & Auswerte-Ebenen für Compliance-Nachweise](0007-mandanten-scoping-und-auswerte-ebenen.md) | Proposed | 2026-07-26 |
+| 0008 | [RLS-Härtung: DB-seitige Durchsetzung als Defense-in-Depth](0008-rls-haertung.md) | Entschieden (zurückgestellt) | 2026-07-28 |
+| 0009 | [Frage-Domäne: wiederverwendbare Frage-Blöcke](0009-frage-domaene.md) | Umgesetzt (D1–D3) | 2026-07-29 |
+| 0010 | [Kurs-Sichtbarkeit nach Land/BU](0010-kurs-sichtbarkeit-land-bu.md) | Proposed | 2026-07-31 |

@@ -41,3 +41,18 @@ Schreibarbeit, Haiku für simple Lookups).
 
 Defaultmäßig keine Bestätigung von Yves nötig vor Subagent-Spawn — er hat
 diesen Modus explizit gewünscht.
+
+## Release-Prozess: Semver + Changelog gehören zusammen
+
+Jedes Release wird semantisch versioniert, und der **Changelog ist fester
+Bestandteil davon** — nie das eine ohne das andere. Bei jedem Version-Bump:
+
+1. `version` in `package.json` anheben (die Anzeige in `/version` +
+   `/manage`-Footer liest genau dieses Feld; siehe `lib/app-version.ts`).
+2. `CHANGELOG.md` nachführen — die `[Unreleased]`-Punkte in einen neuen,
+   datierten `[X.Y.Z]`-Abschnitt verschieben und die Compare-Links unten
+   aktualisieren.
+3. Annotierten Git-Tag `vX.Y.Z` setzen.
+
+Pre-1.0 (Pilotphase): neue Features → Minor-Bump, Fixes/Kleinkram →
+Patch-Bump. Die Konvention steht auch im Kopf von `CHANGELOG.md`.

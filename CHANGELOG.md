@@ -18,6 +18,22 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.3.0] – 2026-08-04
+
+### Hinzugefügt
+- **Land-Scope aus dem OIDC-Claim** (ADR 0007): Beim Login speist der
+  `country`-Claim (Keycloak = Source of Truth) `profiles.land` — überschreibend
+  wie die Rolle, aber wie der Anzeigename nur bei vorhandenem Wert (ein
+  fehlender Claim nullt kein bestehendes Land). Damit ist die Land-Zuordnung
+  nicht mehr nur per CLI pflegbar.
+- **Kontrolliertes Land-Vokabular** `DE`/`CH`/`LUX` als Single Source of Truth
+  (`lib/land-tokens.ts`): das Authoring-Feld `landScope` ist jetzt ein Select
+  (per Postgres-Enum erzwungen statt Freitext), das Rollen-Zuweisungs-CLI
+  (`set-role-assignment.ts`) validiert `--land` gegen dasselbe Vokabular, und
+  ein unbekanntes `country`-Token wird beim Login geloggt. Verhindert das
+  stille „unsichtbare Kurs"-Problem durch Token-Drift zwischen Claim und
+  Zielfilter.
+
 ## [0.2.0] – 2026-07-31
 
 Erste sprechende Version seit der un-versionierten `0.1.0`-Basis. Ab hier
@@ -67,5 +83,6 @@ inkl. MDX-Bundle-Authoring, KI-Tutor + RAG, Katalog/Kurse, Lernpfade,
 Pflichtkurse & Compliance-Nachweis, OIDC/Keycloak-Auth, DSG-Retention. Details
 siehe `docs/ROADMAP.md` und `docs/adr/`.
 
-[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/finnofleet/ff-fiknow/releases/tag/v0.2.0

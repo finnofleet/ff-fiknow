@@ -20,6 +20,7 @@ import { and, eq } from "drizzle-orm";
 
 import { recordAudit } from "@/lib/audit/log";
 import { db, schema } from "@/lib/db/client";
+import { isLandToken } from "@/lib/land-tokens";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -105,6 +106,16 @@ async function main(): Promise<void> {
 
   const scopeLand = land === undefined ? null : splitList(land);
   const scopeBu = bu === undefined ? null : splitList(bu);
+
+  if (scopeLand !== null) {
+    const invalid = scopeLand.filter((v) => !isLandToken(v));
+    if (invalid.length > 0) {
+      fail(
+        `Ungültige(r) Land-Wert(e) in --land: ${invalid.join(", ")}. ` +
+          "Erlaubt sind ausschließlich: DE, CH, LUX.",
+      );
+    }
+  }
 
   const existing = await db
     .select({

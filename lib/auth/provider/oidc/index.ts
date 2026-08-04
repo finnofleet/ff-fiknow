@@ -21,6 +21,7 @@ import type { AuthStrategy } from "payload";
 import { canSeeAdmin, normalizeRole, type Role } from "@/lib/auth/roles";
 import { db } from "@/lib/db/client";
 import { profiles } from "@/lib/db/schema";
+import { isLandToken } from "@/lib/land-tokens";
 
 import type { AuthProvider, ServerIdentity } from "../types";
 import type { OidcClaims } from "./client";
@@ -59,22 +60,43 @@ export function resolveRole(claims: OidcClaims): Role {
   return mapRole(claims.raw, cfg.clientId, cfg.roleMap);
 }
 
+/** Erstes nicht-leere String-Element aus dem `country`-Claim (z. B. `["DE"]`). */
+function firstCountry(raw: Record<string, unknown>): string | undefined {
+  const country = raw.country;
+  if (!Array.isArray(country)) return undefined;
+  for (const entry of country) {
+    if (typeof entry === "string" && entry.trim()) return entry.trim();
+  }
+  return undefined;
+}
+
 /**
  * Schreibt das profiles-Profil beim Login (JIT-Provisioning, idempotent) —
  * es gibt keinen DB-Trigger, der das für uns tut. Rolle wird IMMER aus
  * Keycloak überschrieben (SoT); display_name nur, wenn der IdP einen Wert
- * liefert (sonst bestehenden Wert nicht nullen).
+ * liefert (sonst bestehenden Wert nicht nullen). `land` kommt aus dem
+ * `country`-Claim (ebenfalls SoT), aber genau wie display_name nur, wenn der
+ * IdP einen Wert liefert (ein fehlender Claim nullt kein bestehendes land).
  */
 export async function provisionProfile(
   claims: OidcClaims,
   role: Role,
 ): Promise<void> {
-  const set: { role: Role; displayName?: string } = { role };
+  const land = firstCountry(claims.raw);
+  if (land && !isLandToken(land)) {
+    console.warn(
+      `[oidc-claims] country-Claim "${land}" ist kein bekanntes Land-Token ` +
+        "(erwartet: DE/CH/LUX) — wird trotzdem gespeichert.",
+    );
+  }
+
+  const set: { role: Role; displayName?: string; land?: string } = { role };
   if (claims.name) set.displayName = claims.name;
+  if (land) set.land = land;
 
   await db
     .insert(profiles)
-    .values({ userId: claims.sub, displayName: claims.name, role })
+    .values({ userId: claims.sub, displayName: claims.name, role, land })
     .onConflictDoUpdate({ target: profiles.userId, set });
 }
 

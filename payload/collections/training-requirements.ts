@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload";
 
+import { LAND_OPTIONS } from "@/lib/land-tokens";
+
 import { editorsOnly } from "../access/by-role";
 
 /**
@@ -127,13 +129,15 @@ export const TrainingRequirements: CollectionConfig = {
               "Optional. Leer = alle Länder. Grenzt die Zielgruppe " +
               "zusätzlich (UND) auf diese Land-Werte ein; wirkt zusammen " +
               "mit dem Rolle/User-Targeting. Strikt: Personen ohne " +
-              "gesetztes Land werden bei gesetztem Filter NICHT erfasst.",
+              "gesetztes Land werden bei gesetztem Filter NICHT erfasst. " +
+              "Die Werte sind fest vorgegeben (DE/CH/LUX).",
           },
           fields: [
             {
               name: "land",
-              type: "text",
+              type: "select",
               required: true,
+              options: LAND_OPTIONS,
             },
           ],
         },

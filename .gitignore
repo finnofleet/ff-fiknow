@@ -43,6 +43,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# lokale Testartefakte (Entwurfs-Policies, Seed-Bundles) — nie committen
+/local-test/
+
 # vercel
 .vercel
 

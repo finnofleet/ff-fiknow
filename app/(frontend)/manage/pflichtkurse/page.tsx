@@ -143,23 +143,31 @@ export default async function CompliancePage({
       {fullOverview.length > 0 && (
         <nav className={styles.filterBar} aria-label="Nach Compliance-Treiber filtern">
           {driverOptions.length > 0 && (
-            <>
-              <Link
-                href="/manage/pflichtkurse"
-                className={`${styles.filterLink} ${!driver ? styles.filterLinkActive : ""}`}
+            <form
+              method="get"
+              action="/manage/pflichtkurse"
+              className={styles.filterGroup}
+            >
+              <label htmlFor="driver-filter" className={styles.filterLabel}>
+                Treiber
+              </label>
+              <select
+                id="driver-filter"
+                name="driver"
+                defaultValue={driver ?? ""}
+                className={styles.select}
               >
-                Alle
-              </Link>
-              {driverOptions.map((value) => (
-                <Link
-                  key={value}
-                  href={`/manage/pflichtkurse?driver=${encodeURIComponent(value)}`}
-                  className={`${styles.filterLink} ${driver === value ? styles.filterLinkActive : ""}`}
-                >
-                  {driverLabel(value)}
-                </Link>
-              ))}
-            </>
+                <option value="">Alle</option>
+                {driverOptions.map((value) => (
+                  <option key={value} value={value}>
+                    {driverLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className="btn btn-ghost">
+                Filtern
+              </button>
+            </form>
           )}
           <a href={exportHref} className={styles.exportLink}>
             <Download size={14} /> CSV exportieren

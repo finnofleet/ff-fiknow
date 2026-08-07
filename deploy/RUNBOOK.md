@@ -597,6 +597,86 @@ liefert wieder gegroundete Antworten.
 
 ---
 
+## 7d. Update auf v0.3.0 (Land-Enum-Migration + Rollen-Mapping)
+
+Dieses Release speist `profiles.land` beim Login aus dem OIDC-`country`-Claim
+(Keycloak = Source of Truth) und erzwingt ein festes Land-Vokabular
+DE/CH/LUX. Zwei Betreiber-Aktionen: eine **Pflicht-Vorabprüfung vor dem
+Deploy** (die Boot-Migration macht einen nicht rückwärts-fähigen Enum-Cast)
+und die Anpassung von `OIDC_ROLE_MAP` auf die echten Realm-Namen.
+
+**Schritt 0 — Pflicht-Vorabprüfung VOR dem Deploy (kritisch).**
+Das Auto-Migrate legt den Enum-Cast beim Pod-Boot an (Abschnitt 6). Enthält
+die Authoring-Tabelle einen Land-Wert außerhalb von {DE, CH, LUX}, schlägt
+der `USING land::enum`-Cast fehl → der neue Pod läuft in einen
+**Crash-Loop**. Deshalb ZUERST prüfen:
+```bash
+psql "$DATABASE_URL" -c \
+  "select distinct land from payload.training_requirements_target_land_scope;"
+```
+Erwartet: nur `DE`, `CH`, `LUX` — oder leer. Jeder abweichende Wert (z. B.
+`LU`, `de`, `Deutschland`, Leerzeichen) MUSS vor dem Deploy korrigiert
+werden, z. B.:
+```sql
+-- an die real gefundenen Werte anpassen:
+update payload.training_requirements_target_land_scope set land = 'LUX' where land = 'LU';
+```
+Erst weiter zu Schritt 1, wenn die DISTINCT-Abfrage ausschließlich erlaubte
+Werte liefert.
+
+> Betrifft NUR das Authoring-Feld `landScope`. `profiles.land` (Freitext,
+> claim-gespeist) und `role_assignments.scope_land` (per CLI validiert)
+> werden NICHT ge-enum-castet und brauchen keine Vorabprüfung.
+
+**Schritt 1 — Image deployen (Pflicht).**
+Neues Image via `helm upgrade --install …` ausrollen (Befehl siehe
+Abschnitt 5). Beim Boot appliziert das Auto-Migrate die
+Payload-Migration `20260804_095928_add_land_scope_enum` (Enum-Typ anlegen
++ Spalte casten). Erwartet im Log: `[auto-migrate] … fertig in <n> ms`
+(Abschnitt 6). Klemmt die Boot-Migration, ist `SKIP_MIGRATIONS` der
+dokumentierte Notausstieg (Abschnitt 7 / 7a).
+
+Verifikation:
+```bash
+kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow   # alle Ready
+curl -fsS https://app.fiknow.example.com/api/health
+psql "$DATABASE_URL" -c "\dT+ payload.enum_training_requirements_target_land_scope_land"   # Enum existiert mit DE/CH/LUX
+```
+
+**Schritt 2 — OIDC_ROLE_MAP auf die echten Realm-Namen setzen (Pflicht für
+Rollen).**
+Der reale Token nutzt die Gruppen `/Administration`, `/Kuratoren`,
+`/Lernende` (NICHT die Beispiel-Namen `fiknow-curator`/`fiknow-admin`). In
+der eigenen Prod-Werte-Datei:
+```yaml
+config:
+  OIDC_ROLE_MAP: "Administration:admin,Kuratoren:curator"
+```
+`Lernende` braucht keinen Eintrag (Default learner); die OpCo-Gruppe
+`FINNOFLEET BMI GmbH` wird bewusst nicht gemappt. Keys sind
+case-insensitiv und matchen den vollen Gruppenpfad ODER das letzte
+Segment. Danach `helm upgrade`.
+> ⚠️ `values-ibm-production.yaml` ist gitignored — der Wert muss in EURER
+> eigenen Werte-Datei gesetzt werden (Vorlage:
+> `values-ibm-production.example.yaml`).
+
+Verifikation: als Kurator/Admin einloggen und Rolle prüfen; optional die
+claim-gespeiste Land-Zuordnung kontrollieren:
+```sql
+select land, count(*) from public.profiles group by land;
+```
+
+**Rollback.**
+- Die Payload-Migration ist vorwärts-only (Auto-Migrate fährt kein Down).
+  Bei einem Image-Rollback (`helm rollback <release> <rev>`) bleiben
+  Enum-Typ und Spaltentyp bestehen; das ältere Image liest die Land-Werte
+  weiterhin korrekt (Enum serialisiert zu seinem Label-String) — kein
+  Datenverlust. Ein echtes Zurück auf `varchar` erfordert das manuelle
+  Ausführen des `down`-SQL aus der Migration.
+- `OIDC_ROLE_MAP`: alten Wert wiederherstellen + `helm upgrade`.
+
+---
+
 ## 8. OpenShift / ROKS-Hinweis
 
 Bei der `restricted`-SCC vergibt OpenShift eine zufällige UID und ignoriert

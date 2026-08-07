@@ -21,6 +21,14 @@ import type { Role } from "@/lib/auth/roles";
 
 export const SESSION_COOKIE = "ep_session";
 export const TX_COOKIE = "ep_oidc_tx";
+/**
+ * Rohes OIDC-ID-Token, ausschließlich als `id_token_hint` beim RP-initiated
+ * Logout gebraucht (ohne den Hint zeigt Keycloak 26 eine Bestätigungsseite und
+ * ignoriert `post_logout_redirect_uri`). Bewusst ein SEPARATES, httpOnly-Cookie
+ * — hält das identitäts-schlanke `ep_session` frei von Token-Ballast; wird beim
+ * Logout gelöscht. Enthält keine Access-/Refresh-Tokens.
+ */
+export const ID_TOKEN_COOKIE = "ep_id_token";
 
 const TX_MAX_AGE_SEC = 600; // 10 min
 export const TX_COOKIE_MAX_AGE = TX_MAX_AGE_SEC;

@@ -68,7 +68,13 @@ const nextConfig: NextConfig = {
     // - connect-src 'self' (+ in Dev ws:/http: fuer HMR)
     // - frame-ancestors 'none'  → keine iframe-Einbettung von aussen
     // - base-uri 'self'  → blockt <base>-Tag-Hijacks
-    // - form-action 'self'  → Formulare gehen nur an eigene Origin
+    // - form-action 'self' + OIDC-Issuer-Origin  → Formulare gehen an die
+    //   eigene Origin; zusätzlich muss die Logout-Form (POST /auth/oidc/logout)
+    //   auf den Keycloak end_session_endpoint weiterleiten dürfen. form-action
+    //   gilt für die GESAMTE Redirect-Kette der Form-Navigation (self → Issuer
+    //   → self), darum die Issuer-Origin (aus OIDC_ISSUER abgeleitet, nicht
+    //   hardcoded) mit aufnehmen — sonst blockt der Browser den Logout-Redirect
+    //   still und der Button „tut nichts".
     //
     // Bewusst NICHT auf /admin und /api angewandt: Payload-Admin nutzt
     // unsafe-eval u.a. — separate Source-Regel mit nur den anderen
@@ -79,6 +85,18 @@ const nextConfig: NextConfig = {
     // bleibt die strikte Policy.
     const isDev = process.env.NODE_ENV !== "production";
 
+    // Origin des OIDC-Issuers (z. B. http://localhost:8080 lokal, die echte
+    // Keycloak-URL in Prod) — für den Logout-Redirect in form-action nötig.
+    const issuerOrigin = (() => {
+      const raw = process.env.OIDC_ISSUER?.trim();
+      if (!raw) return "";
+      try {
+        return new URL(raw).origin;
+      } catch {
+        return "";
+      }
+    })();
+
     const csp = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -88,7 +106,7 @@ const nextConfig: NextConfig = {
       `connect-src 'self'${isDev ? " ws: http:" : ""}`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      `form-action 'self'${issuerOrigin ? ` ${issuerOrigin}` : ""}`,
       "object-src 'none'",
     ].join("; ");
 

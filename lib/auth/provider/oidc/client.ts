@@ -90,6 +90,8 @@ export type OidcClaims = {
   name: string | null;
   /** Vollständige (validierte) ID-Token-Claims — fürs Rollen-Mapping. */
   raw: Record<string, unknown>;
+  /** Rohes ID-Token (JWT) — nur für den `id_token_hint` beim Logout. */
+  idToken: string;
 };
 
 /**
@@ -140,6 +142,12 @@ export async function exchangeCode(args: {
   if (!claims?.sub) {
     throw new Error("OIDC: kein gültiger sub-Claim im ID-Token.");
   }
+  // requireIdToken:true garantiert das id_token — defensiv trotzdem prüfen,
+  // da wir es für den Logout-Hint persistieren.
+  const idToken = result.id_token;
+  if (!idToken) {
+    throw new Error("OIDC: kein id_token in der Token-Antwort.");
+  }
 
   // Diagnose-Sonde (temporär, gegated): welche Claim-FELDER liefert Entra→KC im
   // ID-Token? Nur Object.keys — KEINE Werte, also PII-frei. Klärt für ADR 0007,
@@ -167,6 +175,7 @@ export async function exchangeCode(args: {
     emailVerified: claims.email_verified === true,
     name,
     raw: claims as Record<string, unknown>,
+    idToken,
   };
 }
 

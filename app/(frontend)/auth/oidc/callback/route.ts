@@ -10,6 +10,7 @@ import {
 import {
   cookieOptions,
   signSession,
+  ID_TOKEN_COOKIE,
   SESSION_COOKIE,
   TX_COOKIE,
   verifyTx,
@@ -81,6 +82,12 @@ export async function GET(request: NextRequest) {
 
   const res = NextResponse.redirect(new URL(tx.next || "/dashboard", origin));
   res.cookies.set(SESSION_COOKIE, session, cookieOptions(cfg.sessionMaxAgeSec));
+  // Rohes ID-Token separat ablegen — nur für den Logout-`id_token_hint`.
+  res.cookies.set(
+    ID_TOKEN_COOKIE,
+    claims.idToken,
+    cookieOptions(cfg.sessionMaxAgeSec),
+  );
   res.cookies.delete(TX_COOKIE);
   return res;
 }

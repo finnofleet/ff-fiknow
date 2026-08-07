@@ -20,7 +20,7 @@ import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { getPayload, type Where } from "payload";
 import config from "@payload-config";
 
-import { normalizeRole, type Role } from "@/lib/auth/roles";
+import { normalizeRole, roleMeetsTarget, type Role } from "@/lib/auth/roles";
 import { db } from "@/lib/db/client";
 import { enrollments, profiles, trainingAssignments } from "@/lib/db/schema";
 
@@ -168,7 +168,12 @@ function nonSuspendedUserIds(rows: ProfileRow[]): string[] {
 }
 
 function roleTargetUserIds(rows: ProfileRow[], role: Role): string[] {
-  return rows.filter((r) => normalizeRole(r.role) === role).map((r) => r.userId);
+  // Hierarchisch (ADR 0007): „diese Rolle ODER höher". Ein learner-Ziel erfasst
+  // damit auch Kurator:innen/Admins — alle müssen die Basis-Pflichtschulung
+  // absolvieren (Compliance). Siehe roleMeetsTarget/ROLE_RANK in lib/auth/roles.
+  return rows
+    .filter((r) => roleMeetsTarget(normalizeRole(r.role), role))
+    .map((r) => r.userId);
 }
 
 /**
@@ -197,10 +202,12 @@ function explicitUserTargetIds(
 
 /**
  * Löst die Zielgruppe einer Requirement gegen die übergebene Profile-Menge
- * auf. Für `type==='role'` wird `target.role` LITERAL verglichen (kein
- * normalizeRole auf den Requirement-Wert — der ist bereits ein kuratierter
- * Enum-Wert aus dem Payload-Select, kein rohes DB-Rollenfeld); fehlt/ist
- * ungültig, wird die Requirement übersprungen + geloggt.
+ * auf. Für `type==='role'` wird `target.role` HIERARCHISCH gematcht (via
+ * `roleMeetsTarget`: „diese Rolle ODER höher", siehe lib/auth/roles) — ein
+ * learner-Ziel erfasst also auch Kurator:innen/Admins. `target.role` selbst ist
+ * ein kuratierter Enum-Wert aus dem Payload-Select (kein rohes DB-Rollenfeld,
+ * daher kein normalizeRole darauf); fehlt/ist ungültig, wird die Requirement
+ * übersprungen + geloggt.
  *
  * Land/BU-Scope (ADR 0007 §4) filtert die so ermittelte Basis-Zielmenge
  * zusätzlich (UND) — additiv und verhaltensneutral: sind beide Scopes leer,

@@ -42,6 +42,37 @@ export function normalizeRole(raw: string | null | undefined): Role {
   return "learner";
 }
 
+/**
+ * Rollen-Rang — die EINZIGE explizite Quelle der Rollen-Hierarchie. Eine höhere
+ * Rolle schließt die niedrigere ein: für das Pflichtschulungs-Targeting zählt
+ * ein Admin/Kurator damit auch als Lernende:r. `suspended` steht bewusst UNTER
+ * `learner` (Deny-all-Status) und erfüllt daher kein Rollen-Ziel.
+ *
+ * ⚠️ BEKANNTE GRENZE (Multi-Rollen-Modell, siehe ADR 0007 + Multi-Rollen-Notiz): Dies
+ * ist ein LINEARES Modell. Es kann KEINE gleichrangigen/orthogonalen Rollen
+ * ausdrücken (zwei fachliche Rollen ohne Über-/Unterordnung). Sobald solche
+ * Rollen kommen, greift `roleMeetsTarget` nicht mehr sinnvoll — dann braucht es
+ * ein additives Multi-Rollen-Modell (Mitgliedschaft in einer Rollen-MENGE statt
+ * eines einzelnen Rangs). Bis dahin bewusst linear.
+ */
+export const ROLE_RANK: Record<Role, number> = {
+  suspended: -1,
+  learner: 0,
+  curator: 1,
+  admin: 2,
+};
+
+/**
+ * Erfüllt `userRole` ein Rollen-Ziel `targetRole`? Hierarchisch — „diese Rolle
+ * ODER höher". Macht die vorher implizite Annahme explizit („wer mehr darf, ist
+ * auch Lernende:r"), an der genau dieses Missverständnis entstand. `suspended`
+ * erfüllt nie ein Ziel.
+ */
+export function roleMeetsTarget(userRole: Role, targetRole: Role): boolean {
+  if (userRole === "suspended") return false;
+  return ROLE_RANK[userRole] >= ROLE_RANK[targetRole];
+}
+
 // ============================================================
 // Permission-Checks — eine Funktion pro Capability, NICHT pro Rolle.
 // Wer das prüfen will, fragt die Capability ab, nicht die Rolle direkt.

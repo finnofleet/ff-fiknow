@@ -18,6 +18,32 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.4.0] – 2026-08-07
+
+### Hinzugefügt
+- **Hierarchisches Rollen-Ziel für Pflichtschulungen** (ADR 0011): Rollen-Ziele
+  werden „diese Rolle ODER höher" ausgewertet (`ROLE_RANK` / `roleMeetsTarget`
+  in `lib/auth/roles.ts`) — ein `learner`-Ziel erfasst damit auch
+  Kurator:innen/Admins. Schließt die Compliance-Lücke, dass erhöhte Rollen die
+  Basis-Pflichtschulung nicht zugewiesen bekamen. Grenze: lineares Modell, keine
+  gleichrangigen Peer-Rollen (additives Multi-Rollen-Modell zurückgestellt).
+
+### Geändert
+- **Compliance-Treiber-Filter als Dropdown** statt Pill-Reihe auf
+  `/manage/pflichtkurse` — skaliert mit dem Treiber-Vokabular und ist als
+  Filterleiste für weitere Achsen (Land/Status) vorbereitet; weiterhin
+  URL-getrieben und ohne JS, mit Theme-tauglichem eigenem Chevron.
+
+### Behoben
+- **OIDC-Logout end-to-end** — „Abmelden" blieb auf einer Keycloak-Seite hängen;
+  drei gestapelte, prod-relevante Ursachen behoben: (1) CSP `form-action` erlaubt
+  nun den Redirect zum Keycloak `end_session_endpoint` (Issuer-Origin aus
+  `OIDC_ISSUER`); (2) ein `id_token_hint` (neues, separates httpOnly-Cookie
+  `ep_id_token`) überspringt die Keycloak-Bestätigung und lässt
+  `post_logout_redirect_uri` greifen; (3) `303 See Other` statt Default-`307`
+  sorgt dafür, dass der Browser Keycloak per GET aufruft und die Parameter
+  gelesen werden. Logout springt jetzt sauber in die App zurück.
+
 ## [0.3.0] – 2026-08-04
 
 ### Hinzugefügt
@@ -83,6 +109,7 @@ inkl. MDX-Bundle-Authoring, KI-Tutor + RAG, Katalog/Kurse, Lernpfade,
 Pflichtkurse & Compliance-Nachweis, OIDC/Keycloak-Auth, DSG-Retention. Details
 siehe `docs/ROADMAP.md` und `docs/adr/`.
 
-[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/finnofleet/ff-fiknow/releases/tag/v0.2.0

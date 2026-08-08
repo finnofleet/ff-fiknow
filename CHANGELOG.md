@@ -18,6 +18,48 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.5.0] – 2026-08-08
+
+### Hinzugefügt
+- **Abschlusstest: eingefrorene Fragen-Ziehung + expliziter „Neuer Versuch"**
+  (Schema `0013`): der pro Versuch gezogene Fragensatz eines Pool-Abschlusstests
+  wird beim ersten Laden eingefroren (`lesson_progress.exam_seed`) — ein Reload
+  würfelt die Fragen nicht mehr neu (Bug: nach dem Reshuffle wurden Antworten der
+  falschen Frage zugeordnet). Ein Wiederholungsversuch ist jetzt eine bewusste
+  Aktion („Neuer Versuch"): sie setzt den Seed zurück und lädt die Seite voll neu
+  — sauberer Fragensatz ohne Vermischung neuer Fragen mit alten Antworten. Das
+  server-seitige Grading läuft gegen den gespeicherten Seed.
+- **Einschreibung und Lernbeginn als getrennte Ereignisse** (Schema `0014`):
+  `enrollments` unterscheidet jetzt `enrolled_at` (Einschreibung/Zuweisung) und
+  `started_at` (erste geöffnete Lektion, nullable). Das Compliance-„Startdatum"
+  liest den tatsächlichen Lernbeginn; eine eingeschriebene, aber noch nicht
+  begonnene Teilnahme zeigt „—" statt eines irreführenden Datums. Der Lernbeginn
+  wird beim ersten Lektions-Start gesetzt (`markCourseStarted`, erster Start
+  gilt), die Draft-Vorschau bleibt ausgenommen. Migration mit Backfill
+  (`enrolled_at := started_at` für Bestandszeilen). Beide Zeitpunkte werden im
+  Compliance-Nachweis als eigene Spalten ausgewiesen — **Einschreibedatum**
+  neben Startdatum, im Dashboard (`/manage/pflichtkurse`) und im CSV-Export.
+
+### Geändert
+- **„Kurs verlassen" im Lern-Breadcrumb sichtbar gemacht**: ein führendes
+  Haus-Icon (→ Startseite/`/dashboard`) macht den Ausstieg aus einer Lektion
+  explizit — vorher war der Weg nur implizit über das Logo.
+
+### Behoben
+- **Abschluss von Pflichtkursen konnte bei fehlender Zuweisung verloren gehen**
+  (Ordering-Härtung): `syncCourseCompletion` reconcilet die betroffene Person
+  jetzt VOR dem Abschluss-Update. Wer eine Lektion erreichte, ohne dass zuvor ein
+  Reconcile lief (z. B. Deep-Link direkt nach `/learn/…` ohne Dashboard-/
+  Report-Besuch), schloss den Kurs bislang „ins Leere" ab — der Reconciler
+  materialisierte die Zuweisung später nur OFFEN und trug den Abschluss nie nach.
+  Idempotent und ohne Falsch-Zuweisungen (kein Ziel → kein Nachweis); best-effort,
+  ein Reconcile-Fehlschlag blockiert den Abschluss nicht.
+- **Startdatum blieb „—" für zugewiesene Teilnehmer:innen**: das Startdatum hing
+  zuvor allein an der separaten Einschreibe-Aktion und fehlte damit bei
+  Pflichtkursen, in die man nicht per Button „einschreibt". Es entsteht jetzt
+  spätestens mit dem tatsächlichen Lernbeginn (siehe Einschreibung/Lernbeginn
+  oben).
+
 ## [0.4.0] – 2026-08-07
 
 ### Hinzugefügt
@@ -109,7 +151,8 @@ inkl. MDX-Bundle-Authoring, KI-Tutor + RAG, Katalog/Kurse, Lernpfade,
 Pflichtkurse & Compliance-Nachweis, OIDC/Keycloak-Auth, DSG-Retention. Details
 siehe `docs/ROADMAP.md` und `docs/adr/`.
 
-[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/finnofleet/ff-fiknow/releases/tag/v0.2.0

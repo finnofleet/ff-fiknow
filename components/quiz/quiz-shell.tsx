@@ -1,10 +1,13 @@
 "use client";
 
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, RotateCcw } from "lucide-react";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 import { QuizContext, type QuestionResult } from "./quiz-context";
-import { submitQuizAttemptAction } from "@/app/(frontend)/learn/[courseSlug]/[sectionSlug]/[lessonSlug]/actions";
+import {
+  resetExamAction,
+  submitQuizAttemptAction,
+} from "@/app/(frontend)/learn/[courseSlug]/[sectionSlug]/[lessonSlug]/actions";
 import { summarizeQuiz } from "@/lib/quiz/grade";
 import styles from "./quiz-shell.module.css";
 
@@ -24,6 +27,12 @@ type Props = {
    * dieselbe Ziehung reproduzieren und server-seitig neu bewerten kann.
    */
   seed?: string;
+  /**
+   * True bei Abschlusstests (Fragen-Pool ODER inline `final_exam`) — steuert
+   * die Sichtbarkeit des "Neuer Versuch"-Buttons. Normale Uebungsquizze
+   * haben keinen eingefrorenen Seed und brauchen kein explizites Re-take.
+   */
+  isExam?: boolean;
   children: ReactNode;
 };
 
@@ -36,11 +45,13 @@ export function QuizShell({
   nextHref,
   confirmationRequired,
   seed,
+  isExam,
   children,
 }: Props) {
   const [results, setResults] = useState<Map<string, QuestionResult>>(new Map());
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [retaking, setRetaking] = useState(false);
 
   // Verständnisbestätigung greift nur auf der letzten Lektion des Kurses.
   const needsConfirmation = confirmationRequired && nextHref === null;
@@ -75,6 +86,21 @@ export function QuizShell({
     // Action navigiert weiter — kein setSubmitting(false) nötig
   }
 
+  // "Neuer Versuch" (explizite Aktion): setzt den server-seitig eingefrorenen
+  // Seed zurueck und laedt die Lektion per VOLLEM Reload neu.
+  //
+  // Bewusst `window.location.reload()` statt `router.refresh()`: ein
+  // Soft-Refresh tauscht zwar die server-gerenderten Fragen aus, React behaelt
+  // aber die lokalen `<Question>`-States (selected/submitted) der
+  // wiederverwendeten Client-Instanzen — dann mischen sich NEUE Fragen mit
+  // ALTEN Antworten/Feedback. Ein voller Reload verwirft allen Client-State und
+  // zieht mit frischem Seed einen sauberen neuen Satz.
+  async function onRetake() {
+    setRetaking(true);
+    await resetExamAction({ courseSlug, sectionSlug, lessonSlug });
+    window.location.reload();
+  }
+
   return (
     <QuizContext.Provider value={ctxValue}>
       {children}
@@ -99,6 +125,18 @@ export function QuizShell({
               ? `Bestanden — Bestehensgrenze ${Math.round(passingScore * 100)}%`
               : `Nicht bestanden — Bestehensgrenze ${Math.round(passingScore * 100)}%`}
           </div>
+        )}
+
+        {allAnswered && isExam && (
+          <button
+            type="button"
+            className={`btn btn-ghost ${styles.retake}`}
+            onClick={onRetake}
+            disabled={retaking || submitting}
+          >
+            <RotateCcw size={14} strokeWidth={1.75} />
+            {retaking ? "…" : "Neuer Versuch"}
+          </button>
         )}
 
         {needsConfirmation && (

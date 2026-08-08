@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { and, eq } from "drizzle-orm";
+
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCourse, getLesson } from "@/lib/content";
 import { db } from "@/lib/db/client";
-import { quizAttempts } from "@/lib/db/schema";
-import { markLessonCompleted } from "@/lib/progress";
+import { lessonProgress, quizAttempts } from "@/lib/db/schema";
+import { markLessonCompleted, resetExamSeed } from "@/lib/progress";
 import { extractExamQuestions, gradeExam } from "@/lib/quiz/exam-grade";
 import { getPoolQuestions } from "@/lib/quiz/pool-loader";
 import { gradePoolAttempt, selectPoolQuestions } from "@/lib/quiz/pool";
@@ -71,7 +73,24 @@ export async function submitQuizAttemptAction(payload: SubmitQuizPayload) {
     const course = await getCourse(payload.courseSlug);
     const version = course?.frontmatter.version ?? "";
     const n = lesson?.frontmatter.questions_per_attempt ?? pool.length;
-    const drawn = selectPoolQuestions(pool, n, payload.seed ?? "");
+    // Integritaet: die Ziehung wird gegen den SERVER-gespeicherten,
+    // eingefrorenen Seed reproduziert (lesson_progress.exam_seed) — NICHT
+    // gegen `payload.seed`, den der Client beliebig setzen koennte. Fallback
+    // auf `payload.seed` nur defensiv (z. B. Draft-Vorschau ohne Progress-
+    // Zeile, wo bewusst kein Seed persistiert wird).
+    const [progressRow] = await db
+      .select({ examSeed: lessonProgress.examSeed })
+      .from(lessonProgress)
+      .where(
+        and(
+          eq(lessonProgress.userId, user.id),
+          eq(lessonProgress.courseSlug, payload.courseSlug),
+          eq(lessonProgress.sectionSlug, payload.sectionSlug),
+          eq(lessonProgress.lessonSlug, payload.lessonSlug),
+        ),
+      );
+    const gradingSeed = progressRow?.examSeed ?? payload.seed ?? "";
+    const drawn = selectPoolQuestions(pool, n, gradingSeed);
     const selected = await getPoolQuestions(payload.courseSlug, version, drawn);
     const graded = gradePoolAttempt(
       selected,
@@ -164,4 +183,32 @@ export async function completeAndContinueAction(formData: FormData) {
 
   if (next) redirect(next);
   redirect(`/courses/${courseSlug}`);
+}
+
+export type ResetExamPayload = {
+  courseSlug: string;
+  sectionSlug: string;
+  lessonSlug: string;
+};
+
+/**
+ * "Neuer Versuch" (explizite User-Aktion, Gegenstueck zum Bug-Fix oben): setzt
+ * den eingefrorenen Pool-Seed zurueck, damit der naechste Render der
+ * Lesson-Seite eine frische Ziehung erzeugt (`ensureExamSeed`). Die Seite
+ * selbst zieht bewusst NIE automatisch neu — nur dieser Pfad.
+ */
+export async function resetExamAction(payload: ResetExamPayload) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  await resetExamSeed({
+    userId: user.id,
+    courseSlug: payload.courseSlug,
+    sectionSlug: payload.sectionSlug,
+    lessonSlug: payload.lessonSlug,
+  });
+
+  revalidatePath(
+    `/learn/${payload.courseSlug}/${payload.sectionSlug}/${payload.lessonSlug}`,
+  );
 }

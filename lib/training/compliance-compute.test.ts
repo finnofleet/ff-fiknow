@@ -34,6 +34,7 @@ describe("computeCompliance", () => {
           { userId: "u-untouched", courseSlug: "ai-act-basics", completedAt: null },
         ],
         startedAt: new Map([["u-enrolled::ai-act-basics", now]]),
+        enrolledAt: new Map([["u-enrolled::ai-act-basics", now]]),
         hasProgress: new Set(["u-progress-only::ai-act-basics"]),
         displayNames: new Map([
           ["u-done", "Done User"],
@@ -61,6 +62,8 @@ describe("computeCompliance", () => {
     expect(byId.get("u-done")?.completedAt).toEqual(now);
     expect(byId.get("u-enrolled")?.status).toBe("gestartet");
     expect(byId.get("u-enrolled")?.startedAt).toEqual(now);
+    expect(byId.get("u-enrolled")?.enrolledAt).toEqual(now);
+    expect(byId.get("u-untouched")?.enrolledAt).toBeNull();
     expect(byId.get("u-progress-only")?.status).toBe("gestartet");
     expect(byId.get("u-progress-only")?.startedAt).toBeNull();
     expect(byId.get("u-untouched")?.status).toBe("nicht_gestartet");

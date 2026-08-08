@@ -67,6 +67,12 @@
 .crumb a:hover {
   color: var(--ink-2);
 }
+/* House-Icon-Anker im Breadcrumb: vertikal zur Mono-Zeile zentrieren. */
+.crumbHome {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
 .crumbSep {
   margin: 0 8px;
   opacity: 0.5;

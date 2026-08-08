@@ -9,6 +9,17 @@
 export const E2E_BOOT_ENV: Record<string, string> = {
   DATABASE_URL: "postgres://postgres:postgres@127.0.0.1:55433/fiknow?sslmode=disable",
   PAYLOAD_SECRET: "e2e-test-secret-mindestens-16-zeichen",
+  // MUSS die Session-Secret-Aufloesung der App (OIDC_SESSION_SECRET ||
+  // PAYLOAD_SECRET, siehe oidc/config.ts) PINNEN. Der von global-setup
+  // gespawnte `next dev` laedt automatisch `.env.local`; enthaelt die ein
+  // OIDC_SESSION_SECRET, verifiziert der Server die Test-Cookies mit einem
+  // ANDEREN Secret als der Seed sie signiert (der Seed laeuft unter `tsx`
+  // OHNE .env.local-Autoload und nutzt PAYLOAD_SECRET) → verifySession
+  // scheitert, getServerIdentity() liefert null und JEDER Management-Spec
+  // bricht. Hier explizit == PAYLOAD_SECRET setzen: E2E_BOOT_ENV wird NACH
+  // process.env in den Spawn-Env gemerged, und Next ueberschreibt bereits
+  // gesetzte Vars nicht mit .env.local — dieser Wert gewinnt also.
+  OIDC_SESSION_SECRET: "e2e-test-secret-mindestens-16-zeichen",
   OIDC_ISSUER: "http://localhost/dummy",
   OIDC_CLIENT_ID: "e2e",
   OIDC_CLIENT_SECRET: "e2e",

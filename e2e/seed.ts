@@ -21,7 +21,6 @@ import { getPayload } from "payload";
 
 import { db } from "@/lib/db/client";
 import {
-  enrollments,
   lessonProgress,
   profiles,
   questions,
@@ -30,7 +29,7 @@ import {
   roles,
 } from "@/lib/db/schema";
 import { SESSION_COOKIE, signSession } from "@/lib/auth/provider/oidc/session";
-import { markLessonCompleted } from "@/lib/progress";
+import { ensureEnrollment, markCourseStarted, markLessonCompleted } from "@/lib/progress";
 import { reconcileAssignments } from "@/lib/training/reconcile";
 import { syncCourseCompletion } from "@/lib/training/completion";
 
@@ -51,6 +50,7 @@ const ENNO_ID = "33333333-3333-3333-3333-333333333333"; // learner — started (
 const PIA_ID = "44444444-4444-4444-4444-444444444444"; // learner — started (lesson_progress)
 const NINO_ID = "55555555-5555-5555-5555-555555555555"; // learner — untouched (open)
 const SUSPENDED_ID = "66666666-6666-6666-6666-666666666666"; // suspended
+const ELSA_ID = "77777777-7777-7777-7777-777777777777"; // learner — enrolled, NOT started
 
 // --- ADR 0007 P2b/P3 — Rechte-/Scope-e2e ------------------------------------
 // Zusaetzliche CH-Lerner, damit der CH-Bucket die k-Anon-Schwelle (5) erreicht
@@ -129,6 +129,7 @@ async function seedProfiles(): Promise<void> {
       { userId: ENNO_ID, displayName: "Enno", role: "learner", land: "CH" },
       { userId: PIA_ID, displayName: "Pia", role: "learner", land: "DE" },
       { userId: NINO_ID, displayName: "Nino", role: "learner", land: "DE" },
+      { userId: ELSA_ID, displayName: "Elsa", role: "learner", land: "DE" },
       { userId: SUSPENDED_ID, displayName: "Susi Suspended", role: "suspended" },
       // Weitere CH-Lerner, damit CH die k-Anon-Schwelle 5 erreicht.
       { userId: CH_ANJA_ID, displayName: "Anja", role: "learner", land: "CH" },
@@ -402,12 +403,11 @@ async function seedProgressStates(): Promise<void> {
   });
   await syncCourseCompletion(DANA_ID, COURSE_SLUG);
 
-  log("Enno → started: enrollments row …");
-  await db.insert(enrollments).values({
-    userId: ENNO_ID,
-    courseSlug: COURSE_SLUG,
-    startedAt: new Date(),
-  });
+  log("Enno → started: markCourseStarted (enrolled + started) …");
+  await markCourseStarted(ENNO_ID, COURSE_SLUG);
+
+  log("Elsa → enrolled, NOT started: ensureEnrollment only …");
+  await ensureEnrollment(ELSA_ID, COURSE_SLUG);
 
   log("Pia → started: lesson_progress row (in_progress) …");
   await db.insert(lessonProgress).values({

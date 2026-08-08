@@ -31,6 +31,8 @@ export type Participant = {
   userId: string;
   displayName: string;
   status: ParticipantStatus;
+  /** enrollments.enrolled_at — Einschreibe-/Zuweisungszeitpunkt (immer gesetzt). */
+  enrolledAt: Date | null;
   startedAt: Date | null;
   completedAt: Date | null;
   /** Beim Abschluss eingefrorenes `courses.version`-Token, sonst `null`. */
@@ -65,6 +67,8 @@ export type ComputeComplianceInput = {
     cycle?: number;
     evidence?: CompletionEvidence | null;
   }[];
+  /** key `${userId}::${courseSlug}` -> enrollment.enrolledAt */
+  enrolledAt?: Map<string, Date>;
   /** key `${userId}::${courseSlug}` -> enrollment.startedAt */
   startedAt: Map<string, Date>;
   /** key `${userId}::${courseSlug}` (lesson_progress existiert) */
@@ -181,6 +185,7 @@ export function computeCompliance(
         userId,
         displayName: input.displayNames.get(userId) ?? userId,
         status: deriveStatus(key, row.completedAt, input),
+        enrolledAt: input.enrolledAt?.get(key) ?? null,
         startedAt: input.startedAt.get(key) ?? null,
         completedAt: row.completedAt,
         courseVersionSnapshot: row.courseVersionSnapshot,

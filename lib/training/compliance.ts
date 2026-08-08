@@ -96,11 +96,25 @@ export async function getComplianceOverview(
   if (scopedRows.length === 0) return [];
 
   const enrollmentRows = await db
-    .select({ userId: enrollments.userId, courseSlug: enrollments.courseSlug, startedAt: enrollments.startedAt })
+    .select({
+      userId: enrollments.userId,
+      courseSlug: enrollments.courseSlug,
+      startedAt: enrollments.startedAt,
+      enrolledAt: enrollments.enrolledAt,
+    })
     .from(enrollments);
   const startedAt = new Map<string, Date>();
   for (const row of enrollmentRows) {
-    startedAt.set(participantKey(row.userId, row.courseSlug), row.startedAt);
+    // `started_at` ist seit der Trennung Einschreibung/Lernbeginn nullable:
+    // eine eingeschriebene, aber noch nicht gestartete Zeile liefert KEIN
+    // Startdatum (bleibt "—" und zaehlt nicht als „gestartet").
+    if (row.startedAt) {
+      startedAt.set(participantKey(row.userId, row.courseSlug), row.startedAt);
+    }
+  }
+  const enrolledAt = new Map<string, Date>();
+  for (const row of enrollmentRows) {
+    enrolledAt.set(participantKey(row.userId, row.courseSlug), row.enrolledAt);
   }
 
   const progressRows = await db
@@ -148,6 +162,7 @@ export async function getComplianceOverview(
       evidence: row.evidence as CourseCompliance["participants"][number]["evidence"],
     })),
     startedAt,
+    enrolledAt,
     hasProgress,
     displayNames,
     titles,

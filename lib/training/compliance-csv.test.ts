@@ -8,6 +8,7 @@ function participantFixture(over: Partial<Participant> = {}): Participant {
     userId: "u-1",
     displayName: "Test User",
     status: "nicht_gestartet",
+    enrolledAt: null,
     startedAt: null,
     completedAt: null,
     courseVersionSnapshot: null,
@@ -39,7 +40,7 @@ describe("buildComplianceCsv", () => {
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     const [header] = csv.slice(1).split("\r\n");
     expect(header).toBe(
-      "Teilnehmer,Kurs,Treiber,Umfang_Minuten,Status,Startdatum,Abschlussdatum,Kursversion,Zyklus,Pruefung",
+      "Teilnehmer,Kurs,Treiber,Umfang_Minuten,Status,Einschreibedatum,Startdatum,Abschlussdatum,Kursversion,Zyklus,Pruefung",
     );
   });
 
@@ -64,6 +65,7 @@ describe("buildComplianceCsv", () => {
   it("Treiber semikolon-getrennt, Umfang aus evidence bevorzugt vor Kurs-Live-Wert", () => {
     const completedAt = new Date("2026-03-01T00:00:00Z");
     const startedAt = new Date("2026-02-01T00:00:00Z");
+    const enrolledAt = new Date("2026-01-15T00:00:00Z");
     const courses: CourseCompliance[] = [
       courseFixture({
         title: "KI-Kompetenz",
@@ -73,6 +75,7 @@ describe("buildComplianceCsv", () => {
           participantFixture({
             displayName: "Anna",
             status: "abgeschlossen",
+            enrolledAt,
             startedAt,
             completedAt,
             courseVersionSnapshot: "v2",
@@ -85,7 +88,7 @@ describe("buildComplianceCsv", () => {
     const csv = buildComplianceCsv(courses);
     const [, row] = csv.slice(1).trimEnd().split("\r\n");
     expect(row).toBe(
-      "Anna,KI-Kompetenz,eu_ai_act;iso_42001,45,abgeschlossen,2026-02-01,2026-03-01,v2,1,–",
+      "Anna,KI-Kompetenz,eu_ai_act;iso_42001,45,abgeschlossen,2026-01-15,2026-02-01,2026-03-01,v2,1,–",
     );
   });
 
@@ -139,7 +142,7 @@ describe("buildComplianceCsv", () => {
   it("leere Kursliste -> nur BOM + Kopfzeile, kein Crash", () => {
     const csv = buildComplianceCsv([]);
     expect(csv.slice(1).trimEnd()).toBe(
-      "Teilnehmer,Kurs,Treiber,Umfang_Minuten,Status,Startdatum,Abschlussdatum,Kursversion,Zyklus,Pruefung",
+      "Teilnehmer,Kurs,Treiber,Umfang_Minuten,Status,Einschreibedatum,Startdatum,Abschlussdatum,Kursversion,Zyklus,Pruefung",
     );
   });
 });

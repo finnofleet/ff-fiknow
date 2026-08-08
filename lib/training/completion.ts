@@ -40,6 +40,7 @@ import {
   type PassedQuiz,
   type QuizLessonRef,
 } from "./completion-compute";
+import { reconcileForUser } from "./reconcile";
 
 export async function syncCourseCompletion(
   userId: string,
@@ -48,6 +49,27 @@ export async function syncCourseCompletion(
 ): Promise<void> {
   const course = await getCourse(courseSlug);
   if (!course) return;
+
+  // Ordering-Absicherung: die Completion wird als UPDATE auf eine BESTEHENDE
+  // offene Assignment-Zeile geschrieben. Erreicht jemand die Lektion, ohne dass
+  // zuvor ein Reconcile lief (z. B. Deep-Link nach /learn/… ohne Dashboard-/
+  // Report-Besuch), existiert diese Zeile noch nicht — die Completion liefe ins
+  // Leere und wuerde spaeter NICHT nachgetragen (der Reconciler materialisiert
+  // die Zuweisung nur OFFEN). Daher hier den User zuerst reconcilen, damit alle
+  // Zuweisungen, fuer die er Ziel ist, offen materialisiert sind, bevor der
+  // Abschluss angehaengt wird. Idempotent (onConflictDoNothing); ist der User
+  // fuer den Kurs kein Ziel, entsteht keine Zeile und der UPDATE bleibt ein
+  // No-op (korrekt — keine Pflicht, kein Nachweis). Best-effort: ein Fehlschlag
+  // darf den Abschluss nicht verhindern (dann greift der bisherige Pfad, sofern
+  // bereits eine Zeile existiert).
+  try {
+    await reconcileForUser(userId);
+  } catch (err) {
+    console.error(
+      "[training/completion] reconcileForUser vor Abschluss fehlgeschlagen",
+      err,
+    );
+  }
 
   const progress = await getCourseProgress(userId, courseSlug);
   let totalLessons = 0;

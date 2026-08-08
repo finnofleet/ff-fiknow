@@ -1,7 +1,5 @@
-import { randomUUID } from "node:crypto";
-
 import type { Metadata } from "next";
-import { Circle, CircleCheck, CircleDot } from "lucide-react";
+import { Circle, CircleCheck, CircleDot, House } from "lucide-react";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -20,7 +18,9 @@ import { selectPoolQuestions } from "@/lib/quiz/pool";
 import { getPoolQuestions } from "@/lib/quiz/pool-loader";
 import { renderPoolQuestionsToMdx } from "@/lib/quiz/pool-render";
 import {
+  ensureExamSeed,
   getCourseProgress,
+  markCourseStarted,
   markLessonInProgress,
   progressKey,
 } from "@/lib/progress";
@@ -106,6 +106,10 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
   // Draft-Vorschau zählt NICHT als Lernfortschritt (Vorschau ≠ Lernen) — sonst
   // tauchten unveröffentlichte Kurse im Dashboard/Progress des Kurators auf.
   if (user && !isDraft) {
+    // Lernbeginn (started_at) — getrennt vom Einschreiben (enrolled_at). Setzt
+    // das Startdatum genau beim ersten Lektions-Start; idempotent, erster Start
+    // gilt. Draft-Vorschau ist bewusst ausgenommen (Vorschau ≠ Lernen).
+    await markCourseStarted(user.id, courseSlug);
     await markLessonInProgress({
       userId: user.id,
       courseSlug,
@@ -134,18 +138,38 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
   // (lesson.body) unveraendert.
   const poolSlugs = lesson.frontmatter.question_pool;
   const isPoolExam = isQuiz && Boolean(poolSlugs?.length);
+  // "Neuer Versuch"-Button (Re-take, siehe QuizShell): nur bei Abschlusstests
+  // sichtbar — Pool-Praefung ODER inline `final_exam` (7a). Normale
+  // Uebungsquizze zeigen ihn nicht (kein eingefrorener Seed, keine Compliance-
+  // Bewertung).
+  const isFinalExam = isQuiz && Boolean(lesson.frontmatter.final_exam);
+  const isExam = isPoolExam || isFinalExam;
 
   let quizBody = lesson.body;
   let questionCount = isQuiz
     ? (lesson.body.match(/<Question[\s>]/g) ?? []).length
     : 0;
-  // Seed pro Render (nicht pro Versuch persistiert): der Client schickt ihn
-  // beim Submit zurueck, der Server reproduziert damit dieselbe Ziehung.
+  // Seed wird beim ERSTEN Laden eingefroren (Bug-Fix): vorher wurde bei
+  // JEDEM Render ein neuer `randomUUID()` gezogen, wodurch ein Reload die
+  // Fragen reshuffelte und Antworten falsch zugeordnet wurden. Eingeloggte
+  // Nutzer (kein Draft) bekommen einen in `lesson_progress.exam_seed`
+  // persistierten Seed (stabil ueber Reloads, nur "Neuer Versuch" setzt ihn
+  // zurueck). Draft-Vorschau/kein User schreiben bewusst keine Progress —
+  // dort reicht ein deterministischer, nicht persistierter Seed pro
+  // Kurs-Version (stabil ueber Reloads ohne DB-Schreibzugriff).
   let seed: string | undefined;
 
   if (isPoolExam && poolSlugs) {
     const version = course.frontmatter.version ?? "";
-    seed = randomUUID();
+    seed =
+      user && !isDraft
+        ? await ensureExamSeed({
+            userId: user.id,
+            courseSlug,
+            sectionSlug,
+            lessonSlug,
+          })
+        : `preview:${courseSlug}:${sectionSlug}:${lessonSlug}:${version}`;
     const n = lesson.frontmatter.questions_per_attempt ?? poolSlugs.length;
     const drawn = selectPoolQuestions(poolSlugs, n, seed);
     const poolQs = await getPoolQuestions(courseSlug, version, drawn);
@@ -164,6 +188,17 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
           />
         </Link>
         <div className={styles.crumb}>
+          {/* Expliziter „Kurs verlassen"-Anker: House-Icon führt zur Startseite
+              (wie das Logo), macht den Ausstieg aber im Breadcrumb sichtbar. */}
+          <Link
+            href="/dashboard"
+            className={styles.crumbHome}
+            aria-label="Kurs verlassen — zur Startseite"
+            title="Kurs verlassen — zur Startseite"
+          >
+            <House size={13} strokeWidth={1.75} aria-hidden />
+          </Link>
+          <span className={styles.crumbSep}>·</span>
           <Link href={`/courses/${courseSlug}`}>{course.frontmatter.title}</Link>
           <span className={styles.crumbSep}>·</span>
           <span>{lesson.section.frontmatter.title}</span>
@@ -266,6 +301,7 @@ export default async function LessonPage({ params }: { params: RouteParams }) {
               nextHref={nextHref}
               confirmationRequired={Boolean(course.frontmatter.confirmation_required)}
               seed={seed}
+              isExam={isExam}
             >
               <div className={styles.prose} data-tutor-prose>
                 <MDXRemote

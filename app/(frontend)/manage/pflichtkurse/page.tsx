@@ -58,6 +58,7 @@ function ParticipantRow({ participant }: { participant: Participant }) {
           {STATUS_LABEL[participant.status]}
         </span>
       </td>
+      <td className={styles.numCell}>{formatDate(participant.enrolledAt)}</td>
       <td className={styles.numCell}>{formatDate(participant.startedAt)}</td>
       <td className={styles.numCell}>{formatDate(participant.completedAt)}</td>
     </tr>
@@ -246,6 +247,7 @@ export default async function CompliancePage({
                       <tr>
                         <th>Teilnehmer</th>
                         <th>Status</th>
+                        <th>Eingeschrieben</th>
                         <th>Startdatum</th>
                         <th>Abschlussdatum</th>
                       </tr>

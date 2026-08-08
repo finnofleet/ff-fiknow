@@ -43,4 +43,33 @@ test.describe("Pflichtkurse — Compliance-Dashboard (Kurator-Ansicht)", () => {
       fullPage: true,
     });
   });
+
+  test("zeigt Einschreibedatum getrennt vom Startdatum", async ({ page }) => {
+    await page.goto("/manage/pflichtkurse");
+    await expect(page.getByRole("heading", { name: "Pflichtkurse" })).toBeVisible();
+    await page.getByText(/Teilnehmer:innen anzeigen/).click();
+
+    // Neue Spalte vorhanden
+    await expect(
+      page.getByRole("columnheader", { name: "Eingeschrieben" }),
+    ).toBeVisible();
+
+    // Elsa: eingeschrieben, aber NICHT gestartet → Einschreibedatum gesetzt,
+    // Startdatum "—". Spaltenreihenfolge: Teilnehmer(0) Status(1)
+    // Eingeschrieben(2) Startdatum(3) Abschlussdatum(4).
+    const elsaCells = page
+      .getByRole("row")
+      .filter({ hasText: "Elsa" })
+      .getByRole("cell");
+    await expect(elsaCells.nth(2)).toContainText("2026"); // Einschreibedatum
+    await expect(elsaCells.nth(3)).toHaveText("—"); // Startdatum
+
+    // Enno: gestartet → sowohl Einschreibe- als auch Startdatum gesetzt.
+    const ennoCells = page
+      .getByRole("row")
+      .filter({ hasText: "Enno" })
+      .getByRole("cell");
+    await expect(ennoCells.nth(2)).toContainText("2026"); // Einschreibedatum
+    await expect(ennoCells.nth(3)).toContainText("2026"); // Startdatum
+  });
 });

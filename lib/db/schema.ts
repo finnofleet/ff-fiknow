@@ -88,9 +88,15 @@ export const enrollments = pgTable(
   {
     userId: uuid("user_id").notNull(),
     courseSlug: text("course_slug").notNull(),
-    startedAt: timestamp("started_at", { withTimezone: true })
+    // Zwei getrennte Ereignisse (bewusst NICHT konflatiert):
+    //   enrolled_at = Einschreibung / Zuweisung (Zeile entsteht)
+    //   started_at  = tatsaechlicher Lernbeginn (erste Lektion geoeffnet)
+    // Ein "eingeschrieben, aber noch nicht gestartet"-Zustand hat daher
+    // started_at = NULL. Das Compliance-„Startdatum" liest started_at.
+    enrolledAt: timestamp("enrolled_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (t) => [
@@ -114,6 +120,16 @@ export const lessonProgress = pgTable(
     lessonSlug: text("lesson_slug").notNull(),
     status: text("status").notNull().default("in_progress"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    /**
+     * Eingefrorener Seed der Fragen-Pool-Ziehung fuer Abschlusstests (Bug-Fix:
+     * `seed = randomUUID()` bei jedem Render reshuffelte die gezogenen Fragen
+     * bei jedem Reload und verfaelschte die Zuordnung der Antworten). `null` =
+     * noch nicht gezogen ODER nach explizitem "Neuer Versuch" zurueckgesetzt
+     * (siehe `resetExamSeed`/`ensureExamSeed` in lib/progress.ts). Nur fuer
+     * Pool-Abschlusstests relevant; bei allen anderen Lesson-Typen bleibt die
+     * Spalte `null`.
+     */
+    examSeed: text("exam_seed"),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

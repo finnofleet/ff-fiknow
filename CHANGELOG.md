@@ -18,6 +18,23 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.5.1] – 2026-08-10
+
+### Sicherheit
+- **17 Dependabot-Alerts über Override-/Dependency-Bumps geschlossen** — alle
+  transitiv, kein First-Party-Code betroffen: `undici` 7.28.0 → 7.29.0 (5
+  Alerts), `hono` → 4.12.34+ (4), `js-yaml` → 4.3.1 / 3.15.1 (2), `ip-address`
+  → 10.3.1+ (3), `fast-uri` → 3.1.5, `nanoid` → 3.3.17+, `dompurify` → 3.4.13.
+  Überwiegend ReDoS/DoS- sowie Header-/Cookie-Injection-Fixes. Build + 292
+  Unit-Tests grün nach dem Lockfile-Update.
+- **Bewusst offen (2 Alerts):** `image-size` (High — DoS via ICNS/JXL/HEIF-
+  Parser-Endlosschleife) hat noch KEINEN Upstream-Patch; Angriffsfläche gering,
+  da Media-Upload `editorsOnly` (Kurator:innen/Admins) + Upload-Sanitisierung
+  (Magic-Bytes + Raster-Re-Encode) — Monitoring bis zum Fix. `@hono/node-server`
+  #51 (Medium — `serve-static` Path-Traversal, nur unter Windows) bleibt offen:
+  der Fix erfordert einen MCP-inkompatiblen Major-Bump, und es gibt kein
+  Windows-Deployment.
+
 ## [0.5.0] – 2026-08-08
 
 ### Hinzugefügt
@@ -151,7 +168,8 @@ inkl. MDX-Bundle-Authoring, KI-Tutor + RAG, Katalog/Kurse, Lernpfade,
 Pflichtkurse & Compliance-Nachweis, OIDC/Keycloak-Auth, DSG-Retention. Details
 siehe `docs/ROADMAP.md` und `docs/adr/`.
 
-[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/finnofleet/ff-fiknow/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.2.0...v0.3.0

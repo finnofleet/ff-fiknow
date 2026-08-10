@@ -22,9 +22,10 @@
 
 image:
   repository: ghcr.io/finnofleet/ff-fiknow
-  # Gepinnt auf einen unveränderlichen main-<sha>-Tag (kein floating 'latest').
-  # Bei einem Update auf den neuen main-<sha> ziehen.
-  tag: main-c24e8b4
+  # Gepinnt auf den produktiv freigegebenen Release-Tag (kein floating 'latest').
+  # Entsteht beim Push eines v*-Git-Tags (build-image.yml: type=semver) und ist
+  # damit unveränderlich. Bei einem Update auf den neuen v<x.y.z>-Release ziehen.
+  tag: v0.5.1
 
 # Package ist privat → Pull-Secret nötig.
 imagePullSecrets:
@@ -44,6 +45,22 @@ config:
   # Leer lassen → wird aus ingress.hosts[0] (https) abgeleitet:
   # https://fiknow.bm-production-cluster-...-0000.eu-de.containers.appdomain.cloud
   OIDC_REDIRECT_BASE: ""
+
+  # Keys außerhalb der ConfigMap-Allowlist (OIDC_*, DB_POOL_MAX, *_STORAGE_DIR)
+  # MÜSSEN unter config.extra stehen — nur diese Map wird per range in die
+  # ConfigMap gerendert (templates/configmap.yaml). Ein Key auf oberster Ebene
+  # von config: wird ohne Fehlermeldung still verworfen.
+  #
+  # MCP-Authoring-Server (POST /api/mcp/mcp): Opt-in, in dieser Vorlage bewusst
+  # NICHT gesetzt. Aktivieren öffnet die gesamte Content-Management-Pipeline als
+  # MCP-Tools — abgesichert nur über das Authoring-Bearer-Token (cat_…,
+  # curator/admin). Voraussetzung ist persistenter RWX-Speicher
+  # (dataVolume.type=pvc, s. u.), sonst bricht das Chart fail-fast ab
+  # (_helpers.tpl-Guard). Der Code vergleicht strikt gegen den String "true",
+  # deshalb gequotet. Zum Aktivieren die beiden folgenden Zeilen einkommentieren:
+  #
+  # extra:
+  #   MCP_ENABLED: "true"
 
 ingress:
   enabled: true

@@ -3,7 +3,7 @@
  *
  * Alle Werte aus Env-Vars, NIE im Code hartverdrahtet. So reiht sich das
  * LLM-Konto in die übrigen brand-spezifischen Konten ein (Supabase, DB,
- * Storage …) und der FiKnow-Handover ist ein Env-Var-Tausch, kein Code-Change.
+ * Storage …) und der FinKnow-Handover ist ein Env-Var-Tausch, kein Code-Change.
  *
  *   LLM_PROVIDER   "anthropic" (Default; einziger v1-Provider)
  *   LLM_API_KEY    Provider-API-Key (Pflicht, sonst ist der Tutor AUS)

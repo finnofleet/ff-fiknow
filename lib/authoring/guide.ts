@@ -14,7 +14,7 @@
  * `next.config.ts` via `outputFileTracingIncludes` der MCP-Route zugeordnet.
  *
  * BRAND-AWARE: Bildstil/Diagramm-Idiom/Stimme unterscheiden sich je Marke
- * (FiKnow Clean vs verstande Sketch). Diese Topics werden ZUERST aus einem
+ * (FinKnow Clean vs verstande Sketch). Diese Topics werden ZUERST aus einem
  * optionalen Brand-Overlay (`<BRAND_CONFIG_PATH-dir>/authoring/<topic>.md`)
  * gelesen — exakt das `loadBrandLogo()`-Muster — und fallen sonst auf den
  * passenden In-Repo-Default zurück (Bildstil per `brand.fontSet`). So kann ein
@@ -48,7 +48,7 @@ function brandOverlayDir(): string {
   return path.dirname(configPath);
 }
 
-/** „FIKNOW" | „VERSTANDE" — Marken-Diskriminator (Sora = FiKnow). */
+/** „FIKNOW" | „VERSTANDE" — Marken-Diskriminator (Sora = FinKnow). */
 function brandKey(): "FIKNOW" | "VERSTANDE" {
   return brand.fontSet === "sora" ? "FIKNOW" : "VERSTANDE";
 }

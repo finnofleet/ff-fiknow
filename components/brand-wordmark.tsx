@@ -3,7 +3,7 @@ import { brand, splitBrandName } from "@/lib/brand";
 /**
  * Wortmarke: rendert den Brand-Namen mit optionalem ausgegrauten Suffix
  * (Teil nach dem letzten Punkt). Für verstande.ch wird ".ch" muted, für
- * FiKnow rendert der ganze Name in Primärfarbe.
+ * FinKnow rendert der ganze Name in Primärfarbe.
  *
  * Nutzt die `tldClassName`-Prop, weil die Komponente in mehreren Layouts
  * mit unterschiedlichen CSS-Modulen verwendet wird — jedes liefert seine

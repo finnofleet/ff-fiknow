@@ -22,7 +22,7 @@
 
 ## Kontext
 
-Das FiKnow-/Gruppen-KI-Team fragte: Ist die Plattform MCP-fähig? Das Ziel
+Das FinKnow-/Gruppen-KI-Team fragte: Ist die Plattform MCP-fähig? Das Ziel
 ist Content per MCP zu verwalten (Authoring) — nicht nur über das
 course-authoring-Plugin, das an Claude Code gebunden ist.
 
@@ -198,11 +198,11 @@ Konkret werden fünf Erweiterungen beschlossen:
   per `fs` gelesen + gecached. **Brand-aware:** markenspezifische Topics
   (image/diagram/content-style) lesen ZUERST aus dem Brand-Overlay
   (`<BRAND_CONFIG_PATH-dir>/authoring/<topic>.md`, wie `loadBrandLogo()`), sonst
-  Default per `brand.fontSet` (FiKnow-Bildstil bereits getrennt im Repo). Macht
+  Default per `brand.fontSet` (FinKnow-Bildstil bereits getrennt im Repo). Macht
   MCP plugin-unabhängig für Desktop-/Cowork-Kollegen.
-  - **Offen (Follow-up, braucht Yves):** FiKnows Marken-Stimme als
+  - **Offen (Follow-up, braucht Yves):** FinKnows Marken-Stimme als
     `brand/authoring/content-style.md` im **fiknow-brand**-Repo (+ `COPY`-Zeile
-    in dessen Dockerfile). Bis dahin fällt FiKnow auf den neutralen/verstande-
+    in dessen Dockerfile). Bis dahin fällt FinKnow auf den neutralen/verstande-
     Default zurück — kein Bruch, nur nicht final gebrandet.
 - **Phase 2.5 (GEBAUT):** Out-of-Band-Bundle-Upload — das Pendant zum Asset-
   Out-of-Band, eine Ebene höher. `import_course(files[])` zwingt das Modell, den
@@ -226,5 +226,5 @@ Konkret werden fünf Erweiterungen beschlossen:
 
 **Status der Umsetzung:** Phasen 1+2(+2.5) gebaut (10 Tools + 7 Resources + 1
 Prompt; Asset-by-Reference + Out-of-Band-Upload für Assets UND Bundles +
-Wissen-in-MCP, brand-aware). Offen: FiKnow-Marken-Stimme im Overlay (Follow-up)
+Wissen-in-MCP, brand-aware). Offen: FinKnow-Marken-Stimme im Overlay (Follow-up)
 und Phase 3 (Dokument-Level-Tools, async/inkrementelles RAG, token-only-Auth).

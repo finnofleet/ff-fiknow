@@ -461,7 +461,7 @@ ist eine eigene, spätere Cleanup-Phase — nie ein Big-Bang.
   abgeschlossene Bestandsnachweise (kein Snapshot vorhanden — rückwirkend
   zuordnen oder „Altbestand/unbekannt" kennzeichnen?).
 - **Gruppen-/Namensschema** in Entra/KC — nur relevant, falls claim-gefüttert;
-  wer legt es fest (IT oder FIKNOW-Team)?
+  wer legt es fest (IT oder FINKNOW-Team)?
 - **Retention-Klasse des Audit-Logs:** Klasse A oder eigene, kürzere Frist?
   DSB-Abnahme, analog zur Klasse-A-Frist in ADR 0006.
 - **Mitbestimmung:** BR-Freigabe des Compliance-Zugriffs-Loggings (Protokoll

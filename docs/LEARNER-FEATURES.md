@@ -6,7 +6,7 @@ Security-Fundaments (ADR 0001 Schritt 1 + SECURITY_AUDIT vollständig).
 Hergeleitet aus Wettbewerbs-Recherche — Elements of AI
 (`INSPIRATION-ELEMENTSOFAI.md`), Articulate (Storyline/Rise),
 LearnWorlds — und dem eigenen Domänen-Kontext: **Prüfungs-Vorbereitung**
-(verstande.ch → A2-Drohne/BAZL) bzw. **Compliance-Onboarding** (FiKnow).
+(verstande.ch → A2-Drohne/BAZL) bzw. **Compliance-Onboarding** (FinKnow).
 
 **Leitgedanke / Moat:** *Bundle-as-Code (KI schreibt Kurse) + lerner-seitige,
 content-gegroundete KI.* Articulate ist statisch authored, LearnWorlds' KI ist
@@ -65,7 +65,7 @@ einzahlen — nicht ob sie LearnWorlds' Checkliste matchen.
 
 ## Brand-Split
 
-| Feature | verstande.ch (Consumer/Prüfung) | FiKnow (Enterprise/Onboarding) |
+| Feature | verstande.ch (Consumer/Prüfung) | FinKnow (Enterprise/Onboarding) |
 |---|---|---|
 | Mock-Exam + Readiness | ⭐ Kernwert | ⭐ („compliance-ready?") |
 | KI-Tutor | ⭐ | ⭐ |
@@ -80,5 +80,5 @@ einzahlen — nicht ob sie LearnWorlds' Checkliste matchen.
   Quarantäne auf separater Origin denkbar) **und** ist KI-blind (kein Grounding,
   kein Tutor, keine Readiness auf opakem Content). Wäre ein separater,
   gekapselter Kurstyp *neben* den nativen Kursen, kein „Einlesen ins Modell".
-  Reines FiKnow/Enterprise-Thema — **nur** wieder aufgreifen, wenn ein konkreter
+  Reines FinKnow/Enterprise-Thema — **nur** wieder aufgreifen, wenn ein konkreter
   Kunde eine SCORM-Bibliothek hosten lassen will. Bis dahin weggelassen.

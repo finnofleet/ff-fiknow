@@ -1,19 +1,19 @@
-# Bild-Stil — FiKnow
+# Bild-Stil — FinKnow
 
-Basis-Prompt für AI-Bildgenerierung im FiKnow-Look (FINNOFLEET-Variante
+Basis-Prompt für AI-Bildgenerierung im FinKnow-Look (FINNOFLEET-Variante
 der edu-platform).
 
 > Quelle: FINNOFLEET-Brandbook (`brand-refs/FINNOFLEET-brandbook-2026-02-10.pdf`,
-> 02.5 Bildsprache) + [`BRAND-FIKNOW.md`](./BRAND-FIKNOW.md). Aufbau/Workflow
+> 02.5 Bildsprache) + [`BRAND-FINKNOW.md`](./BRAND-FINKNOW.md). Aufbau/Workflow
 > wie beim verstande-Pendant
 > ([`BRAND-IMAGE-STYLE-VERSTANDE.md`](./BRAND-IMAGE-STYLE-VERSTANDE.md)) — aber
 > fiknow ist **Fotografie**, nicht Illustration.
 
 ## Wann nutzen
 
-- Cover-Bilder für FiKnow-Onboarding-Module (`Course.coverImage` in Payload)
+- Cover-Bilder für FinKnow-Onboarding-Module (`Course.coverImage` in Payload)
 - Inline-Abbildungen via `<Figure src="..." />` in Lessons
-- Hero-/Tiles-Grafiken auf der FiKnow-Landing-Page
+- Hero-/Tiles-Grafiken auf der FinKnow-Landing-Page
 - FINNOFLEET-internes Schulungs-/Marketing-Material
 
 ## Workflow

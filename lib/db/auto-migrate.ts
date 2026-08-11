@@ -132,7 +132,7 @@ export async function runAutoMigrations(): Promise<void> {
       });
 
       // (Die auth.uid()/role()-Helfer für RLS legt Schritt 2b an; ein
-      // separates setup-auth.sql gibt es bei FIKNOW nicht — kein GoTrue.)
+      // separates setup-auth.sql gibt es bei FINKNOW nicht — kein GoTrue.)
 
       // --- 4. Payload-Migrationen -------------------------------------
       //

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Benutzer-/Rollenverwaltung liegt bei FIKNOW vollständig im Identity-Provider
+ * Benutzer-/Rollenverwaltung liegt bei FINKNOW vollständig im Identity-Provider
  * (Keycloak): Rollen werden bei jedem Login aus den Token-Claims übernommen,
  * eine App-interne Änderung hätte keinen Bestand. Daher nur ein Hinweis.
  */

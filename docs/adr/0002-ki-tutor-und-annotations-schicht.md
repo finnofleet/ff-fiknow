@@ -63,7 +63,7 @@ brand-übergreifend geteilt.
   Open-Models, managed) · self-hosted Open-Model (nur wenn ein Vertrag On-Prem
   erzwingt — Qualität ist bei einem Prüfungs-Tutor ein *Safety*-Merkmal,
   halluziniertes Recht ist schlimmer als kein Tutor).
-- **Handover:** Bei FiKnow-Übergabe legt die Firma ihr eigenes Provider-Konto an
+- **Handover:** Bei FinKnow-Übergabe legt die Firma ihr eigenes Provider-Konto an
   → ihr Key in FiKnoms Env → unser Key raus. Eine Env-Var, kein Code-Change.
   (Das LLM-Konto reiht sich in die übrigen brand-spezifischen Konten ein:
   Supabase/GoTrue, DB, Storage, Domain, Entra-Tenant, GHCR.)
@@ -190,7 +190,7 @@ PII-Leak.
 - Konkreter EU/ZDR-Pfad (Bedrock vs Vertex vs Anthropic-Enterprise) — abhängig
   von vertraglicher ZDR-Verfügbarkeit für die jeweilige Region.
 - Sichtbarkeit von Annotationen: v1 privat; später evtl. geteilte/Instruktor-
-  Annotationen (FiKnow-Kohorte) — eigener Scope.
+  Annotationen (FinKnow-Kohorte) — eigener Scope.
 
 ## Konsequenzen
 
@@ -198,6 +198,6 @@ PII-Leak.
 - Neuer authentifizierter Endpoint (Tutor) mit Provider-Abstraktion, Grounding,
   Rate-Limit, Output-Sanitisierung, Gating.
 - Neue Deploy-Vars pro Brand (`LLM_*`) — in die README-Deploy-Notiz + die
-  FiKnow-Handover-Checkliste aufnehmen.
+  FinKnow-Handover-Checkliste aufnehmen.
 - Der Render-/Sanitisierungs-Ansatz aus `lib/mdx/` ist wiederverwendbar für die
   Tutor-Output-Darstellung.

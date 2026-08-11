@@ -1,5 +1,5 @@
 # ============================================================
-# FIKNOW — Brand-Konfiguration
+# FINKNOW — Brand-Konfiguration
 #
 # White-Label-Instanz der edu-platform für FINNOFLEET — geführte
 # Wissensvermittlung (Onboarding, Tool-Schulungen, interne Zertifizierungen,
@@ -10,10 +10,10 @@
 # ============================================================
 
 identity:
-  # FIKNOW ist einteilig (ohne Punkt) — wird daher in Primärfarbe
+  # FINKNOW ist einteilig (ohne Punkt) — wird daher in Primärfarbe
   # uniform gerendert, kein dezent abgesetzter TLD-Teil.
-  name: FIKNOW
-  # FIKNOWs eigener Claim (deutsch, interne Zielgruppe). "Kurs" =
+  name: FINKNOW
+  # FINKNOWs eigener Claim (deutsch, interne Zielgruppe). "Kurs" =
   # zugleich Schiffsrichtung, Lernkurs und Idiom "Kurs geben"; das
   # maritime Motiv knüpft bewusst an das Navigations-Thema der Gruppe an.
   tagline: mit Wissen auf Kurs

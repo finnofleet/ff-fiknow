@@ -28,7 +28,7 @@ entsteht.
 **RLS-Durchsetzung (P7) wird bewusst zurückgestellt; das Restrisiko wird
 getragen.** Begründung:
 
-- **Keine echte Mandantierung.** FIKNOW ist Single-Tenant mit Entitäts-*Sicht*-
+- **Keine echte Mandantierung.** FINKNOW ist Single-Tenant mit Entitäts-*Sicht*-
   Filtern (Land/BU), keine harte Mandantentrennung — der Schutzbedarf, den RLS
   klassisch adressiert, ist entsprechend geringer.
 - **Kein direktes REST-/Tabellen-Schlupfloch** (Angriffsflächen-Analyse unten):
@@ -216,7 +216,7 @@ Big-Bang.
 2. **Mechanismus:** Option A (zwei Rollen/Pools, empfohlen) vs. B (FORCE +
    Service-Claim)?
 3. **DB-Provisioning-Hoheit:** Wer legt die eingeschränkte Rolle + GRANTs in den
-   Ziel-DBs an (IBM Cloud / Managed-Postgres) — FIKNOW-Team oder IT? Auto-Migrate
+   Ziel-DBs an (IBM Cloud / Managed-Postgres) — FINKNOW-Team oder IT? Auto-Migrate
    läuft heute als Owner; eine zweite Rolle braucht ggf. einen manuellen
    Provisioning-Schritt.
 4. **Aufwand/Nutzen jetzt:** Der reale Restnutzen ist Defense-in-Depth gegen

@@ -12,9 +12,9 @@ verschiedene Sessions hinweg generiert werden.
 - Hero-/Tiles-Grafiken auf der Landing-Page
 - Marketing-Material rund um verstande.ch
 
-Für **FiKnow** gibt es einen separaten Basis-Prompt (Sora/FINNOFLEET-Grün,
+Für **FinKnow** gibt es einen separaten Basis-Prompt (Sora/FINNOFLEET-Grün,
 geometrischer, weniger handgezeichnet) — bei Bedarf analoges Dokument
-unter `BRAND-IMAGE-STYLE-FIKNOW.md`.
+unter `BRAND-IMAGE-STYLE-FINKNOW.md`.
 
 ## Workflow
 

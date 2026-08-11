@@ -1,6 +1,6 @@
 # Changelog
 
-Alle nennenswerten Änderungen an FiKnow werden hier festgehalten.
+Alle nennenswerten Änderungen an FinKnow werden hier festgehalten.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).

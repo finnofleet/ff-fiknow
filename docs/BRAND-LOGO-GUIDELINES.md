@@ -1,4 +1,4 @@
-# Logo-Guidelines — verstande.ch & FiKnow
+# Logo-Guidelines — verstande.ch & FinKnow
 
 Anleitung für die AI-gestützte Logo-Generierung der zwei Brands. Dies ist
 **kein** Cover-Bild-Leitfaden — für Editorial-Illustrationen siehe
@@ -83,13 +83,13 @@ Avoid: photorealism, 3D rendering, perspective depth, colour, texture,
 typography, decorative flourishes, complex linework, thin serifs.
 ```
 
-### FiKnow
+### FinKnow
 
 Tonalität: geometrisch, technisch-modern, leicht korporativ. Orientiert sich
 an FINNOFLEET-Grün und einem modularen, verbundenen Charakter.
 
 ```
-Create a minimal geometric vector logo mark for FiKnow, a B2B
+Create a minimal geometric vector logo mark for FinKnow, a B2B
 e-learning product for the financial sector. Single abstract symbol —
 no text, no letters. Choose one concept: an abstracted letter F as a
 pure geometric shape, a connector node with two or three linked
@@ -117,6 +117,6 @@ rounded humanist aesthetics.
 ## 4. Ohne Logo bleiben — ein valider Default
 
 Wenn kein Logo-Asset vorhanden ist, zeigt das UI automatisch den Buchstaben
-aus `brand.markLetter` (z. B. „V" für verstande, „F" für FiKnow). Das ist
+aus `brand.markLetter` (z. B. „V" für verstande, „F" für FinKnow). Das ist
 kein Fehler — ein Buchstaben-Mark funktioniert, ist nur weniger distinkt.
 Eine Brand ohne `brand/assets/logo.svg` läuft ohne Anpassung weiter.

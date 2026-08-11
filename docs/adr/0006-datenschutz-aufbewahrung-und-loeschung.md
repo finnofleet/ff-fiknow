@@ -98,9 +98,9 @@ daher in zwei Ebenen, die sich **nicht ersetzen**:
 
 - **Identität → Keycloak/HR.** Das „diese Person existiert nicht mehr" gehört in
   den IdP — im Enterprise-Setup typischerweise zentral über HR/IT beim
-  MA-Austritt. Kein Self-Service in FiKnow (die Profil-Seite verweist bereits auf
+  MA-Austritt. Kein Self-Service in FinKnow (die Profil-Seite verweist bereits auf
   die zentrale SSO-Verwaltung).
-- **App-Daten → lokal in FiKnow.** Keycloak kennt FiKnows Postgres nicht — es
+- **App-Daten → lokal in FinKnow.** Keycloak kennt FinKnows Postgres nicht — es
   gibt keine Foreign Keys, keine Kaskade, kein automatisches Signal. Eine Löschung
   in Keycloak räumt lokal **nichts** auf; die Zeilen (Klasse A und B) blieben
   verwaist stehen. Die lokale Lösch-/Anonymisierungslogik muss deshalb
@@ -142,7 +142,7 @@ finale Frist (Default 3 Jahre) formal ab.
 - **Phase 7a — Datenklassen + Retention-Policy + RoPA. ✓ umgesetzt.**
   Klassifikation (A/B) codifiziert (`lib/privacy/data-classes.ts`), Frist-Logik
   (`lib/privacy/retention.ts`, `FIKNOW_RETENTION_YEARS` Default 3),
-  Verzeichnis der Verarbeitungstätigkeiten (`docs/ROPA-fiknow.md`).
+  Verzeichnis der Verarbeitungstätigkeiten (`docs/ROPA-finknow.md`).
 - **Phase 7b — Löschung Klasse (B) + Purge-Primitive. ✓ umgesetzt.**
   `purgeUserData(userId)` (`lib/privacy/purge-user.ts`) löscht Klasse (B) über
   alle Tabellen per `userId` + offene Assignments in einer Transaktion; Admin-

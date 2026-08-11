@@ -29,7 +29,7 @@ export const Lessons: CollectionConfig = {
     ],
     description:
       "Lesson gehört zu einer Section. Body ist MDX — siehe AUTHORING.md " +
-      "und FIKNOW-AUTOR-GUIDE.md für unterstützte Components.",
+      "und FINKNOW-AUTOR-GUIDE.md für unterstützte Components.",
   },
   access: {
     read: readPublishedOrEditor,

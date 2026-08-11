@@ -108,7 +108,7 @@
 
   /* --accent / --accent-ink kommen aus :root (brand-konstant) */
   --accent-soft: oklch(0.92 0.05 70);
-  /* Heller Brand-Accent (z. B. FiKnow-Lime) als kleiner Text auf hellem Grund
+  /* Heller Brand-Accent (z. B. FinKnow-Lime) als kleiner Text auf hellem Grund
      failt WCAG → für Vordergrund-Text abdunkeln (Hue bleibt, Lightness runter).
      Großer Display-Text/Buttons nutzen weiter --accent (vibrant). */
   --accent-text: color-mix(in oklch, var(--accent), black 38%);

@@ -5,7 +5,7 @@
  * Der Index-Pfad (Upload-Hook, Re-Index, Backfill) und das Query-Embedding im
  * Tutor rufen NICHT einen hartverdrahteten Anbieter, sondern dieses
  * `EmbeddingProvider`-Interface. Konfiguration pro Deployment via Env-Vars
- * (siehe ./env.ts), nie brand-übergreifend geteilt — beim FiKnow-Handover legt
+ * (siehe ./env.ts), nie brand-übergreifend geteilt — beim FinKnow-Handover legt
  * die Firma ihr eigenes Voyage-Konto an → ihr Key in deren Env.
  *
  * Die Vektor-Dimension ist KEIN Provider-Detail: alle Embeddings im Index

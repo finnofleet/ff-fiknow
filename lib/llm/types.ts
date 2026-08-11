@@ -3,7 +3,7 @@
  *
  * Der Tutor ruft NICHT einen hartverdrahteten Anbieter, sondern dieses
  * `CompletionProvider`-Interface. Konfiguration pro Deployment via Env-Vars
- * (siehe ./env.ts), nie brand-übergreifend geteilt. Bei FiKnow-Handover legt
+ * (siehe ./env.ts), nie brand-übergreifend geteilt. Bei FinKnow-Handover legt
  * die Firma ihr eigenes Provider-Konto an → ihr Key in deren Env → eine
  * Env-Var, kein Code-Change.
  *

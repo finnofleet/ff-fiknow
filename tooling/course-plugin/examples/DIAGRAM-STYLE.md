@@ -234,5 +234,5 @@ Zwei häufige Fehler, die sofort billig wirken:
 ## Referenzen
 
 - Vollständige Hintergrund-Doku: `docs/diagram-style/SVG-DIAGRAM-STYLE.md` (Repo)
-- Brand-Specs fiknow/FINNOFLEET: `docs/BRAND-FIKNOW.md` (Repo)
+- Brand-Specs fiknow/FINNOFLEET: `docs/BRAND-FINKNOW.md` (Repo)
 - Skill zum Authoring: `skills/course-diagram.md`

@@ -7,7 +7,7 @@ import {
 } from "@/lib/auth/provider/oidc/session";
 
 /**
- * Request-Gate (aus dem Root-Proxy aufgerufen). FIKNOW ist OIDC-only:
+ * Request-Gate (aus dem Root-Proxy aufgerufen). FINKNOW ist OIDC-only:
  * verifiziert das signierte ep_session-Cookie (Edge-kompatibel via WebCrypto)
  * und leitet Unangemeldete zur SSO-Login-Route.
  */

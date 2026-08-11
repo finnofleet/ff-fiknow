@@ -1,7 +1,7 @@
 /**
  * Auth-Provider.
  *
- * FIKNOW nutzt ausschliesslich OIDC (Keycloak) — es gibt KEINEN
+ * FINKNOW nutzt ausschliesslich OIDC (Keycloak) — es gibt KEINEN
  * AUTH_PROVIDER-Schalter mehr. `getAuthProvider()` bleibt als Einstiegspunkt
  * erhalten (Session-/Payload-Code ruft es), liefert aber fest den OIDC-Provider.
  */

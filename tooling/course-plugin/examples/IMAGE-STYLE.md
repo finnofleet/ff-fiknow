@@ -188,7 +188,7 @@ Der Basis-Block bleibt immer unverändert. Pro Bild wird am Ende eine kurze
 ## Referenzen
 
 - Vollständige Brand-Doku verstande: `docs/BRAND-IMAGE-STYLE-VERSTANDE.md` (Repo)
-- Vollständige Brand-Doku fiknow: `docs/BRAND-IMAGE-STYLE-FIKNOW.md` (Repo)
-- Brand-Specs fiknow/FINNOFLEET: `docs/BRAND-FIKNOW.md` (Repo)
+- Vollständige Brand-Doku fiknow: `docs/BRAND-IMAGE-STYLE-FINKNOW.md` (Repo)
+- Brand-Specs fiknow/FINNOFLEET: `docs/BRAND-FINKNOW.md` (Repo)
 - Skill zum Authoring: `skills/course-image.md`
 - Diagramm-Äquivalent: `skills/course-diagram.md` / `examples/DIAGRAM-STYLE.md`

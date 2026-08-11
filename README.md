@@ -1,13 +1,13 @@
-# FIKNOW (ff-fiknow)
+# FINKNOW (ff-fiknow)
 
 > mit Wissen auf Kurs
 
 Die Lernplattform von FINNOFLEET für geführte Wissensvermittlung (Onboarding,
 Tool-Schulungen, interne Zertifizierungen).
 
-Eigenständiger, firmen-eigener Stand: Plattform-Code und FIKNOW-Brand sind hier
+Eigenständiger, firmen-eigener Stand: Plattform-Code und FINKNOW-Brand sind hier
 zu **einem** Repository verschmolzen (hervorgegangen aus der edu-platform). Kein
-Basis-Image-+-Overlay mehr — dieses Repo baut und deployt FIKNOW direkt.
+Basis-Image-+-Overlay mehr — dieses Repo baut und deployt FINKNOW direkt.
 
 - **Auth:** OIDC-only via **Keycloak** (Entra ID wird upstream in Keycloak
   föderiert). Rolle = Keycloak als Source of Truth, gemappt aus Token-Claims.

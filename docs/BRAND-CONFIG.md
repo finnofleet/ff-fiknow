@@ -59,7 +59,7 @@ winziges Dockerfile und einen GitHub-Actions-Workflow.
 
 In Jelastic wird dann pro Env das jeweilige Brand-Image gepullt:
 - verstande-Env → `ghcr.io/<owner>/edu-platform:latest`
-- FiKnow-Env → `ghcr.io/<owner>/fiknow:latest`
+- FinKnow-Env → `ghcr.io/<owner>/fiknow:latest`
 
 ## Brand-Repo aufsetzen
 

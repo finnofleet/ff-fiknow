@@ -47,7 +47,7 @@ Es gibt **kein übergreifendes Dashboard**. Der Übergang von Kurs 1 zu Kurs 2 p
 
    > **RAG-Scope-Implikation (siehe [ADR 0003](adr/0003-rag-grounding-fuer-den-ki-tutor.md)):** Der KI-Tutor groundet in v1 **kurs-scoped** (Retrieval nur über den aktuellen Kurs). Sobald Lernpfade etabliert sind, muss sich das Retrieval **am ganzen Pfad** orientieren — mehrere Kurse als Scope — damit der Tutor pfad-übergreifend antwortet (z. B. eine Frage, deren Antwort in einem früheren Kurs des Pfads steht). Beim Bau der Lernpfade mitdenken: der Vektor-Index muss pfad-weit abfragbar sein.
 
-> **Offene Frage**: Building AI setzt Python-Kenntnisse voraus und kommuniziert das klar auf der Marketing-Seite. Wenn wir FiKnow-Kurse mit unterschiedlichen Vorkenntnissen bauen, brauchen wir eine ähnliche Voraussetzungs-Kommunikation auf der Course-Detail-Seite — heute fehlt das in unserem Modell.
+> **Offene Frage**: Building AI setzt Python-Kenntnisse voraus und kommuniziert das klar auf der Marketing-Seite. Wenn wir FinKnow-Kurse mit unterschiedlichen Vorkenntnissen bauen, brauchen wir eine ähnliche Voraussetzungs-Kommunikation auf der Course-Detail-Seite — heute fehlt das in unserem Modell.
 
 ---
 

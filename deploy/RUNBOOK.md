@@ -1,7 +1,7 @@
-# FIKNOW — Deployment-Runbook (Kubernetes / IBM)
+# FINKNOW — Deployment-Runbook (Kubernetes / IBM)
 
-Schritt-für-Schritt-Anleitung, um FIKNOW (`ff-fiknow`) auf einem Kubernetes-
-Cluster in Betrieb zu nehmen. FIKNOW ist **OIDC-only** (Keycloak) und braucht
+Schritt-für-Schritt-Anleitung, um FINKNOW (`ff-fiknow`) auf einem Kubernetes-
+Cluster in Betrieb zu nehmen. FINKNOW ist **OIDC-only** (Keycloak) und braucht
 ein **externes Postgres** — beide werden vom Cluster-/Firmen-Umfeld
 bereitgestellt, nicht vom Chart.
 
@@ -217,9 +217,9 @@ Redirect-Base oder ein Secret fehlt — die Meldung sagt, was.
 
 ## 5a. KI-Tutor & RAG (optional, eigene Keys)
 
-Der KI-Tutor ist **deploymentweit optional** — ohne Keys läuft FIKNOW normal
+Der KI-Tutor ist **deploymentweit optional** — ohne Keys läuft FINKNOW normal
 (Kurse, Quiz, Progress, Annotationen), nur die Tutor-/RAG-Funktionen sind aus.
-Beim Handover an FIKNOW unbedingt **eigene Provider-Konten** anlegen (die Keys
+Beim Handover an FINKNOW unbedingt **eigene Provider-Konten** anlegen (die Keys
 aus edu-platform gehören nicht der Firma) — es ist ein reiner Env-Var-Tausch,
 kein Code-Change.
 
@@ -465,7 +465,7 @@ nur anderes `command` (`node_modules/.bin/tsx scripts/retention-purge.ts
 über `cronjob.retentionPurge.dryRun` in den Values) erzwingt serverseitig
 einen dry-run, selbst wenn `--confirm` gesetzt ist.
 
-> **Erwartung: 0 gelöschte Zeilen, auf absehbare Zeit.** FIKNOW läuft erst seit
+> **Erwartung: 0 gelöschte Zeilen, auf absehbare Zeit.** FINKNOW läuft erst seit
 > 2026 produktiv — bei einer 3-Jahres-Frist wird der Job also noch länger
 > nichts zu löschen finden. Das ist **kein Fehler**: Der nächtliche Lauf
 > validiert, dass der Mechanismus funktioniert (Job startet, verbindet sich

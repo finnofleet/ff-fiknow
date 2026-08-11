@@ -1,21 +1,21 @@
-# Inhalte schreiben — Stil- und Didaktik-Referenz (FIKNOW)
+# Inhalte schreiben — Stil- und Didaktik-Referenz (FINKNOW)
 
-Diese Datei ist die **redaktionelle und didaktische** Schreib-Anleitung für FIKNOW-Kursinhalte. FIKNOW ist die FINNOFLEET-interne Plattform für **geführte Wissensvermittlung** — sie macht beliebige Themen schulbar (mehr dazu unter „Positionierung"). Sie ergänzt das Topic `bundle-format` (via `get_authoring_guide` bzw. die Resource `authoring://format/bundle`), überschneidet sie aber nicht: Alles zum Bundle-Format, zur Ordnerstruktur, zu Frontmatter-Feldern und zu MDX-Komponenten-Syntax steht dort. Hier geht es um Stimme, Ton, Didaktik und Qualitätsstandards.
+Diese Datei ist die **redaktionelle und didaktische** Schreib-Anleitung für FINKNOW-Kursinhalte. FINKNOW ist die FINNOFLEET-interne Plattform für **geführte Wissensvermittlung** — sie macht beliebige Themen schulbar (mehr dazu unter „Positionierung"). Sie ergänzt das Topic `bundle-format` (via `get_authoring_guide` bzw. die Resource `authoring://format/bundle`), überschneidet sie aber nicht: Alles zum Bundle-Format, zur Ordnerstruktur, zu Frontmatter-Feldern und zu MDX-Komponenten-Syntax steht dort. Hier geht es um Stimme, Ton, Didaktik und Qualitätsstandards.
 
 ---
 
 ## 1. Marke & Stimme
 
-- **Marke**: FIKNOW — Claim „mit Wissen auf Kurs". Der Markenname wird durchgängig in Versalien geschrieben (**FIKNOW**), analog zu **FINNOFLEET**.
+- **Marke**: FINKNOW — Claim „mit Wissen auf Kurs". Der Markenname wird durchgängig in Versalien geschrieben (**FINKNOW**), analog zu **FINNOFLEET**.
 - **Claim**: **„mit Wissen auf Kurs"** (deutsch). „Kurs" trägt drei Bedeutungen zugleich: die Schiffsrichtung (Orientierung), den Lernkurs (das Produkt) und das Idiom „jemandem Kurs geben". Das maritime „Kurs"-Motiv knüpft bewusst an das Navigations-Thema der Gruppe an — daher konsistent halten.
 - **Tonfall**: Hochdeutsch, klar, professionell, zugänglich. Keine Marketingfloskeln. Keine Du-/Sie-Mischung — durchgängig **Du**, respektvoll und direkt, ohne Distanz oder Anbiederung.
 - **Sachlich, nicht akademisch**: mittlere Satzlänge; Fachbegriffe einführen statt voraussetzen; pro abstrakter Idee mindestens ein konkretes Beispiel aus dem Arbeitsalltag bei FINNOFLEET.
-- **Nicht verspielt**: FIKNOW ist kein Edutainment-Produkt. Der Ton ist clean und präzise — wie ein gut geschriebenes internes Fachdokument, das trotzdem lesbar ist. Kein Humor auf Kosten der Substanz.
+- **Nicht verspielt**: FINKNOW ist kein Edutainment-Produkt. Der Ton ist clean und präzise — wie ein gut geschriebenes internes Fachdokument, das trotzdem lesbar ist. Kein Humor auf Kosten der Substanz.
 - **Kein Dialekt, keine umgangssprachlichen Abkürzungen** im Lerntext.
 
 ### Positionierung
 
-FIKNOW macht **beliebige Themen schulbar**. Der Kern ist **geführte Wissensvermittlung** — didaktisch strukturiert, statt einer losen Sammlung von Dokumentlinks. Onboarding ist der prominenteste Anwendungsfall (und der, der heute oft jedes Mal neu als Checkliste mit losen Links erfunden wird), aber nur **einer** von mehreren:
+FINKNOW macht **beliebige Themen schulbar**. Der Kern ist **geführte Wissensvermittlung** — didaktisch strukturiert, statt einer losen Sammlung von Dokumentlinks. Onboarding ist der prominenteste Anwendungsfall (und der, der heute oft jedes Mal neu als Checkliste mit losen Links erfunden wird), aber nur **einer** von mehreren:
 
 | Kurstyp | Beispiel |
 |---|---|
@@ -46,7 +46,7 @@ Die drei Säulen der Marke — **Mensch & Orientierung**, **FinTech** (IT-, Soft
 | Kurze, aktive Sätze; Fachbegriffe fett beim ersten Auftreten | Nominalstil, Schachtelsätze, Passiv-Konstruktionen ohne Grund |
 | Kursinhalt an realen FINNOFLEET-Produkten/Abläufen verankern | Generische Beispiele ohne Bezug zur Gruppe |
 
-> **Glossar**: Es gibt (noch) keine zentrale FINNOFLEET-Terminologieliste für den Lerntext. FIKNOW pflegt stattdessen ein **eigenes Mini-Glossar**, das mit den Kursen mitwächst — dort landen wiederkehrende Fachbegriffe und bei Bedarf auch Subbrand-Namen (SUBITO, engram, …), damit der Style-Guide selbst sie nicht kennen muss.
+> **Glossar**: Es gibt (noch) keine zentrale FINNOFLEET-Terminologieliste für den Lerntext. FINKNOW pflegt stattdessen ein **eigenes Mini-Glossar**, das mit den Kursen mitwächst — dort landen wiederkehrende Fachbegriffe und bei Bedarf auch Subbrand-Namen (SUBITO, engram, …), damit der Style-Guide selbst sie nicht kennen muss.
 
 ---
 
@@ -123,11 +123,11 @@ Dies ist ein Startvorschlag als **Beispiel** für *einen* Kurstyp — keine Vors
 
 Ca. 10 Reading-Lessons + 5 Quizzes. Bei 10–12 Min pro Reading und 6 Min pro Quiz: ~2–2,5 Stunden Material.
 
-> **Kein zentraler Themenkatalog**: FIKNOW ist *keine* zentrale HR-Onboarding-Vorgabe. Kurse entstehen bedarfsgetrieben — wer ein Thema schulbar machen will, autort es. Die Outline oben ist reine Illustration, kein Platzhalter für eine Zulieferung.
+> **Kein zentraler Themenkatalog**: FINKNOW ist *keine* zentrale HR-Onboarding-Vorgabe. Kurse entstehen bedarfsgetrieben — wer ein Thema schulbar machen will, autort es. Die Outline oben ist reine Illustration, kein Platzhalter für eine Zulieferung.
 
 ### Wissens-Nuggets — die schlanke Schwester des vollen Kurses
 
-Neben vollen Kurs-Modulen liefert FIKNOW **Wissens-Nuggets**. Das ist FIKNOWs **Micro-Learning**-Format: ein einzelner, in sich abgeschlossener Lern-Happen, der **eine** konkrete Frage aus dem Arbeitsalltag beantwortet — „Was ist eigentlich ein Kreditrisiko?", „Wie läuft eine Mahnstufe bei uns?". Micro-Learning meint bewusst kleine, fokussierte Einheiten, die man **dann** zieht, wenn man sie braucht (Pull), statt sie wie eine Lernstrecke durchzuarbeiten (Push).
+Neben vollen Kurs-Modulen liefert FINKNOW **Wissens-Nuggets**. Das ist FINKNOWs **Micro-Learning**-Format: ein einzelner, in sich abgeschlossener Lern-Happen, der **eine** konkrete Frage aus dem Arbeitsalltag beantwortet — „Was ist eigentlich ein Kreditrisiko?", „Wie läuft eine Mahnstufe bei uns?". Micro-Learning meint bewusst kleine, fokussierte Einheiten, die man **dann** zieht, wenn man sie braucht (Pull), statt sie wie eine Lernstrecke durchzuarbeiten (Push).
 
 Der Unterschied zum vollen Kurs ist nicht „Pfad ja/nein", sondern **Anlass und Tiefe**:
 
@@ -166,11 +166,11 @@ Onboarding und Nugget-Sammlung sind nicht zwei Formate, sondern derselbe Gedanke
 
 ---
 
-## 4. FIKNOW-Master-Prompt
+## 4. FINKNOW-Master-Prompt
 
 Diesen Block kopierst du als ersten Turn in eine neue Authoring-Session (Cowork oder anderes KI-Tool). Die Session arbeitet danach Lesson für Lesson.
 
-> Du bist Co-Autor für **FIKNOW** (immer in Versalien), die interne Lernplattform von FINNOFLEET — einer FinTech-Gruppe mit Spezialkredit-Software für das Kreditmanagement. FIKNOW macht beliebige Themen schulbar: **geführte Wissensvermittlung** statt loser Dokumentlinks — Onboarding, Tool-Schulungen, interne Zertifizierungen, Nutzerschulungen. FIKNOW-Claim: „mit Wissen auf Kurs".
+> Du bist Co-Autor für **FINKNOW** (immer in Versalien), die interne Lernplattform von FINNOFLEET — einer FinTech-Gruppe mit Spezialkredit-Software für das Kreditmanagement. FINKNOW macht beliebige Themen schulbar: **geführte Wissensvermittlung** statt loser Dokumentlinks — Onboarding, Tool-Schulungen, interne Zertifizierungen, Nutzerschulungen. FINKNOW-Claim: „mit Wissen auf Kurs".
 >
 > Wir schreiben gerade den Kurs **„[Kurstitel]"** (Kurstyp: [Onboarding/Tool-Schulung/Zertifizierung/Nutzerschulung], Niveau: [Einsteiger/Fortgeschritten/Experte], Zielgruppe/BU: [...]).
 >
@@ -228,22 +228,22 @@ Das Ergebnis fügst du ins Bundle unter `<NN>-<section>/<MM>-<slug>.mdx` ein und
 - [ ] Keine verschachtelten Anführungszeichen in MDX-Attribut-Werten
 - [ ] Bundle hochgeladen als Draft → im echten Learner-Shell geprüft → erst dann publishen
 
-> **Entschieden (kein Disclaimer)**: FIKNOW-Kurse brauchen *keinen* Compliance-Disclaimer am Kursende. FIKNOW ist rein ergänzend; ein rechtlicher Hinweis ist nicht nötig. (Sollte sich das ändern, hier und in der Checkliste ergänzen.)
+> **Entschieden (kein Disclaimer)**: FINKNOW-Kurse brauchen *keinen* Compliance-Disclaimer am Kursende. FINKNOW ist rein ergänzend; ein rechtlicher Hinweis ist nicht nötig. (Sollte sich das ändern, hier und in der Checkliste ergänzen.)
 
 ---
 
 ## Entschieden
 
-- **Positionierung**: FIKNOW macht *beliebige Themen schulbar* — geführte Wissensvermittlung (Onboarding, Tool-Schulungen, interne Zertifizierungen, Nutzerschulungen). Onboarding ist ein Anwendungsfall, nicht der Zweck. Differenzierer: geführt & didaktisch statt loser Dokumentlinks.
-- **Markenname**: durchgängig in Versalien — **FIKNOW**, analog zu **FINNOFLEET**.
-- **Claim**: **„mit Wissen auf Kurs"** (deutsch, FIKNOW-eigen).
+- **Positionierung**: FINKNOW macht *beliebige Themen schulbar* — geführte Wissensvermittlung (Onboarding, Tool-Schulungen, interne Zertifizierungen, Nutzerschulungen). Onboarding ist ein Anwendungsfall, nicht der Zweck. Differenzierer: geführt & didaktisch statt loser Dokumentlinks.
+- **Markenname**: durchgängig in Versalien — **FINKNOW**, analog zu **FINNOFLEET**.
+- **Claim**: **„mit Wissen auf Kurs"** (deutsch, FINKNOW-eigen).
 - **Anrede**: durchgängig **Du** — direkt, respektvoll, ohne Distanz; keine Du-/Sie-Mischung.
 - **Niveau-Stufen**: Einsteiger / Fortgeschritten / Experte (steuert die Begriffstiefe).
 - **Zielgruppe festhalten**: gilt ein Inhalt nicht gruppenweit, Business Unit / Firma / Rolle im `summary` benennen; gruppenweit = kein Hinweis nötig.
 - **Lernpfade**: Onboarding (geführt) und Nugget-Sammlung (lose) sind derselbe Lernpfad-Gedanke bei unterschiedlichem Führungsgrad. Nuggets bleiben eigenständig; das Bündeln zu Pfaden ist Plattform-/Roadmap-Sache.
-- **Glossar**: kein zentraler externer Glossar; FIKNOW pflegt ein eigenes, mitwachsendes Mini-Glossar (auch für Subbrand-Begriffe).
-- **Subbrands**: FIKNOW gilt gruppenweit; Töchter (SUBITO, engram, …) dürfen im Kurstext als Beispiele genannt werden — Erklärung läuft bei Bedarf übers Glossar, der Style-Guide muss sie nicht kennen.
-- **Compliance-Disclaimer**: keiner (FIKNOW ist rein ergänzend).
+- **Glossar**: kein zentraler externer Glossar; FINKNOW pflegt ein eigenes, mitwachsendes Mini-Glossar (auch für Subbrand-Begriffe).
+- **Subbrands**: FINKNOW gilt gruppenweit; Töchter (SUBITO, engram, …) dürfen im Kurstext als Beispiele genannt werden — Erklärung läuft bei Bedarf übers Glossar, der Style-Guide muss sie nicht kennen.
+- **Compliance-Disclaimer**: keiner (FINKNOW ist rein ergänzend).
 - **Kein zentraler Themenkatalog**: Kurse entstehen bedarfsgetrieben, nicht aus einer HR-Vorgabe.
 
 > **Abgrenzung**: Architektur- und Produktfragen (z. B. wie Lernpfade technisch abgebildet werden, ob Relevanz ein echtes Frontmatter-Feld wird, ob es eine Mandantierung gibt) gehören **nicht** in dieses Dokument, sondern zu den ADRs/Roadmap. Hier steht nur, *wie Inhalte aufgebaut werden*.

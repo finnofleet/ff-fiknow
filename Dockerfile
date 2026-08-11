@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # ============================================================
-# FIKNOW (ff-fiknow) — Production-Image
+# FINKNOW (ff-fiknow) — Production-Image
 #
 # Multi-stage Build:
 #   1. deps     → npm ci (nur production-dependencies)
@@ -10,8 +10,8 @@
 # Result: ~150 MB Image, läuft als non-root auf Kubernetes
 # (IBM Cloud, Helm-Chart unter deploy/helm/fiknow).
 #
-# Brand-Konfig (brand/brand.yaml) ist FIKNOW-spezifisch im Image.
-# Das Repository baut FIKNOW direkt — kein Basis-Image-Overlay mehr.
+# Brand-Konfig (brand/brand.yaml) ist FINKNOW-spezifisch im Image.
+# Das Repository baut FINKNOW direkt — kein Basis-Image-Overlay mehr.
 # Image: ghcr.io/finnofleet/ff-fiknow
 #
 # Deployment-Doku: deploy/RUNBOOK.md
@@ -67,7 +67,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # oder per Brand-Build-Overlay (siehe Brand-Repo-Pattern).
 RUN mkdir -p ./content && chown nextjs:nodejs ./content
 
-# Brand-Konfig: FIKNOW-Brand ist im Image (brand/brand.yaml aus diesem Repo).
+# Brand-Konfig: FINKNOW-Brand ist im Image (brand/brand.yaml aus diesem Repo).
 COPY --from=builder --chown=nextjs:nodejs /app/brand ./brand
 
 # Migrations-Artefakte für Auto-Migrate beim App-Start

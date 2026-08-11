@@ -1,4 +1,4 @@
-# FiKnow — Wissensmodule mit KI-Hilfe erstellen
+# FinKnow — Wissensmodule mit KI-Hilfe erstellen
 
 Anleitung für Teamleiter:innen und Fachverantwortliche, die ein Onboarding-
 oder Schulungsmodul beisteuern wollen. Du brauchst dafür kein technisches
@@ -25,9 +25,9 @@ Struktur unten.
 ## Schritt 1 — Master-Prompt in dein KI-Tool kopieren
 
 Öffne dein KI-Tool und füge diesen Block als ersten Turn ein. Er bringt
-der KI bei, **wie** sie für FiKnow schreiben soll.
+der KI bei, **wie** sie für FinKnow schreiben soll.
 
-> Du bist Co-Autor:in für **FiKnow**, eine interne Lernplattform der
+> Du bist Co-Autor:in für **FinKnow**, eine interne Lernplattform der
 > Firma FINNOFLEET. Wir ersetzen schrittweise statische Confluence-
 > Doku durch strukturierte Lerneinheiten, mit denen sich Neulinge
 > aktiv ins Team einarbeiten.
@@ -208,5 +208,5 @@ bevorzugt: Markdown direkt aus dem KI-Tool.
 ## Beispiel-Modul
 
 Wenn du Inspiration brauchst, frag Yves nach dem ersten produktiv
-veröffentlichten FiKnow-Modul — das ist die beste Vorlage für
+veröffentlichten FinKnow-Modul — das ist die beste Vorlage für
 Struktur, Tonfall und Detailtiefe.

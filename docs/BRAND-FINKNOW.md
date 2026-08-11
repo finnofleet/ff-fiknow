@@ -1,7 +1,7 @@
-# FiKnow / FINNOFLEET — Brand-Referenz
+# FinKnow / FINNOFLEET — Brand-Referenz
 
 Destillat aus dem offiziellen Brandbook (`docs/brand-refs/FINNOFLEET-brandbook-2026-02-10.pdf`).
-FiKnow ist die edu-platform-Instanz im FINNOFLEET-Look. **Dieses Dokument ist
+FinKnow ist die edu-platform-Instanz im FINNOFLEET-Look. **Dieses Dokument ist
 die maßgebliche Quelle** für fiknow-Farben, Schrift, Diagramme, Icons und
 Bildsprache — nicht die abgeleiteten CSS-Tokens.
 

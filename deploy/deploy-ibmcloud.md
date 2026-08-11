@@ -1,6 +1,6 @@
-# FIKNOW — Deployment auf IBM Cloud (IKS)
+# FINKNOW — Deployment auf IBM Cloud (IKS)
 
-Konkreter, durchgeführter Walkthrough für den Betrieb von FIKNOW auf einem
+Konkreter, durchgeführter Walkthrough für den Betrieb von FINKNOW auf einem
 **IBM Cloud Kubernetes Service (IKS)**-Cluster. Ergänzt das generische
 [`RUNBOOK.md`](RUNBOOK.md) um die **IBM-spezifischen CLI-Schritte** und die
 **real aufgetretenen Stolpersteine** (allen voran die VPC-File-Netzwerkfreigabe).
@@ -77,7 +77,7 @@ mit der ICD-CA wäre die Härtungs-Option (Backlog).
 
 ## 3. Persistenter Speicher (RWX File Storage)
 
-FIKNOW braucht geteilten, persistenten Speicher für `/data` (Payload-Medien +
+FINKNOW braucht geteilten, persistenten Speicher für `/data` (Payload-Medien +
 Authoring-Bundles), sobald Kurse authored oder Medien hochgeladen werden — bei
 ≥2 Replicas zwingend **ReadWriteMany (RWX)**. In der IBM Cloud = **VPC File
 Storage** (nicht Block = nur RWO, nicht COS/s3fs = kein echtes POSIX-FS).

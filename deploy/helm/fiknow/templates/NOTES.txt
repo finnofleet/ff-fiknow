@@ -1,4 +1,4 @@
-FIKNOW ({{ .Values.image.repository }}:{{ .Values.image.tag }}) wurde deployed.
+FINKNOW ({{ .Values.image.repository }}:{{ .Values.image.tag }}) wurde deployed.
 
 Auth: OIDC (Keycloak)
 OIDC-Issuer:   {{ .Values.config.OIDC_ISSUER }}

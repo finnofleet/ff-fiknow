@@ -1,6 +1,6 @@
 # fiknow — Helm-Chart
 
-Deployt das FIKNOW-OCI-Image (`ghcr.io/finnofleet/ff-fiknow`) auf Kubernetes.
+Deployt das FINKNOW-OCI-Image (`ghcr.io/finnofleet/ff-fiknow`) auf Kubernetes.
 Erfüllt die Deployment-Anforderungen: **OCI-Image**, **OIDC** (Keycloak),
 **non-root**, **externes Postgres**.
 
@@ -10,7 +10,7 @@ Erfüllt die Deployment-Anforderungen: **OCI-Image**, **OIDC** (Keycloak),
 ## Installation
 
 ```bash
-# OIDC (FIKNOW @ IBM) — Beispielwerte anpassen:
+# OIDC (FINKNOW @ IBM) — Beispielwerte anpassen:
 helm upgrade --install fiknow ./deploy/helm/fiknow \
   -f ./deploy/helm/fiknow/values-fiknow-oidc.yaml \
   --namespace fiknow --create-namespace

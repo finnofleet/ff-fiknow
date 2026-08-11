@@ -57,13 +57,13 @@ die dokumentierten Landminen; `brand.name` rendert „FINKNOW"; Typecheck +
 Tests grün.
 
 **Status Ring 1:** ✅ umgesetzt (44 Dateien), 292 Unit-Tests grün,
-`brand.name = FINKNOW`. Zwei bewusst offene Punkte:
+`brand.name = FINKNOW`. Lokal im Dev-Server verifiziert (Titel + Wordmark
+zeigen FINKNOW, kein sichtbares FIKNOW mehr).
 
-- ⛔ **`brand/assets/logo.svg` — Wortmarke muss neu gezeichnet werden.**
-  Die Buchstaben sind Vektorpfade und buchstabieren sichtbar **FIKNOW**
-  (F·I·K·N·[Glühbirne=O]·W). FINKNOW braucht ein zusätzliches **N**-Glyph
-  zwischen I und K plus Neu-Kerning von K/N/Birne/W und `viewBox`-Breite →
-  **Design-Redraw**, kein Text-Edit. Datei bleibt bis dahin unangetastet.
+- ✅ **`brand/assets/logo.svg` — Wortmarke neu gezeichnet.** Zusätzliches
+  **N**-Glyph zwischen I und K eingefügt, Folge-Glyphen (K/N/Glühbirne-O/W)
+  um +254 verschoben, `viewBox`/`width` verbreitert. Mechanisch abgeleitet,
+  **von Yves im Browser abgenommen** („sieht gut aus").
 - Kommentar-Prosa „FIKNOW" in `deploy/helm/**` und `deploy/ibmcloud/**`
   (`.yaml`/`.tpl`) wurde bewusst **nicht** angefasst — diese Infra-Dateien
   gehören zu Ring 3 und werden dort als ein kohärenter Change umgestellt.

@@ -5,10 +5,17 @@ description: >-
   non-root, OIDC-Auth (Keycloak), externes Postgres. Keycloak und Postgres
   werden NICHT mitgeliefert (extern, z. B. vom IBM-Umfeld bereitgestellt).
 type: application
-# Chart-Version (SemVer des Charts selbst).
-version: 0.3.2
-# Default-App-Version = Image-Tag (per values.image.tag überschreibbar).
-appVersion: "fiknow"
+# Chart- und App-Version sind an die App-Version gekoppelt (Lockstep) und
+# werden beim Release von der CI aus dem Git-Tag vX.Y.Z gestempelt
+# (Job `publish-chart` in .github/workflows/build-image.yml, nur auf Tags).
+# Die hier committeten Werte sind reine Platzhalter für lokale Source-Installs
+# — dann den Image-Tag explizit pinnen (values.image.tag).
+#
+#   version    = striktes SemVer ohne v-Präfix (Helm-Pflicht)  → z. B. 0.5.2
+#   appVersion = exakt der Image-Tag (v-Präfix, s. metadata-action) → v0.5.2
+# Ein leerer values.image.tag fällt auf appVersion zurück → repository:appVersion.
+version: 0.0.0
+appVersion: "v0.0.0"
 home: https://github.com/finnofleet/ff-fiknow
 sources:
   - https://github.com/finnofleet/ff-fiknow

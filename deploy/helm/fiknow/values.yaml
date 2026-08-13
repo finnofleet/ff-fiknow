@@ -15,9 +15,10 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/finnofleet/ff-fiknow
-  # IMMER explizit pinnen (kein implizites latest) — z. B. ein main-<sha>
-  # oder ein v-Tag für reproduzierbare Deploys.
-  tag: latest
+  # Leer lassen → nutzt Chart.appVersion (an die App-Version gekoppelt, von
+  # CI aus dem Git-Tag gestempelt) → reproduzierbar. Für ein abweichendes Ziel
+  # (z. B. ein main-<sha> zum Testen) hier explizit einen Tag setzen.
+  tag: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

@@ -171,7 +171,7 @@ Werte-Datei (an die Umgebung anpassen) — siehe auch das Beispiel
 ```yaml
 image:
   repository: ghcr.io/finnofleet/ff-fiknow
-  tag: latest                      # oder ein main-<sha> / v-Tag für reproduzierbar
+  tag: v0.5.1                      # Release-Tag pinnen, kein floating 'latest'
 
 config:
   OIDC_ISSUER: https://keycloak.intern.example.com/realms/fiknow
@@ -674,6 +674,109 @@ select land, count(*) from public.profiles group by land;
   Datenverlust. Ein echtes Zurück auf `varchar` erfordert das manuelle
   Ausführen des `down`-SQL aus der Migration.
 - `OIDC_ROLE_MAP`: alten Wert wiederherstellen + `helm upgrade`.
+
+---
+
+## 7e. Update auf v0.4.0 – v0.5.1 (Betreiber-Prozedur)
+
+Diese drei Releases brauchen **keine** Konfigurationsänderung und **keine**
+Vorabprüfung — alles Nötige passiert beim Pod-Boot. Zwei Dinge sind trotzdem
+betreiberrelevant: eine datenverändernde Migration (`0014`) und eine fachliche
+Änderung, die die Zahl der Pflicht-Zuweisungen erhöhen kann (ADR 0011).
+
+> Kommt der Sprung von einem Stand **vor** v0.3.0, gilt zuerst §7d Schritt 0
+> (Land-Enum-Vorabprüfung) — sonst Crash-Loop. Dieser Abschnitt setzt voraus,
+> dass das erledigt ist.
+
+**Schritt 1 — Image deployen (Pflicht).**
+Ausrollen wie gewohnt via `helm upgrade --install …` (Befehl siehe Abschnitt 5).
+Beim Boot appliziert das Auto-Migrate zwei Drizzle-Migrationen:
+
+| Migration | Wirkung |
+|---|---|
+| `0013_striped_roughhouse` | `lesson_progress.exam_seed` (text, nullable) — additiv |
+| `0014_youthful_spot` | `enrollments.enrolled_at` (NOT NULL, `DEFAULT now()`) + Backfill `enrolled_at := started_at`; `started_at` verliert `NOT NULL` und Default |
+
+> ⚠️ **Wichtig fürs Log-Lesen:** `drizzleMigrate` protokolliert **nicht** pro
+> Migration (`lib/db/auto-migrate.ts`). `0013`/`0014` erscheinen also NICHT
+> namentlich im Log — sichtbar sind nur Postgres-NOTICEs der Art
+> `relation "…" already exists, skipping`. Wer die Migrationsnamen sucht,
+> schliesst leicht falsch, es sei nichts gelaufen.
+> Der Beleg ist die Abschlusszeile `[auto-migrate] fertig in <n> ms`: sie wird
+> erst nach dem Drizzle- UND dem Payload-Schritt ausgegeben, und ein Fehler in
+> `drizzleMigrate` wirft und verhindert den Boot. **Pod Ready = Migrationen
+> durch.**
+
+Beim Rolling Update migriert nur der erste Pod. Der zweite meldet
+`[auto-migrate] Payload-Migrationen aktuell — CLI-Subprozess übersprungen`
+(typisch <200 ms). Das ist erwartet und keine Doppelmigration.
+
+Verifikation:
+```bash
+kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow   # Ready, 0 Restarts
+curl -fsS https://app.fiknow.example.com/api/health
+```
+Backfill prüfen:
+```sql
+select count(*) filter (where enrolled_at is null) as ohne_einschreibung,
+       count(*) filter (where started_at  is null) as ohne_start,
+       count(*)                                    as gesamt
+from enrollments;
+```
+Erwartet: `ohne_einschreibung = 0` (der Backfill füllt alle Bestandszeilen).
+`ohne_start > 0` ist korrekt — zugewiesene, aber noch nicht begonnene
+Teilnahmen zeigen künftig „—" statt eines irreführenden Datums.
+
+**Schritt 2 — Funktionale Abnahme (Pflicht, nur im Browser prüfbar).**
+
+1. **Logout** — war vor v0.4.0 defekt (blieb auf einer Keycloak-Seite hängen).
+   „Abmelden" muss jetzt sauber in die App zurückspringen. Prüft in einem Zug
+   CSP `form-action`, das neue `ep_id_token`-Cookie (`id_token_hint`) und den
+   `303`-Redirect.
+2. **`/manage/pflichtkurse`** — die Spalte **Einschreibedatum** muss neben dem
+   Startdatum stehen, ebenso im CSV-Export.
+3. **Abschlusstest** — „Neuer Versuch" ist eine bewusste Aktion; ein Reload
+   würfelt den Fragensatz nicht mehr neu.
+
+> ⚠️ **Erwartete fachliche Änderung:** Mit ADR 0011 gelten Rollen-Ziele als
+> „diese Rolle ODER höher" — ein `learner`-Ziel erfasst damit auch
+> Kurator:innen und Admins. Die Zahl der Pflicht-Zuweisungen im
+> Compliance-Dashboard **kann nach dem Update steigen**. Das ist der
+> beabsichtigte Fix einer Compliance-Lücke, kein Fehler.
+
+**Schritt 3 — Retention-Purge nachziehen (nur falls nie aktiviert).**
+Kommt der Sprung von einem Stand ohne aktiven CronJob: §7c Schritt 2 anwenden.
+Vor dem ersten Nachtlauf einmal manuell auslösen — nur so zeigt sich, dass
+`tsx` und `scripts/retention-purge.ts` im Produktions-Image liegen:
+```bash
+kubectl create job --from=cronjob/<release>-retention-purge \
+  retention-manual-$(date +%s) -n <namespace>
+kubectl -n <namespace> delete job retention-manual-…   # nach dem Test
+```
+Erwartet im Dry-Run: `deletedCount: 0`. Manuell erzeugte Jobs fallen nicht
+unter `successfulJobsHistoryLimit` und bleiben sonst dauerhaft stehen.
+
+> Container loggen in UTC, der CronJob läuft in seiner `timeZone`. Ein
+> 03:17-Lauf in `Europe/Zurich` erscheint im Log als 01:17.
+
+**v0.5.1** braucht keine Betreiber-Aktion (ausschliesslich Dependency-Bumps).
+Zwei bewusst offene Alerts sind im CHANGELOG begründet.
+
+**Rollback.**
+- Beide Migrationen sind **vorwärts-only** (kein Down-SQL). `helm rollback
+  <release> <rev>` holt das alte Image, NICHT das alte Schema.
+- `0013` ist unschädlich: `exam_seed` ist nullable, das alte Image ignoriert
+  die Spalte.
+- `0014` ist strukturell rollback-tolerant — `enrolled_at` hat `DEFAULT now()`,
+  ein Insert des alten Images ohne diese Spalte funktioniert weiter.
+  **Aber:** `0014` entfernt `NOT NULL` und den Default von `started_at`, auf den
+  sich das alte Modell beim Insert verliess. Nach einem Rollback bekommen
+  **neu** angelegte Einschreibungen daher `started_at = NULL` und zeigen im
+  alten UI kein Startdatum. Bestandszeilen bleiben unberührt; betroffen sind
+  nur Zeilen aus dem Rollback-Fenster. Reparatur: erneutes Upgrade (der
+  Lernbeginn wird dann beim ersten Lektionsstart gesetzt) oder gezieltes
+  `UPDATE enrollments SET started_at = enrolled_at WHERE started_at IS NULL`
+  für die betroffenen Zeilen.
 
 ---
 

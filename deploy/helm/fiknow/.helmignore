@@ -4,3 +4,12 @@
 *~
 .git
 .gitignore
+
+# Produktive Werte-Datei NIE ins Chart-Paket aufnehmen — sie enthält den echten
+# Cluster-Ingress-Host, die Keycloak-Issuer-URL und Deployment-Schalter wie
+# MCP_ENABLED. Analog zum Eintrag in .gitignore, aber zwingend nötig: helm
+# wertet .gitignore NICHT aus. Ohne diese Zeile backt ein `helm package` auf
+# einer Betreiber-Maschine (dort existiert die Datei lokal) die Produktivwerte
+# in den Tarball — und ein anschließendes `helm push` nach GHCR.
+# Die committete values-ibm-production.example.yaml bleibt bewusst im Paket.
+values-ibm-production.yaml

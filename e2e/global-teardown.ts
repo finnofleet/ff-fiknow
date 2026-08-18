@@ -3,7 +3,7 @@
  * the manually-spawned `next dev` process (see global-setup.ts for why it's
  * not managed via `config.webServer`) and the disposable Postgres container.
  * Runs after all specs finish (success or failure), so we never leave
- * `fiknow-e2e-pg` or an orphaned dev server running.
+ * `finknow-e2e-pg` or an orphaned dev server running.
  */
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";

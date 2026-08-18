@@ -8,7 +8,7 @@
  * Kalenderjahres-Runden (die ADR erwähnt "ab Ende des Entstehungsjahres" als
  * Herkunft der 3 Jahre aus dem BGB, legt aber technisch einen einfachen
  * Datums-Offset fest; siehe ADR 0006 für den Rechtskontext). Konfigurierbar
- * über `FIKNOW_RETENTION_YEARS`, damit der DSB die Frist ohne Codeänderung
+ * über `FINKNOW_RETENTION_YEARS`, damit der DSB die Frist ohne Codeänderung
  * final abnehmen/anpassen kann.
  */
 
@@ -29,11 +29,11 @@ export function parseRetentionYears(raw: string | undefined): number {
 
 /**
  * Aufbewahrungsfrist in Jahren für Klasse (A) (`training_assignments`).
- * Aus `FIKNOW_RETENTION_YEARS` gelesen; Fallback 3 bei fehlendem oder
+ * Aus `FINKNOW_RETENTION_YEARS` gelesen; Fallback 3 bei fehlendem oder
  * ungültigem Wert (nicht-numerisch, <= 0).
  */
 export const RETENTION_YEARS = parseRetentionYears(
-  process.env.FIKNOW_RETENTION_YEARS,
+  process.env.FINKNOW_RETENTION_YEARS,
 );
 
 function addYears(base: Date, years: number): Date {

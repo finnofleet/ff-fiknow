@@ -1,4 +1,4 @@
-# FINKNOW (ff-fiknow)
+# FINKNOW (ff-finknow)
 
 > mit Wissen auf Kurs
 
@@ -11,10 +11,10 @@ Basis-Image-+-Overlay mehr — dieses Repo baut und deployt FINKNOW direkt.
 
 - **Auth:** OIDC-only via **Keycloak** (Entra ID wird upstream in Keycloak
   föderiert). Rolle = Keycloak als Source of Truth, gemappt aus Token-Claims.
-- **Deployment:** OCI-Image (`ghcr.io/finnofleet/ff-fiknow`) + Helm-Chart unter
-  [`deploy/helm/fiknow`](deploy/helm/fiknow) (non-root, externes Postgres,
+- **Deployment:** OCI-Image (`ghcr.io/finnofleet/ff-finknow`) + Helm-Chart unter
+  [`deploy/helm/finknow`](deploy/helm/finknow) (non-root, externes Postgres,
   Ingress). Alternativ als OCI-Chart
-  `oci://ghcr.io/finnofleet/charts/fiknow`. Siehe
+  `oci://ghcr.io/finnofleet/charts/finknow`. Siehe
   [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md) für alle Schritte.
 
 ## Stack
@@ -48,10 +48,10 @@ docker compose -f docker-compose.oidc.yml up
 # 3. .env.local anlegen und OIDC-Werte + DATABASE_URL eintragen
 cp .env.example .env.local
 # Minimale Werte für den lokalen OIDC-Flow:
-#   OIDC_ISSUER=http://localhost:8080/realms/fiknow
+#   OIDC_ISSUER=http://localhost:8080/realms/finknow
 #   OIDC_CLIENT_ID=edu-platform
 #   OIDC_CLIENT_SECRET=local-dev-secret
-#   OIDC_ROLE_MAP=fiknow-curator:curator,fiknow-admin:admin
+#   OIDC_ROLE_MAP=finknow-curator:curator,finknow-admin:admin
 #   OIDC_SESSION_SECRET=local-dev-session-secret-min-16
 #   OIDC_ALLOW_INSECURE=true
 #   DATABASE_URL=postgres://postgres:postgres@localhost:5544/edu
@@ -74,9 +74,9 @@ Keycloak-Admin auf [http://localhost:8080](http://localhost:8080).
 
 | User | App-Rolle |
 |---|---|
-| `curator@fiknow.test` | `curator` |
-| `admin@fiknow.test` | `admin` |
-| `learner@fiknow.test` | `learner` |
+| `curator@finknow.test` | `curator` |
+| `admin@finknow.test` | `admin` |
+| `learner@finknow.test` | `learner` |
 
 ## Verzeichnisstruktur
 
@@ -103,7 +103,7 @@ components/
 deploy/
   RUNBOOK.md            Schritt-für-Schritt Kubernetes/IBM-Deploy-Guide (generisch)
   deploy-ibmcloud.md    IBM-Cloud-(IKS)-Walkthrough inkl. Stolpersteine
-  helm/fiknow/          Helm-Chart (values.yaml, templates, Chart.yaml)
+  helm/finknow/          Helm-Chart (values.yaml, templates, Chart.yaml)
 docs/
   AUTHORING_BUNDLE.md   Bundle-Format + Upload-Flow
   CONTENT_STYLE.md      Tonfall, Schreib-Konventionen, Qualitäts-Checkliste
@@ -139,7 +139,7 @@ payload/
 scripts/                Ops-Skripte (bootstrap-db.mjs u.a.)
 tooling/
   course-plugin/        KI-Kurs-Plugin (client.mjs, Beispiel-Kurs, Skills)
-  keycloak/             Referenz-Realm (fiknow-realm.json) für lokalen Test
+  keycloak/             Referenz-Realm (finknow-realm.json) für lokalen Test
 proxy.ts                Auth-Middleware (Session-Check + Protected Routes)
 ```
 
@@ -160,7 +160,7 @@ proxy.ts                Auth-Middleware (Session-Check + Protected Routes)
 | `npm run db:bootstrap` | DB-Bootstrap-Skript |
 
 > **Ersten Admin anlegen:** Rollen kommen aus Keycloak (Source of Truth), nicht
-> aus der DB — weise dem User im Realm die Rolle `fiknow-admin` zu (wird via
+> aus der DB — weise dem User im Realm die Rolle `finknow-admin` zu (wird via
 > `OIDC_ROLE_MAP` beim Login auf die App-Rolle `admin` gemappt).
 
 ## Inhalte schreiben
@@ -214,13 +214,13 @@ oder direkt aus der OCI-Registry:
 
 ```bash
 # Aus dem Repo
-helm upgrade --install fiknow ./deploy/helm/fiknow \
-  -f my-values.yaml --namespace fiknow --create-namespace
+helm upgrade --install finknow ./deploy/helm/finknow \
+  -f my-values.yaml --namespace finknow --create-namespace
 
 # Aus der OCI-Registry (CI publiziert nach jedem main-Build)
-helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
+helm upgrade --install finknow oci://ghcr.io/finnofleet/charts/finknow \
   --version <tag> -f my-values.yaml \
-  --namespace fiknow --create-namespace
+  --namespace finknow --create-namespace
 ```
 
 **Extern bereitstellen (Voraussetzungen):**
@@ -231,14 +231,14 @@ helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
 - Persistenter RWX-Speicher für `/data` (Medien + Kurs-Bundles), sobald
   Uploads oder Authoring/MCP genutzt werden
 
-**Image:** `ghcr.io/finnofleet/ff-fiknow` — GitHub Actions baut und pusht auf
+**Image:** `ghcr.io/finnofleet/ff-finknow` — GitHub Actions baut und pusht auf
 jedem `main`-Push. Tags: `latest` (neuester main-Build), `main-<sha>`
 (auditfähig), `v1.2.3` (bei Git-Tag). CI hängt eine SBOM (SPDX) an und führt
 einen informativen Grype-Scan durch.
 
 > **Alle Details** (Postgres, Keycloak-Setup, Secrets, Helm-Werte, KI-Keys,
 > Troubleshooting) stehen im **[`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)** und
-> im **[Chart-README](deploy/helm/fiknow/README.md)** — hier nicht dupliziert.
+> im **[Chart-README](deploy/helm/finknow/README.md)** — hier nicht dupliziert.
 >
 > **IBM Cloud (IKS) konkret:** Der durchgeführte Walkthrough inkl. der
 > IBM-spezifischen CLI-Schritte und Stolpersteine (VPC-File-NFS-Freigabe,
@@ -253,7 +253,7 @@ Brand-Image gebaut werden.
 
 | Achse | Wie getrennt |
 | --- | --- |
-| **Code** | Ein Repo, ein Base-Image (`ghcr.io/finnofleet/ff-fiknow`) |
+| **Code** | Ein Repo, ein Base-Image (`ghcr.io/finnofleet/ff-finknow`) |
 | **Brand** | `brand/brand.yaml` im Image (Default); Forks bauen ein eigenes Image, das dieses als Base nutzt und `brand/brand.yaml` überschreibt |
 | **Daten** | Eigenes Postgres pro Deployment (User, Progress, Attempts isoliert) |
 | **Identität** | Eigener Keycloak-Realm pro Deployment |
@@ -263,7 +263,7 @@ Brand-Image gebaut werden.
 
 1. Brand-Repo anlegen (privat), `brand.yaml` nach Schema in
    [`docs/BRAND-CONFIG.md`](docs/BRAND-CONFIG.md) erstellen.
-2. Eigenes Dockerfile: `FROM ghcr.io/finnofleet/ff-fiknow:latest` →
+2. Eigenes Dockerfile: `FROM ghcr.io/finnofleet/ff-finknow:latest` →
    `COPY brand.yaml /app/brand/brand.yaml`.
 3. Eigenes Postgres + Keycloak-Realm + Kubernetes-Deployment.
 4. OIDC-, DB- und Payload-Vars als Secret setzen; KI-Tutor-Keys optional

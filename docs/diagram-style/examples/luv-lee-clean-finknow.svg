@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-labelledby="t1 d1" font-family="Sora, system-ui, -apple-system, 'Segoe UI', sans-serif">
-  <title id="t1">Luv und Lee an einem Gebäude (fiknow)</title>
-  <desc id="d1">Auf der Luvseite trifft der Wind geordnet auf die Fassade; auf der Leeseite bilden sich Wirbel und Turbulenz. fiknow clean, theme-adaptiv (currentColor).</desc>
+  <title id="t1">Luv und Lee an einem Gebäude (finknow)</title>
+  <desc id="d1">Auf der Luvseite trifft der Wind geordnet auf die Fassade; auf der Leeseite bilden sich Wirbel und Turbulenz. finknow clean, theme-adaptiv (currentColor).</desc>
 
   <defs>
     <marker id="ah-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse">

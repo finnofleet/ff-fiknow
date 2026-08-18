@@ -27,7 +27,7 @@ generiert das Bild in seinem eigenen Tool (ChatGPT-Image, Midjourney, Imagen,
 
 1. **Brand-Idiom bestimmen** — aus `platformBaseUrl` ableiten:
    - `verstande.ch` → **Sketchbook-Illustration** (handgezeichnet, Elfenbein-Palette)
-   - `fiknow.ch` / `finnofleet` → **Fotografie** (editorial, fotorealistisch,
+   - `finknow.ch` / `finnofleet` → **Fotografie** (editorial, fotorealistisch,
      genau EIN `#99FF33`-Grün-Akzent)
    - Wenn unklar oder nicht konfiguriert: kurz nachfragen.
 

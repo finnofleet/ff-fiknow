@@ -14,9 +14,9 @@ Referenz-Werte aus dem Erst-Deployment (anpassen):
 | | |
 |---|---|
 | Cluster | `bm-production-cluster` (IKS, Region `eu-de`, vanilla Kubernetes) |
-| Namespace | `fiknow` |
-| App-Host | `fiknow.<ingress-subdomain>` (IKS-Wildcard-Subdomain) |
-| Werte-Datei | [`helm/fiknow/values-ibm-production.yaml`](helm/fiknow/values-ibm-production.yaml) |
+| Namespace | `finknow` |
+| App-Host | `finknow.<ingress-subdomain>` (IKS-Wildcard-Subdomain) |
+| Werte-Datei | [`helm/finknow/values-ibm-production.yaml`](helm/finknow/values-ibm-production.yaml) |
 
 ---
 
@@ -33,13 +33,13 @@ ibmcloud plugin install kubernetes-service cloud-databases
 ```bash
 ibmcloud ks cluster config -c bm-production-cluster
 kubectl get ingressclass            # erwartet: public-iks-k8s-nginx
-kubectl create namespace fiknow
+kubectl create namespace finknow
 ```
 
 Ingress-Subdomain + mitgeliefertes Wildcard-TLS-Secret ablesen:
 ```bash
 ibmcloud ks cluster get -c bm-production-cluster
-#   "Ingress Subdomain" → App-Host = fiknow.<subdomain>
+#   "Ingress Subdomain" → App-Host = finknow.<subdomain>
 #   "Ingress Secret"    → liegt im Namespace 'default' (s. Abschnitt 4)
 ```
 
@@ -47,30 +47,30 @@ ibmcloud ks cluster get -c bm-production-cluster
 
 Instanz anlegen und Admin-Credentials ziehen:
 ```bash
-ibmcloud resource service-instance-create fiknow-pg databases-for-postgresql standard eu-de
-ibmcloud resource service-key-create fiknow-pg-key Administrator --instance-name fiknow-pg
-ibmcloud resource service-key fiknow-pg-key --output json
+ibmcloud resource service-instance-create finknow-pg databases-for-postgresql standard eu-de
+ibmcloud resource service-key-create finknow-pg-key Administrator --instance-name finknow-pg
+ibmcloud resource service-key finknow-pg-key --output json
 #   → .credentials.connection.postgres : hostname, port, composed-URI (admin)
 ```
 
 **Wir nutzen die Default-DB `ibmclouddb`** (keine separate DB nötig) und legen
 nur einen dedizierten App-User an:
 ```bash
-ibmcloud cdb deployment-user-create fiknow-pg fiknow <fiknow-pw>
+ibmcloud cdb deployment-user-create finknow-pg finknow <finknow-pw>
 ```
 
 Dann **einmal als admin** auf `ibmclouddb` die Rechte setzen, damit der
 Auto-Migrate Schema/Funktionen/RLS anlegen darf:
 ```sql
-GRANT CREATE ON DATABASE ibmclouddb TO fiknow;   -- darf das auth-Schema anlegen
-GRANT ALL ON SCHEMA public TO fiknow;            -- PG15+: public ist nicht mehr offen für alle
+GRANT CREATE ON DATABASE ibmclouddb TO finknow;   -- darf das auth-Schema anlegen
+GRANT ALL ON SCHEMA public TO finknow;            -- PG15+: public ist nicht mehr offen für alle
 ```
 > ⚠️ Der zweite Grant ist Pflicht: Ab PostgreSQL 15 scheitert der Migrate sonst
 > mit `permission denied for schema public` beim Anlegen der `public.*`-Tabellen.
 
 Daraus ergibt sich der `DATABASE_URL` (kommt ins Secret, Abschnitt 5):
 ```
-postgres://fiknow:<fiknow-pw>@<host>:<port>/ibmclouddb?sslmode=require
+postgres://finknow:<finknow-pw>@<host>:<port>/ibmclouddb?sslmode=require
 ```
 `sslmode=require` ist verschlüsselt und braucht keine CA-Datei. `verify-full`
 mit der ICD-CA wäre die Härtungs-Option (Backlog).
@@ -112,11 +112,11 @@ kubectl apply -f deploy/ibmcloud/storageclass-fiknow.yaml
 
 # 2) PVC über diese Klasse (Retain schützt die Daten vor versehentlichem Löschen)
 kubectl apply -f deploy/ibmcloud/pvc-fiknow-data.yaml
-kubectl -n fiknow get pvc fiknow-data      # erwartet: Bound (Provisionierung ~30s)
+kubectl -n finknow get pvc fiknow-data      # erwartet: Bound (Provisionierung ~30s)
 ```
 > Nach dem ersten Pod-Start muss `/data` real `1001:1001` gehören —
 > verifizieren mit
-> `kubectl -n fiknow exec deploy/fiknow -- sh -c 'ls -ldn /data'`
+> `kubectl -n finknow exec deploy/finknow -- sh -c 'ls -ldn /data'`
 > (zeigt es `65534`, wurde die falsche StorageClass genommen). Ein manuelles
 > `chown` ist weder nötig noch möglich (root-squash).
 
@@ -135,7 +135,7 @@ desc = context deadline exceeded
 **Diagnose:**
 ```bash
 # Mount-Target-IP + dessen Security Group aus dem PV lesen
-kubectl -n fiknow describe pv <pv-name> | grep -iE 'nfsServerPath|ENISecurityGroupIds'
+kubectl -n finknow describe pv <pv-name> | grep -iE 'nfsServerPath|ENISecurityGroupIds'
 #   nfsServerPath=<mount-target-ip>:/...    → Mount-Target-IP
 #   ENISecurityGroupIds=r010-xxxx           → SG des Mount-Targets
 
@@ -150,7 +150,7 @@ ibmcloud is security-group-rule-add <mount-target-sg-id> \
   inbound tcp --port-min 2049 --port-max 2049 --remote <worker-subnet-cidr>
 ```
 Danach `nc`-Test wiederholen → `exit=0`. kubelet retryt den Mount automatisch;
-sonst `kubectl -n fiknow rollout restart deploy/fiknow`.
+sonst `kubectl -n finknow rollout restart deploy/finknow`.
 
 > Bleibt es trotz SG-Regel geblockt, hängt zusätzlich eine **Network ACL**
 > (stateless!) am Worker-Subnetz — dort `TCP 2049` **+ Rückkanal `TCP
@@ -160,12 +160,12 @@ sonst `kubectl -n fiknow rollout restart deploy/fiknow`.
 
 Das IKS-Wildcard-Zert liegt im Namespace `default`; eine Ingress-Ressource kann
 ein TLS-Secret aber nur aus dem **eigenen** Namespace referenzieren. IKS-managed
-(auto-renew) in den `fiknow`-Namespace deployen:
+(auto-renew) in den `finknow`-Namespace deployen:
 ```bash
 ibmcloud ks ingress secret ls -c bm-production-cluster      # CRN des Default-Zerts
 ibmcloud ks ingress secret create -c bm-production-cluster \
-  --name fiknow-tls --namespace fiknow --cert-crn <crn>
-kubectl -n fiknow get secret fiknow-tls                     # type: kubernetes.io/tls
+  --name finknow-tls --namespace finknow --cert-crn <crn>
+kubectl -n finknow get secret finknow-tls                     # type: kubernetes.io/tls
 ```
 
 ## 6. Keycloak-Client
@@ -175,8 +175,8 @@ Details (Redirect-URI, Rollen, **Rollen-Claim ins ID-Token mappen**) siehe
 [`RUNBOOK.md` §2](RUNBOOK.md). Kurzform für diesen Host:
 
 - Client authentication: **On**, Standard flow: **On**
-- Valid redirect URI: `https://fiknow.<subdomain>/auth/oidc/callback` (exakt)
-- Realm-Rollen `fiknow-curator`, `fiknow-admin`
+- Valid redirect URI: `https://finknow.<subdomain>/auth/oidc/callback` (exakt)
+- Realm-Rollen `finknow-curator`, `finknow-admin`
 - **User-Realm-Role-Mapper** mit **Add to ID token: On** (sonst ist jeder nur `learner`)
 - Client-Secret aus dem Tab **Credentials** → `OIDC_CLIENT_SECRET`
 
@@ -184,7 +184,7 @@ Details (Redirect-URI, Rollen, **Rollen-Claim ins ID-Token mappen**) siehe
 
 **Image-Pull-Secret** (GHCR-Package ist privat):
 ```bash
-kubectl -n fiknow create secret docker-registry ghcr-pull \
+kubectl -n finknow create secret docker-registry ghcr-pull \
   --docker-server=ghcr.io --docker-username=<github-user> \
   --docker-password="$GHCR_TOKEN"
 ```
@@ -195,48 +195,48 @@ kubectl -n fiknow create secret docker-registry ghcr-pull \
 
 **App-Secret** (`existingSecret` aus der Werte-Datei):
 ```bash
-export DATABASE_URL='postgres://fiknow:<pw>@<host>:<port>/ibmclouddb?sslmode=require'
+export DATABASE_URL='postgres://finknow:<pw>@<host>:<port>/ibmclouddb?sslmode=require'
 export OIDC_CLIENT_SECRET='<aus-keycloak>'
 PAYLOAD_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 OIDC_SESSION_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 
-kubectl -n fiknow create secret generic fiknow-env \
+kubectl -n finknow create secret generic finknow-env \
   --from-literal=DATABASE_URL="$DATABASE_URL" \
   --from-literal=PAYLOAD_SECRET="$PAYLOAD_SECRET" \
   --from-literal=OIDC_CLIENT_SECRET="$OIDC_CLIENT_SECRET" \
   --from-literal=OIDC_SESSION_SECRET="$OIDC_SESSION_SECRET"
 ```
 > Produktionssauber wäre die Verwaltung über **IBM Secrets Manager + External
-> Secrets Operator** (synct in dasselbe `fiknow-env`-Secret, Chart unverändert)
+> Secrets Operator** (synct in dasselbe `finknow-env`-Secret, Chart unverändert)
 > — siehe Backlog.
 
 ## 8. Installieren
 
-Die Werte-Datei [`helm/fiknow/values-ibm-production.yaml`](helm/fiknow/values-ibm-production.yaml)
-referenziert `existingSecret: fiknow-env`, `imagePullSecrets: ghcr-pull`,
-`dataVolume.existingClaim: fiknow-data`, den Ingress-Host + `fiknow-tls` und
+Die Werte-Datei [`helm/finknow/values-ibm-production.yaml`](helm/finknow/values-ibm-production.yaml)
+referenziert `existingSecret: finknow-env`, `imagePullSecrets: ghcr-pull`,
+`dataVolume.existingClaim: fiknow-data`, den Ingress-Host + `finknow-tls` und
 einen gepinnten Image-Tag.
 
 ```bash
-helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
-  --version 0.3.2 -f deploy/helm/fiknow/values-ibm-production.yaml \
-  --namespace fiknow
+helm upgrade --install finknow oci://ghcr.io/finnofleet/charts/finknow \
+  --version 0.3.2 -f deploy/helm/finknow/values-ibm-production.yaml \
+  --namespace finknow
 ```
 
 ## 9. Verifikation
 
 ```bash
-kubectl -n fiknow rollout status deploy/fiknow
-kubectl -n fiknow get pods                                   # 2x 1/1 Running
-kubectl -n fiknow logs -l app.kubernetes.io/instance=fiknow | grep -i migrate
+kubectl -n finknow rollout status deploy/finknow
+kubectl -n finknow get pods                                   # 2x 1/1 Running
+kubectl -n finknow logs -l app.kubernetes.io/instance=finknow | grep -i migrate
 #   erwartet: [auto-migrate] fertig in <n> ms
-kubectl -n fiknow get ingress                                # Host + ADDRESS
+kubectl -n finknow get ingress                                # Host + ADDRESS
 
 # Smoke-Test (Redirect auf OIDC-Login)
-curl -sI https://fiknow.<subdomain>/dashboard                # 307/302 → /auth/oidc/login
+curl -sI https://finknow.<subdomain>/dashboard                # 307/302 → /auth/oidc/login
 ```
-**End-to-End:** `https://fiknow.<subdomain>/dashboard` im Browser → Keycloak-Login
-→ mit `fiknow-curator`-User zurück → `/manage` erreichbar (bestätigt den
+**End-to-End:** `https://finknow.<subdomain>/dashboard` im Browser → Keycloak-Login
+→ mit `finknow-curator`-User zurück → `/manage` erreichbar (bestätigt den
 Rollen-Claim im ID-Token).
 
 ## 10. Offene Feinschliff-Punkte (Backlog)

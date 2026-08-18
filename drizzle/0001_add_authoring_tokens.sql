@@ -1,6 +1,6 @@
 -- Robust gegen Alt-Schema-Leichen aus früherem db:push (Tokens sind
 -- wegwerfbar → kein Datenverlust). Auf migrations-verwalteten Prod-DBs
--- (verstande.ch, fiknow) existiert die Tabelle nicht, DROP IF EXISTS ist no-op.
+-- (verstande.ch, finknow) existiert die Tabelle nicht, DROP IF EXISTS ist no-op.
 DROP TABLE IF EXISTS "authoring_tokens" CASCADE;
 --> statement-breakpoint
 CREATE TABLE "authoring_tokens" (

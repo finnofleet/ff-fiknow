@@ -1,5 +1,5 @@
 # ============================================================
-# FIKNOW — Helm-Werte für IBM Cloud (IKS, eu-de) — VORLAGE
+# FINKNOW — Helm-Werte für IBM Cloud (IKS, eu-de) — VORLAGE
 #
 # Das ist die committete Vorlage. Für den echten Deploy kopieren und die
 # <CLUSTER-ID>-Platzhalter durch den eigenen Cluster-Ingress-Host ersetzen:
@@ -7,21 +7,21 @@
 # Die reale values-ibm-production.yaml ist gitignored (bleibt lokal).
 #
 # Install:
-#   helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
-#     --version 0.3.2 -f deploy/helm/fiknow/values-ibm-production.yaml \
-#     --namespace fiknow
+#   helm upgrade --install finknow oci://ghcr.io/finnofleet/charts/finknow \
+#     --version 0.3.2 -f deploy/helm/finknow/values-ibm-production.yaml \
+#     --namespace finknow
 #
 # Voraussetzungen (siehe deploy/RUNBOOK.md):
-#   - Secret  'fiknow-env'  (DATABASE_URL, PAYLOAD_SECRET, OIDC_CLIENT_SECRET,
-#                            OIDC_SESSION_SECRET) im Namespace fiknow
-#   - Secret  'ghcr-pull'   (docker-registry, GHCR) im Namespace fiknow
-#   - Secret  'fiknow-tls'  (Wildcard-Zert in den NS fiknow gebracht) im NS fiknow
-#   - PVC     'fiknow-data' (ReadWriteMany) im Namespace fiknow
+#   - Secret  'finknow-env'  (DATABASE_URL, PAYLOAD_SECRET, OIDC_CLIENT_SECRET,
+#                            OIDC_SESSION_SECRET) im Namespace finknow
+#   - Secret  'ghcr-pull'   (docker-registry, GHCR) im Namespace finknow
+#   - Secret  'finknow-tls'  (Wildcard-Zert in den NS finknow gebracht) im NS finknow
+#   - PVC     'fiknow-data' (ReadWriteMany) im Namespace finknow
 #   - Keycloak: confidential Client 'edu-platform' + Rollen-Claim-Mapper
 # ============================================================
 
 image:
-  repository: ghcr.io/finnofleet/ff-fiknow
+  repository: ghcr.io/finnofleet/ff-finknow
   # Gepinnt auf den produktiv freigegebenen Release-Tag (kein floating 'latest').
   # Entsteht beim Push eines v*-Git-Tags (build-image.yml: type=semver) und ist
   # damit unveränderlich. Bei einem Update auf den neuen v<x.y.z>-Release ziehen.
@@ -34,16 +34,16 @@ imagePullSecrets:
 config:
   # >>> TODO: Issuer-URL des zentralen Keycloak-Realms eintragen <<<
   # Format: https://<keycloak-host>/realms/<realm>
-  OIDC_ISSUER: "https://keycloak.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud/realms/fiknow"
+  OIDC_ISSUER: "https://keycloak.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud/realms/finknow"
 
   # Muss mit der Keycloak-Client-ID übereinstimmen (Chart-/RUNBOOK-Default).
   OIDC_CLIENT_ID: edu-platform
 
   # Keycloak-Rolle → App-Rolle. Alles ohne Treffer = learner.
-  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+  OIDC_ROLE_MAP: "finknow-curator:curator,finknow-admin:admin"
 
   # Leer lassen → wird aus ingress.hosts[0] (https) abgeleitet:
-  # https://fiknow.bm-production-cluster-...-0000.eu-de.containers.appdomain.cloud
+  # https://finknow.bm-production-cluster-...-0000.eu-de.containers.appdomain.cloud
   OIDC_REDIRECT_BASE: ""
 
   # Keys außerhalb der ConfigMap-Allowlist (OIDC_*, DB_POOL_MAX, *_STORAGE_DIR)
@@ -66,18 +66,18 @@ ingress:
   enabled: true
   className: public-iks-k8s-nginx
   hosts:
-    - host: fiknow.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud
+    - host: finknow.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: fiknow-tls
+    - secretName: finknow-tls
       hosts:
-        - fiknow.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud
+        - finknow.bm-production-cluster-<CLUSTER-ID>-0000.eu-de.containers.appdomain.cloud
 
 # Secret wird extern verwaltet (NICHT vom Chart erzeugt).
 secret:
-  existingSecret: fiknow-env
+  existingSecret: finknow-env
   create: false
 
 # Persistenter, geteilter Speicher für Payload-Medien (/data/media) und

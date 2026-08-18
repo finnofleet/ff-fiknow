@@ -1,5 +1,5 @@
 # ============================================================
-# fiknow — Helm-Werte (Defaults)
+# finknow — Helm-Werte (Defaults)
 #
 # Minimal nötig für einen Deploy:
 #   - image.repository / image.tag
@@ -8,13 +8,13 @@
 #   - die Secrets (DATABASE_URL, PAYLOAD_SECRET, …) via existingSecret ODER
 #     secret.create + secret.data
 #
-# Ein einsatzfertiges Beispiel: values-fiknow-oidc.yaml
+# Ein einsatzfertiges Beispiel: values-finknow-oidc.yaml
 # ============================================================
 
 replicaCount: 2
 
 image:
-  repository: ghcr.io/finnofleet/ff-fiknow
+  repository: ghcr.io/finnofleet/ff-finknow
   # Leer lassen → nutzt Chart.appVersion (an die App-Version gekoppelt, von
   # CI aus dem Git-Tag gestempelt) → reproduzierbar. Für ein abweichendes Ziel
   # (z. B. ein main-<sha> zum Testen) hier explizit einen Tag setzen.
@@ -36,10 +36,10 @@ serviceAccount:
 # envFrom in den Container gereicht. Geheimes gehört in `secret` (s. u.).
 # ------------------------------------------------------------
 config:
-  # --- OIDC (Keycloak) — FIKNOW ist OIDC-only ---
-  OIDC_ISSUER: ""            # z. B. https://keycloak.example.com/realms/fiknow
+  # --- OIDC (Keycloak) — FINKNOW ist OIDC-only ---
+  OIDC_ISSUER: ""            # z. B. https://keycloak.example.com/realms/finknow
   OIDC_CLIENT_ID: edu-platform
-  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+  OIDC_ROLE_MAP: "finknow-curator:curator,finknow-admin:admin"
   OIDC_SCOPES: "openid profile email"
   # PFLICHT in Prod: öffentliche Basis-URL für die exakte redirect_uri.
   # Die App leitet sie NICHT aus Request-Headern ab (fail-closed).
@@ -96,13 +96,13 @@ ingress:
   className: ""
   annotations: {}
   hosts:
-    - host: ""              # z. B. app.fiknow.ch
+    - host: ""              # z. B. app.finknow.ch
       paths:
         - path: /
           pathType: Prefix
   tls: []
-    # - secretName: fiknow-tls
-    #   hosts: [app.fiknow.ch]
+    # - secretName: finknow-tls
+    #   hosts: [app.finknow.ch]
 
 # ------------------------------------------------------------
 # Security: non-root erzwingen (Image läuft als uid 1001).
@@ -185,7 +185,7 @@ readinessProbe:
 # einbacken. Leer lassen = Image-Default/Brand-Overlay nutzen.
 contentVolume:
   enabled: false
-  # claimName: fiknow-content   # bestehender PVC
+  # claimName: finknow-content   # bestehender PVC
 
 autoscaling:
   enabled: false
@@ -220,7 +220,7 @@ affinity: {}
 cronjob:
   retentionPurge:
     # DSGVO/DSG-Retention: löscht abgelaufene Nachweise (training_assignments)
-    # nach FIKNOW_RETENTION_YEARS (Default 3 J). ADR 0006 Phase 7c.
+    # nach FINKNOW_RETENTION_YEARS (Default 3 J). ADR 0006 Phase 7c.
     enabled: false
     schedule: "17 3 * * *"   # nächtlich 03:17 (ruhige Stunde)
     timeZone: ""              # leer = UTC; z. B. "Europe/Zurich" für lokale Zeit

@@ -1,7 +1,7 @@
 # Course Authoring Plugin
 
 Claude-Plugin für das Erstellen und Publishen von Online-Kursen auf einer
-EDU-Platform-Instanz (verstande.ch, fiknow.ch oder eine andere Brand-
+EDU-Platform-Instanz (verstande.ch, finknow.ch oder eine andere Brand-
 Variante).
 
 Ab v0.2 ist das Plugin ein **authentifizierter Direkt-Client** zur
@@ -183,7 +183,7 @@ Nach mehreren Iterationen + ggf. course-validate:
 Claude  : → course-upload ./telefon-disponent
           "Hochgeladen als DRAFT, version 01HXYZ... ins course.mdx
            zurückgeschrieben. Course-ID: 42. Letzter Check unter
-           https://fiknow.ch/courses/telefon-disponent (Editor sieht
+           https://finknow.ch/courses/telefon-disponent (Editor sieht
            Drafts). Wenn alles passt: course-publish."
 
 User    : "Geht so live."
@@ -194,7 +194,7 @@ Claude  : "Bestätige: Course-ID 42 (telefon-disponent), inkl. aller
 User    : "Ja."
 
 Claude  : → course-publish 42
-          "Live. https://fiknow.ch/courses/telefon-disponent ist jetzt
+          "Live. https://finknow.ch/courses/telefon-disponent ist jetzt
            öffentlich, 3 Sections / 9 Lessons / 3 Quizze."
 ```
 
@@ -214,7 +214,7 @@ Claude  : → course-checkout { slug: "telefon-disponent" }
 
 Claude  : → course-upload ./telefon-disponent
           "Hochgeladen als DRAFT, neue version 01JABC... zurückgeschrieben.
-           Letzter Check unter https://fiknow.ch/courses/telefon-disponent."
+           Letzter Check unter https://finknow.ch/courses/telefon-disponent."
 
 User    : "Passt, live schalten."
 

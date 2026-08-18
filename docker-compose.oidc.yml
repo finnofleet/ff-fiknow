@@ -24,19 +24,19 @@
 # ---- Schritt 2: App auf dem Host starten ----
 #   Setze in .env.local (oder inline):
 #     AUTH_PROVIDER=oidc
-#     OIDC_ISSUER=http://localhost:8080/realms/fiknow
+#     OIDC_ISSUER=http://localhost:8080/realms/finknow
 #     OIDC_CLIENT_ID=edu-platform
 #     OIDC_CLIENT_SECRET=local-dev-secret
-#     OIDC_ROLE_MAP=fiknow-curator:curator,fiknow-admin:admin
+#     OIDC_ROLE_MAP=finknow-curator:curator,finknow-admin:admin
 #     OIDC_SESSION_SECRET=local-dev-session-secret-min-16
 #     OIDC_ALLOW_INSECURE=true        # erlaubt http-Issuer (NUR lokal!)
 #     DATABASE_URL=postgres://postgres:postgres@localhost:5544/edu
 #   dann:  npm run dev
 #
 # Test-User (im importierten Realm, Passwort = der Username):
-#   curator@fiknow.test  (Realm-Rolle fiknow-curator → App-Rolle curator)
-#   admin@fiknow.test    (Realm-Rolle fiknow-admin   → App-Rolle admin)
-#   learner@fiknow.test  (keine Rolle               → App-Rolle learner)
+#   curator@finknow.test  (Realm-Rolle finknow-curator → App-Rolle curator)
+#   admin@finknow.test    (Realm-Rolle finknow-admin   → App-Rolle admin)
+#   learner@finknow.test  (keine Rolle               → App-Rolle learner)
 # ============================================================
 
 services:

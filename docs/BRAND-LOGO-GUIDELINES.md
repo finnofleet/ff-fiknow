@@ -44,7 +44,7 @@ Background.
    `viewBox` auf `0 0 24 24` (oder 32/64) setzen.
 4. **Ablegen** — Datei nach `brand/assets/logo.svg` in die edu-platform
    (Default-Brand) oder ins jeweilige Brand-Repo.
-5. **Brand-Overlay** — Bei fiknow-brand: `assets/logo.svg` im Brand-Repo
+5. **Brand-Overlay** — Bei finknow-brand: `assets/logo.svg` im Brand-Repo
    (überschreibt per Image-Overlay den Default).
 6. **Lokal testen** — Prüfe Zentrierung, Theme-Kompatibilität (Dark + Light)
    und Lesbarkeit bei 24 × 24 px im Browser-DevTool.

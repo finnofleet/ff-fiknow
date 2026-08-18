@@ -2,7 +2,7 @@
   "name": "course-authoring",
   "displayName": "Course Authoring (EDU-Platform)",
   "version": "0.5.0",
-  "description": "Skills für das Erstellen und Publishen von Online-Kursen auf einer EDU-Platform-Instanz (verstande.ch, fiknow.ch etc.) via Claude Cowork. v0.2: authentifizierter Direkt-Client gegen die Plattform-HTTP-API. v0.3: Visual-Authoring — SVG-Diagramme (course-diagram) und Raster-Bilder (course-image) mit proaktiven Vorschlägen und brand-spezifischen Idiomen (verstande Sketch / fiknow Clean). v0.4: Zwei-Stufen-Modell (upload → publish) — Review als Draft in der echten Learner-Shell (Kuratoren sehen Drafts); Preview-Endpoint entfernt. v0.5: Vollständiger Edit-Loop für bestehende Kurse — checkout (Download inkl. Version-Token) → edit → upload → publish.",
+  "description": "Skills für das Erstellen und Publishen von Online-Kursen auf einer EDU-Platform-Instanz (verstande.ch, finknow.ch etc.) via Claude Cowork. v0.2: authentifizierter Direkt-Client gegen die Plattform-HTTP-API. v0.3: Visual-Authoring — SVG-Diagramme (course-diagram) und Raster-Bilder (course-image) mit proaktiven Vorschlägen und brand-spezifischen Idiomen (verstande Sketch / finknow Clean). v0.4: Zwei-Stufen-Modell (upload → publish) — Review als Draft in der echten Learner-Shell (Kuratoren sehen Drafts); Preview-Endpoint entfernt. v0.5: Vollständiger Edit-Loop für bestehende Kurse — checkout (Download inkl. Version-Token) → edit → upload → publish.",
   "author": "Yves Blättler",
   "license": "Proprietary",
   "homepage": "https://github.com/yves-blaettler/edu-platform",
@@ -11,16 +11,16 @@
     "filesystem": "user-folder",
     "network": [
       "https://*.verstande.ch",
-      "https://*.fiknow.ch",
+      "https://*.finknow.ch",
       "https://verstande.ch",
-      "https://fiknow.ch"
+      "https://finknow.ch"
     ]
   },
   "config": {
     "schema": {
       "platformBaseUrl": {
         "type": "string",
-        "description": "Base-URL der Plattform (z.B. https://verstande.ch oder https://fiknow.ch). Wird vom Plugin für upload/publish-Calls gegen /api/authoring/* genutzt.",
+        "description": "Base-URL der Plattform (z.B. https://verstande.ch oder https://finknow.ch). Wird vom Plugin für upload/publish-Calls gegen /api/authoring/* genutzt.",
         "required": true
       },
       "authoringToken": {

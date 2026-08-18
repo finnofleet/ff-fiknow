@@ -10,7 +10,7 @@ Es gibt **zwei Brand-Idiome** — wähle nach Plattform-URL:
 | Plattform | Idiom |
 |---|---|
 | verstande.ch | **Sketch** — handgezeichnet, feste Elfenbein-Karte |
-| fiknow.ch / finnofleet | **Clean** — flach, theme-adaptiv (`currentColor`) |
+| finknow.ch / finnofleet | **Clean** — flach, theme-adaptiv (`currentColor`) |
 
 ---
 
@@ -91,7 +91,7 @@ Cleane Geometrie + **Displacement-Filter** → handgezeichneter Wobble.
 
 ---
 
-## Idiom B — fiknow Clean (theme-adaptiv)
+## Idiom B — finknow Clean (theme-adaptiv)
 
 Flach, geometrisch, **kein** Filter, **kein** Hintergrund-Rect.
 Das Diagramm flippt automatisch mit Light/Dark — ein einziges Asset.
@@ -234,5 +234,5 @@ Zwei häufige Fehler, die sofort billig wirken:
 ## Referenzen
 
 - Vollständige Hintergrund-Doku: `docs/diagram-style/SVG-DIAGRAM-STYLE.md` (Repo)
-- Brand-Specs fiknow/FINNOFLEET: `docs/BRAND-FINKNOW.md` (Repo)
+- Brand-Specs finknow/FINNOFLEET: `docs/BRAND-FINKNOW.md` (Repo)
 - Skill zum Authoring: `skills/course-diagram.md`

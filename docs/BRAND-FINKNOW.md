@@ -2,7 +2,7 @@
 
 Destillat aus dem offiziellen Brandbook (`docs/brand-refs/FINNOFLEET-brandbook-2026-02-10.pdf`).
 FinKnow ist die edu-platform-Instanz im FINNOFLEET-Look. **Dieses Dokument ist
-die maßgebliche Quelle** für fiknow-Farben, Schrift, Diagramme, Icons und
+die maßgebliche Quelle** für finknow-Farben, Schrift, Diagramme, Icons und
 Bildsprache — nicht die abgeleiteten CSS-Tokens.
 
 ## Marke
@@ -53,7 +53,7 @@ Das Brandbook definiert eine **eigene, flache/geometrische** Diagramm-Sprache
   großzügige Zeilenhöhe, Sora. → Das ist **Plattform-CSS** (`.prose table`),
   noch **nicht implementiert**; gilt analog für verstande (editorial-Variante).
 
-→ fiknow-Diagramme sind **flach/technisch/präzise**, das Gegenteil des
+→ finknow-Diagramme sind **flach/technisch/präzise**, das Gegenteil des
 verstande-Sketch-Stils.
 
 ## Icons
@@ -67,5 +67,5 @@ Ordner, Ordner+Lupe, Personengruppe). Varianten: weiß / lime / grau.
 menschlich, nahbar, authentisch". Storytelling vom großen Ganzen zum kleinen
 Teil. **Grün als Highlight** stärkt die Einzigartigkeit (Signature-Motiv:
 Segelboot mit lime-grünem Segel; Drohnen-/Tech-Aufnahmen mit grünen
-Akzentlinien). → Der fiknow-`course-image`-Prompt zielt auf **Fotografie mit
+Akzentlinien). → Der finknow-`course-image`-Prompt zielt auf **Fotografie mit
 grünem Highlight**, nicht auf den verstande-Sketchbook-Look.

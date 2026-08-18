@@ -18,7 +18,7 @@
  * optionalen Brand-Overlay (`<BRAND_CONFIG_PATH-dir>/authoring/<topic>.md`)
  * gelesen — exakt das `loadBrandLogo()`-Muster — und fallen sonst auf den
  * passenden In-Repo-Default zurück (Bildstil per `brand.fontSet`). So kann ein
- * Brand-Overlay (z. B. fiknow-brand) seine eigene Stimme mitbringen, ohne dass
+ * Brand-Overlay (z. B. finknow-brand) seine eigene Stimme mitbringen, ohne dass
  * App-Code anders ist; fehlt sie, greift ein sauberer Default.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -48,9 +48,9 @@ function brandOverlayDir(): string {
   return path.dirname(configPath);
 }
 
-/** „FIKNOW" | „VERSTANDE" — Marken-Diskriminator (Sora = FinKnow). */
-function brandKey(): "FIKNOW" | "VERSTANDE" {
-  return brand.fontSet === "sora" ? "FIKNOW" : "VERSTANDE";
+/** „FINKNOW" | „VERSTANDE" — Marken-Diskriminator (Sora = FinKnow). */
+function brandKey(): "FINKNOW" | "VERSTANDE" {
+  return brand.fontSet === "sora" ? "FINKNOW" : "VERSTANDE";
 }
 
 // ============================================================

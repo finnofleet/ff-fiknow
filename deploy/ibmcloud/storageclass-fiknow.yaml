@@ -1,5 +1,5 @@
 # ============================================================
-# FIKNOW — Custom StorageClass für IBM VPC File Storage (non-root)
+# FINKNOW — Custom StorageClass für IBM VPC File Storage (non-root)
 #
 # WARUM: Der Standard-Treiber legt Shares mit uid=0/gid=0 an → der Share-Root
 # gehört root:root und wird per NFS-root_squash als 65534:65534 gemountet. Ein

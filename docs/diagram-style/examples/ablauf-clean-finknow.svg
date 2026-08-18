@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 250" role="img" aria-labelledby="t2 d2" font-family="Sora, system-ui, -apple-system, 'Segoe UI', sans-serif">
-  <title id="t2">Drei-Schritt-Ablauf (fiknow)</title>
-  <desc id="d2">Linearer Ablauf: Erfassen, Prüfen, Freigeben. Der Abschluss ist mit dem Lime-Akzent hervorgehoben. fiknow clean, theme-adaptiv.</desc>
+  <title id="t2">Drei-Schritt-Ablauf (finknow)</title>
+  <desc id="d2">Linearer Ablauf: Erfassen, Prüfen, Freigeben. Der Abschluss ist mit dem Lime-Akzent hervorgehoben. finknow clean, theme-adaptiv.</desc>
 
   <defs>
     <marker id="ah-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="7" orient="auto-start-reverse">

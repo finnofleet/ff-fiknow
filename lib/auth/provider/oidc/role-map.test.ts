@@ -5,9 +5,9 @@ import type { Role } from "@/lib/auth/roles";
 import { mapRole } from "./role-map";
 
 const MAP: ReadonlyMap<string, Role> = new Map([
-  ["fiknow-curator", "curator"],
-  ["fiknow-admin", "admin"],
-  ["fiknow-banned", "suspended"],
+  ["finknow-curator", "curator"],
+  ["finknow-admin", "admin"],
+  ["finknow-banned", "suspended"],
   ["curators", "curator"], // letztes Gruppen-Segment
 ]);
 
@@ -23,14 +23,14 @@ describe("mapRole", () => {
 
   it("maps realm_access.roles", () => {
     expect(
-      mapRole({ realm_access: { roles: ["fiknow-curator"] } }, CLIENT, MAP),
+      mapRole({ realm_access: { roles: ["finknow-curator"] } }, CLIENT, MAP),
     ).toBe("curator");
   });
 
   it("maps resource_access[client].roles", () => {
     expect(
       mapRole(
-        { resource_access: { [CLIENT]: { roles: ["fiknow-admin"] } } },
+        { resource_access: { [CLIENT]: { roles: ["finknow-admin"] } } },
         CLIENT,
         MAP,
       ),
@@ -38,19 +38,19 @@ describe("mapRole", () => {
   });
 
   it("maps groups by full path and last segment", () => {
-    expect(mapRole({ groups: ["/FIKNOW/Curators"] }, CLIENT, MAP)).toBe("curator");
+    expect(mapRole({ groups: ["/FINKNOW/Curators"] }, CLIENT, MAP)).toBe("curator");
   });
 
   it("is case-insensitive", () => {
     expect(
-      mapRole({ realm_access: { roles: ["FIKNOW-Admin"] } }, CLIENT, MAP),
+      mapRole({ realm_access: { roles: ["FINKNOW-Admin"] } }, CLIENT, MAP),
     ).toBe("admin");
   });
 
   it("picks the highest role when several match", () => {
     expect(
       mapRole(
-        { realm_access: { roles: ["fiknow-curator", "fiknow-admin"] } },
+        { realm_access: { roles: ["finknow-curator", "finknow-admin"] } },
         CLIENT,
         MAP,
       ),
@@ -60,7 +60,7 @@ describe("mapRole", () => {
   it("suspended overrides everything", () => {
     expect(
       mapRole(
-        { realm_access: { roles: ["fiknow-admin", "fiknow-banned"] } },
+        { realm_access: { roles: ["finknow-admin", "finknow-banned"] } },
         CLIENT,
         MAP,
       ),
@@ -70,7 +70,7 @@ describe("mapRole", () => {
   it("ignores roles for a different client", () => {
     expect(
       mapRole(
-        { resource_access: { "other-app": { roles: ["fiknow-admin"] } } },
+        { resource_access: { "other-app": { roles: ["finknow-admin"] } } },
         CLIENT,
         MAP,
       ),

@@ -97,7 +97,7 @@ nur serverseitig sichtbar.
 
 **Warum sie trotzdem nicht greifen — drei Ursachen, alle gleichzeitig wahr:**
 
-1. **Owner-Bypass.** Die App verbindet als **DB-Owner** (`fiknow` in Prod,
+1. **Owner-Bypass.** Die App verbindet als **DB-Owner** (`finknow` in Prod,
    `postgres` lokal — `deploy/RUNBOOK.md`, `deploy/deploy-ibmcloud.md`). Ein
    Owner umgeht RLS per Postgres-Default, solange nicht `FORCE ROW LEVEL
    SECURITY` gesetzt ist. **`FORCE` ist nirgends gesetzt** (repo-weit 0 Treffer).

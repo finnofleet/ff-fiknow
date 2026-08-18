@@ -1,6 +1,6 @@
-# fiknow — Helm-Chart
+# finknow — Helm-Chart
 
-Deployt das FINKNOW-OCI-Image (`ghcr.io/finnofleet/ff-fiknow`) auf Kubernetes.
+Deployt das FINKNOW-OCI-Image (`ghcr.io/finnofleet/ff-finknow`) auf Kubernetes.
 Erfüllt die Deployment-Anforderungen: **OCI-Image**, **OIDC** (Keycloak),
 **non-root**, **externes Postgres**.
 
@@ -11,23 +11,23 @@ Erfüllt die Deployment-Anforderungen: **OCI-Image**, **OIDC** (Keycloak),
 
 ```bash
 # OIDC (FINKNOW @ IBM) — Beispielwerte anpassen:
-helm upgrade --install fiknow ./deploy/helm/fiknow \
-  -f ./deploy/helm/fiknow/values-fiknow-oidc.yaml \
-  --namespace fiknow --create-namespace
+helm upgrade --install finknow ./deploy/helm/finknow \
+  -f ./deploy/helm/finknow/values-finknow-oidc.yaml \
+  --namespace finknow --create-namespace
 ```
 
 Das Chart liegt im Repo; alternativ als OCI-Chart paketieren/pushen:
 
 ```bash
-helm package ./deploy/helm/fiknow
-helm push fiknow-0.3.2.tgz oci://ghcr.io/finnofleet/charts
+helm package ./deploy/helm/finknow
+helm push finknow-0.3.2.tgz oci://ghcr.io/finnofleet/charts
 ```
 
 ## Wichtige Werte
 
 | Wert | Zweck |
 |---|---|
-| `image.repository` / `image.tag` | Image + Tag (`ghcr.io/finnofleet/ff-fiknow` / `latest` — besser ein `main-<sha>`/`v`-Tag pinnen) |
+| `image.repository` / `image.tag` | Image + Tag (`ghcr.io/finnofleet/ff-finknow` / `latest` — besser ein `main-<sha>`/`v`-Tag pinnen) |
 | `config.OIDC_ISSUER` | Keycloak-Realm-URL (Pflicht) |
 | `config.OIDC_CLIENT_ID` / `OIDC_ROLE_MAP` | Client + Rollen-Mapping |
 | `config.OIDC_REDIRECT_BASE` | öffentliche Basis-URL; leer → aus `ingress.hosts[0]` |
@@ -61,4 +61,4 @@ Im Realm muss als gültige redirect_uri eingetragen sein:
 
 und die Rollen/Gruppen aus `OIDC_ROLE_MAP` müssen in die Token-Claims gemappt
 sein (Realm-Roles/Groups in ID-Token). Vgl. das lokale Test-Realm
-`tooling/keycloak/fiknow-realm.json`.
+`tooling/keycloak/finknow-realm.json`.

@@ -1,5 +1,5 @@
 # ============================================================
-# FIKNOW — PVC für /data (Payload-Medien + Authoring-Bundles)
+# FINKNOW — PVC für /data (Payload-Medien + Authoring-Bundles)
 #
 # Nutzt die uid/gid-StorageClass (ibmc-vpc-file-fiknow-1001), damit der
 # Share-Root real 1001:1001 gehört und der non-root-Pod schreiben kann.
@@ -13,7 +13,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: fiknow-data
-  namespace: fiknow
+  namespace: finknow
 spec:
   accessModes:
     - ReadWriteMany

@@ -18,7 +18,7 @@ identity:
   # maritime Motiv knüpft bewusst an das Navigations-Thema der Gruppe an.
   tagline: mit Wissen auf Kurs
   description: Die Lernplattform von FINNOFLEET für geführte Wissensvermittlung — Onboarding, Tool-Schulungen, interne Zertifizierungen und mehr.
-  domain: fiknow-test.jcloud.ik-server.com
+  domain: finknow-test.jcloud.ik-server.com
   markLetter: F
 
 design:

@@ -34,7 +34,7 @@ function required(name: string): string {
 }
 
 /**
- * Parst OIDC_ROLE_MAP = "fiknow-curator:curator,fiknow-admin:admin".
+ * Parst OIDC_ROLE_MAP = "finknow-curator:curator,finknow-admin:admin".
  * Schlüssel = Keycloak-Rolle/-Gruppe (case-insensitiv), Wert = App-Rolle.
  * Unbekannte App-Rollen-Werte werden via normalizeRole defensiv behandelt;
  * eine Map auf `learner` ist sinnlos (Default ist ohnehin learner) und wird

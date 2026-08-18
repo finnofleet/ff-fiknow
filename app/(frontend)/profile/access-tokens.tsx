@@ -241,7 +241,7 @@ export function AccessTokensManager({
         </p>
       )}
       <pre className={styles.tokenSnippet}>
-        {`"mcpServers": {\n  "fiknow-authoring": {\n    "url": "${mcpUrl}",\n    "headers": {\n      "Authorization": "Bearer cat_…"\n    }\n  }\n}`}
+        {`"mcpServers": {\n  "finknow-authoring": {\n    "url": "${mcpUrl}",\n    "headers": {\n      "Authorization": "Bearer cat_…"\n    }\n  }\n}`}
       </pre>
 
       {/* Klartext-Anzeige nach Mint */}

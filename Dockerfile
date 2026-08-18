@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # ============================================================
-# FINKNOW (ff-fiknow) — Production-Image
+# FINKNOW (ff-finknow) — Production-Image
 #
 # Multi-stage Build:
 #   1. deps     → npm ci (nur production-dependencies)
@@ -8,11 +8,11 @@
 #   3. runner   → schlankes Alpine-Image, nur Build-Artefakte
 #
 # Result: ~150 MB Image, läuft als non-root auf Kubernetes
-# (IBM Cloud, Helm-Chart unter deploy/helm/fiknow).
+# (IBM Cloud, Helm-Chart unter deploy/helm/finknow).
 #
 # Brand-Konfig (brand/brand.yaml) ist FINKNOW-spezifisch im Image.
 # Das Repository baut FINKNOW direkt — kein Basis-Image-Overlay mehr.
-# Image: ghcr.io/finnofleet/ff-fiknow
+# Image: ghcr.io/finnofleet/ff-finknow
 #
 # Deployment-Doku: deploy/RUNBOOK.md
 # ============================================================
@@ -93,7 +93,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 # Scripts + der importierten lib/ + tsconfig.json (für die `@/`-Pfad-
 # Auflösung). tsx + typescript sind bereits in node_modules (npm ci ohne
 # --omit=dev). Payload-agnostisch: retention-purge importiert nur den
-# Drizzle-Client. Siehe deploy/helm/fiknow/templates/cronjob.yaml.
+# Drizzle-Client. Siehe deploy/helm/finknow/templates/cronjob.yaml.
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json

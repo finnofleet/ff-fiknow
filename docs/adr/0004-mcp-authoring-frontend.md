@@ -201,7 +201,7 @@ Konkret werden fünf Erweiterungen beschlossen:
   Default per `brand.fontSet` (FinKnow-Bildstil bereits getrennt im Repo). Macht
   MCP plugin-unabhängig für Desktop-/Cowork-Kollegen.
   - **Offen (Follow-up, braucht Yves):** FinKnows Marken-Stimme als
-    `brand/authoring/content-style.md` im **fiknow-brand**-Repo (+ `COPY`-Zeile
+    `brand/authoring/content-style.md` im **finknow-brand**-Repo (+ `COPY`-Zeile
     in dessen Dockerfile). Bis dahin fällt FinKnow auf den neutralen/verstande-
     Default zurück — kein Bruch, nur nicht final gebrandet.
 - **Phase 2.5 (GEBAUT):** Out-of-Band-Bundle-Upload — das Pendant zum Asset-

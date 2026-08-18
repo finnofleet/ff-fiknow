@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "fiknow.fullname" . }}
+  name: {{ include "finknow.fullname" . }}
   labels:
-    {{- include "fiknow.labels" . | nindent 4 }}
+    {{- include "finknow.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "fiknow.fullname" . }}
+    name: {{ include "finknow.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

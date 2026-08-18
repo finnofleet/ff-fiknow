@@ -30,7 +30,7 @@ Bild. Braucht es Logik, Schritt-für-Schritt oder Relationen → Diagramm.
 | Plattform | Idiom |
 |---|---|
 | verstande.ch | **Sketchbook-Illustration** — handgezeichnet, warme Elfenbein-Palette |
-| fiknow.ch / finnofleet | **Fotografie** — editorial, fotorealistisch, EIN Grün-Akzent |
+| finknow.ch / finnofleet | **Fotografie** — editorial, fotorealistisch, EIN Grün-Akzent |
 
 Wähle das Idiom nach `platformBaseUrl`. Mische die Stile **nicht** innerhalb
 eines Kurses.
@@ -102,7 +102,7 @@ viewed from the side. 16:9."
 
 ---
 
-## Idiom B — fiknow Fotografie
+## Idiom B — finknow Fotografie
 
 Authentische Editorial-Fotografie für eine FinTech-Marke. **Keine
 Illustration, kein 3D/CGI** — echter fotorealistischer Look. Genau
@@ -188,7 +188,7 @@ Der Basis-Block bleibt immer unverändert. Pro Bild wird am Ende eine kurze
 ## Referenzen
 
 - Vollständige Brand-Doku verstande: `docs/BRAND-IMAGE-STYLE-VERSTANDE.md` (Repo)
-- Vollständige Brand-Doku fiknow: `docs/BRAND-IMAGE-STYLE-FINKNOW.md` (Repo)
-- Brand-Specs fiknow/FINNOFLEET: `docs/BRAND-FINKNOW.md` (Repo)
+- Vollständige Brand-Doku finknow: `docs/BRAND-IMAGE-STYLE-FINKNOW.md` (Repo)
+- Brand-Specs finknow/FINNOFLEET: `docs/BRAND-FINKNOW.md` (Repo)
 - Skill zum Authoring: `skills/course-image.md`
 - Diagramm-Äquivalent: `skills/course-diagram.md` / `examples/DIAGRAM-STYLE.md`

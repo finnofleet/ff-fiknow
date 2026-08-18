@@ -82,7 +82,7 @@ export const brandConfig = loadBrandConfig();
  * Liest ein optionales Brand-Logo ein, mit zwei Fallback-Stufen:
  *
  *   1. Bevorzugt: <dirname(BRAND_CONFIG_PATH)>/assets/logo.svg
- *      (Brand-Overlay liefert eigenes Logo mit, z. B. fiknow-brand).
+ *      (Brand-Overlay liefert eigenes Logo mit, z. B. finknow-brand).
  *   2. Fallback: ./brand/assets/logo.svg im Default-Pfad
  *      (greift wenn der Overlay-Pfad existiert aber kein Logo bringt,
  *      oder wenn der Overlay-Pfad ganz fehlt — beides typisch im

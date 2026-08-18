@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "fiknow.fullname" . }}-env
+  name: {{ include "finknow.fullname" . }}-env
   labels:
-    {{- include "fiknow.labels" . | nindent 4 }}
+    {{- include "finknow.labels" . | nindent 4 }}
 data:
-  # FIKNOW ist OIDC-only (Keycloak) — kein AUTH_PROVIDER-Schalter mehr.
+  # FINKNOW ist OIDC-only (Keycloak) — kein AUTH_PROVIDER-Schalter mehr.
   {{- with .Values.config.OIDC_ISSUER }}
   OIDC_ISSUER: {{ . | quote }}
   {{- end }}
@@ -21,7 +21,7 @@ data:
   {{- with .Values.config.OIDC_SESSION_MAX_AGE_SEC }}
   OIDC_SESSION_MAX_AGE_SEC: {{ . | quote }}
   {{- end }}
-  {{- $redirectBase := include "fiknow.redirectBase" . }}
+  {{- $redirectBase := include "finknow.redirectBase" . }}
   {{- if $redirectBase }}
   OIDC_REDIRECT_BASE: {{ $redirectBase | quote }}
   {{- end }}

@@ -35,7 +35,7 @@ export default async function AdminUsersPage() {
         <p className={styles.lede}>
           Benutzer und Rollen werden zentral über Single Sign-On (Keycloak)
           verwaltet. Vergib die Realm-Rollen bzw. Gruppen dort (z. B.{" "}
-          <code>fiknow-curator</code>, <code>fiknow-admin</code>) — sie werden
+          <code>finknow-curator</code>, <code>finknow-admin</code>) — sie werden
           bei jedem Login automatisch übernommen.
         </p>
       </header>

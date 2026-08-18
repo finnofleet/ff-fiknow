@@ -1,17 +1,17 @@
-{{- include "fiknow.validate" . -}}
+{{- include "finknow.validate" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fiknow.fullname" . }}
+  name: {{ include "finknow.fullname" . }}
   labels:
-    {{- include "fiknow.labels" . | nindent 4 }}
+    {{- include "finknow.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "fiknow.selectorLabels" . | nindent 6 }}
+      {{- include "finknow.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -24,13 +24,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "fiknow.selectorLabels" . | nindent 8 }}
+        {{- include "finknow.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "fiknow.serviceAccountName" . }}
+      serviceAccountName: {{ include "finknow.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -45,9 +45,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "fiknow.fullname" . }}-env
+                name: {{ include "finknow.fullname" . }}-env
             - secretRef:
-                name: {{ include "fiknow.secretName" . }}
+                name: {{ include "finknow.secretName" . }}
           {{- with .Values.startupProbe }}
           startupProbe:
             {{- toYaml . | nindent 12 }}

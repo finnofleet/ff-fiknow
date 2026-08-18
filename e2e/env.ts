@@ -7,7 +7,7 @@
  * JEDEM Request geprüft, PAYLOAD_SECRET signiert die Test-Cookies).
  */
 export const E2E_BOOT_ENV: Record<string, string> = {
-  DATABASE_URL: "postgres://postgres:postgres@127.0.0.1:55433/fiknow?sslmode=disable",
+  DATABASE_URL: "postgres://postgres:postgres@127.0.0.1:55433/finknow?sslmode=disable",
   PAYLOAD_SECRET: "e2e-test-secret-mindestens-16-zeichen",
   // MUSS die Session-Secret-Aufloesung der App (OIDC_SESSION_SECRET ||
   // PAYLOAD_SECRET, siehe oidc/config.ts) PINNEN. Der von global-setup
@@ -31,7 +31,7 @@ export const E2E_BOOT_ENV: Record<string, string> = {
   AUDIT_COMPLIANCE_ACCESS: "true",
 };
 
-export const E2E_PG_CONTAINER = "fiknow-e2e-pg";
+export const E2E_PG_CONTAINER = "finknow-e2e-pg";
 export const E2E_PG_PORT = 55433;
 export const E2E_BASE_URL = "http://localhost:3100";
 export const E2E_DEV_SERVER_PORT = 3100;

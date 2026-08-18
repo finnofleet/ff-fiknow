@@ -5,7 +5,7 @@
  * den Token-Claims ab, NICHT aus einer App-internen Pflege. Berücksichtigt:
  *   - realm_access.roles            (Realm-Rollen)
  *   - resource_access[client].roles (Client-Rollen)
- *   - groups                        (Gruppen, z. B. "/FIKNOW/Curators")
+ *   - groups                        (Gruppen, z. B. "/FINKNOW/Curators")
  *
  * Aus allen gefundenen Strings (case-insensitiv, plus letztes Pfadsegment bei
  * Gruppen) wird gegen OIDC_ROLE_MAP gematcht. Höchste erreichte Rolle gewinnt
@@ -41,7 +41,7 @@ export function extractRoleKeys(claims: Claims, clientId: string): string[] {
     asStringArray(resourceAccess[clientId]?.roles).forEach(add);
   }
 
-  // groups — kompletter Pfad UND letztes Segment ("/FIKNOW/Curators" → auch "curators")
+  // groups — kompletter Pfad UND letztes Segment ("/FINKNOW/Curators" → auch "curators")
   asStringArray(claims.groups).forEach((g) => {
     add(g);
     const seg = g.split("/").filter(Boolean).pop();

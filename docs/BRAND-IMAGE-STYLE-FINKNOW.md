@@ -7,7 +7,7 @@ der edu-platform).
 > 02.5 Bildsprache) + [`BRAND-FINKNOW.md`](./BRAND-FINKNOW.md). Aufbau/Workflow
 > wie beim verstande-Pendant
 > ([`BRAND-IMAGE-STYLE-VERSTANDE.md`](./BRAND-IMAGE-STYLE-VERSTANDE.md)) — aber
-> fiknow ist **Fotografie**, nicht Illustration.
+> finknow ist **Fotografie**, nicht Illustration.
 
 ## Wann nutzen
 

@@ -10,7 +10,7 @@
  * (kein anonymer Angreifer) und die Plattform hat wenige Nutzer. Der
  * „pro-Replika statt global"-Nachteil ist hier irrelevant — bei N Replikas
  * gilt effektiv N×Limit, was für den Hygiene-Zweck genügt. Keine externe
- * Abhängigkeit, kein Secret pro Deployment (verstande.ch, fiknow).
+ * Abhängigkeit, kein Secret pro Deployment (verstande.ch, finknow).
  *
  * Trade-off Fixed-Window: an der Fenstergrenze sind theoretisch bis zu
  * 2×limit Requests in kurzer Folge möglich. Für reines Frequenz-Capping

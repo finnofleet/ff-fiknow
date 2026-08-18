@@ -18,6 +18,32 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.6.0] – 2026-08-18
+
+### Geändert
+- **Rebrand FIKNOW → FINKNOW** — der Produktname wurde durchgängig umgestellt:
+  Anzeigename (`brand/brand.yaml`), neu gezeichnete Wortmarke
+  (`brand/assets/logo.svg`, zusätzliches „N" ins Logogramm), Repo-/Doku-
+  Identität (GitHub-Repo `ff-fiknow` → `ff-finknow`, Paketname) und der
+  technische Infra-Slug `fiknow` → `finknow` (Keycloak-Realm/-Rollen/-Gruppen,
+  Postgres-DB, Helm-Chart + `finknow.*`-Templates, Image `ghcr.io/finnofleet/
+  ff-finknow`, OIDC-Issuer/`OIDC_ROLE_MAP`). Env-Var `FIKNOW_RETENTION_YEARS`
+  → `FINKNOW_RETENTION_YEARS`. **Bewusst unverändert:** PVC `fiknow-data` +
+  StorageClass `ibmc-vpc-file-fiknow-1001` (deployter Hintergrund-Storage, kein
+  Nutzer-Kontakt). Die Ring-3-Infra-Migration wurde von der internen IT
+  umgesetzt; das getestete Migrations-Script + Runbook liegen unter
+  `deploy/ring3-rename/`.
+- **Helm-Chart-Version an die App-Version gekoppelt** — Chart-`version`,
+  `appVersion` und der Image-Tag werden beim Release aus dem Git-Tag `vX.Y.Z`
+  gestempelt (CI publiziert das Chart nur noch auf Tags); vorher stand die
+  Chart-Version still und wurde bei jedem Push überschrieben. Bei der
+  Installation ist damit eindeutig, welches Chart zu welchem App-Stand gehört.
+
+### Behoben
+- **Marken-Diskriminator lud die Bild-Style-Doku ins Leere** — `brandKey()`
+  gab nach dem Datei-Rename weiter `"FIKNOW"` zurück und verfehlte damit
+  `BRAND-IMAGE-STYLE-FINKNOW.md` (stiller Fallback); jetzt korrekt `"FINKNOW"`.
+
 ## [0.5.1] – 2026-08-10
 
 ### Sicherheit
@@ -168,9 +194,10 @@ inkl. MDX-Bundle-Authoring, KI-Tutor + RAG, Katalog/Kurse, Lernpfade,
 Pflichtkurse & Compliance-Nachweis, OIDC/Keycloak-Auth, DSG-Retention. Details
 siehe `docs/ROADMAP.md` und `docs/adr/`.
 
-[Unreleased]: https://github.com/finnofleet/ff-fiknow/compare/v0.5.1...HEAD
-[0.5.1]: https://github.com/finnofleet/ff-fiknow/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/finnofleet/ff-fiknow/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/finnofleet/ff-fiknow/releases/tag/v0.2.0
+[Unreleased]: https://github.com/finnofleet/ff-finknow/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/finnofleet/ff-finknow/compare/v0.5.1...v0.6.0
+[0.5.1]: https://github.com/finnofleet/ff-finknow/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/finnofleet/ff-finknow/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/finnofleet/ff-finknow/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/finnofleet/ff-finknow/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/finnofleet/ff-finknow/releases/tag/v0.2.0

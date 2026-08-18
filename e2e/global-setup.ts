@@ -4,7 +4,7 @@
  * irgendeine Spec läuft.
  *
  * Reihenfolge (siehe AGENTS-Auftrag):
- *   1. Docker-Container fiknow-e2e-pg (postgres:16) neu starten
+ *   1. Docker-Container finknow-e2e-pg (postgres:16) neu starten
  *   2. Warten bis pg_isready
  *   3. auth-Schema-Bootstrap (payload-Schema + auth.uid()/auth.role())
  *   4. `drizzle-kit migrate` (mit Retry gegen bekannte Erst-Lauf-Flakiness)
@@ -95,7 +95,7 @@ function dockerRmForce(): void {
 function dockerRunPostgres(): void {
   log(`Starting fresh Postgres container ${E2E_PG_CONTAINER} on port ${E2E_PG_PORT} …`);
   runInherit(
-    `docker run -d --name ${E2E_PG_CONTAINER} -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=fiknow -p ${E2E_PG_PORT}:5432 postgres:16`,
+    `docker run -d --name ${E2E_PG_CONTAINER} -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=finknow -p ${E2E_PG_PORT}:5432 postgres:16`,
   );
 }
 
@@ -131,7 +131,7 @@ function bootstrapSchemas(): void {
   log("Applying auth/payload schema bootstrap SQL …");
   execFileSync(
     "docker",
-    ["exec", "-i", E2E_PG_CONTAINER, "psql", "-U", "postgres", "-d", "fiknow"],
+    ["exec", "-i", E2E_PG_CONTAINER, "psql", "-U", "postgres", "-d", "finknow"],
     { input: AUTH_SCHEMA_BOOTSTRAP, stdio: ["pipe", "inherit", "inherit"] },
   );
 }
@@ -146,7 +146,7 @@ function profilesTableExists(): boolean {
       "-U",
       "postgres",
       "-d",
-      "fiknow",
+      "finknow",
       "-tAc",
       "select to_regclass('public.profiles')",
     ],

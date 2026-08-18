@@ -13,7 +13,7 @@
   `quiz_attempts`, `annotations`, `training_assignments` (alle
   `lib/db/schema.ts`); Profil-UI (`app/(frontend)/profile/`); Retention-Cron
   (`lib/privacy/purge-expired.ts`, `scripts/retention-purge.ts`,
-  `retention_purge_runs`, `deploy/helm/fiknow/templates/cronjob.yaml` —
+  `retention_purge_runs`, `deploy/helm/finknow/templates/cronjob.yaml` —
   umgesetzt); künftig ein Austritts-Trigger/Keycloak-Reconcile (offen).
 - **Verwandt:** [[0005-pflichtkurse-und-compliance-nachweis]], `ROADMAP.md`.
 
@@ -141,7 +141,7 @@ finale Frist (Default 3 Jahre) formal ab.
 
 - **Phase 7a — Datenklassen + Retention-Policy + RoPA. ✓ umgesetzt.**
   Klassifikation (A/B) codifiziert (`lib/privacy/data-classes.ts`), Frist-Logik
-  (`lib/privacy/retention.ts`, `FIKNOW_RETENTION_YEARS` Default 3),
+  (`lib/privacy/retention.ts`, `FINKNOW_RETENTION_YEARS` Default 3),
   Verzeichnis der Verarbeitungstätigkeiten (`docs/ROPA-finknow.md`).
 - **Phase 7b — Löschung Klasse (B) + Purge-Primitive. ✓ umgesetzt.**
   `purgeUserData(userId)` (`lib/privacy/purge-user.ts`) löscht Klasse (B) über
@@ -152,12 +152,12 @@ finale Frist (Default 3 Jahre) formal ab.
 - **Phase 7c (Teil 1) — Retention-Cron. ✓ umgesetzt + verifiziert (2026-07-24).**
   `purgeExpiredNachweise` (`lib/privacy/purge-expired.ts`) löscht abgeschlossene
   `training_assignments`, deren Frist abgelaufen ist (`completed_at <= now −
-  FIKNOW_RETENTION_YEARS`); offene Zeilen (`completed_at IS NULL`) werden nie
+  FINKNOW_RETENTION_YEARS`); offene Zeilen (`completed_at IS NULL`) werden nie
   angefasst. CLI `scripts/retention-purge.ts` (dry-run default, `--confirm`;
   `RETENTION_PURGE_DRY_RUN=1` erzwingt dry-run). Jeder Lauf schreibt eine
   PII-freie Audit-Zeile in `retention_purge_runs` (Cutoff, Frist, Anzahl,
   dry-run-Flag) — DSGVO-Rechenschaftspflicht. Läuft als **K8s-CronJob**
-  (`deploy/helm/fiknow/templates/cronjob.yaml`, ephemerer Pod pro Lauf, gleiches
+  (`deploy/helm/finknow/templates/cronjob.yaml`, ephemerer Pod pro Lauf, gleiches
   Image), Payload-agnostisch. Integrationstest gegen echtes Postgres bestanden.
   **Hinweis:** löscht bis ~2029 real 0 Zeilen (App erst seit 2026) — der Lauf
   validiert bis dahin nur den Mechanismus. **Bewusste Konsequenz der

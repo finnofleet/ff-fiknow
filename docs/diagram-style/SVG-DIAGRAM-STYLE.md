@@ -9,8 +9,8 @@ SVGs werden vom Modell **als Text** authort (kein externes Tool) und über
 > `examples/` rendern — iterativ schärfen.
 
 > **Zwei Marken, zwei Idiome.** Dieser Sketch-Stil gilt für **verstande**.
-> **fiknow** hat eine **eigene, cleane** Diagramm-Sprache nach FINNOFLEET-
-> Brandbook — siehe Abschnitt „fiknow — Clean-Variante" unten und
+> **finknow** hat eine **eigene, cleane** Diagramm-Sprache nach FINNOFLEET-
+> Brandbook — siehe Abschnitt „finknow — Clean-Variante" unten und
 > `docs/BRAND-FINKNOW.md`. Beim Authoring den zur Brand passenden Stil wählen.
 
 ## Die Sketch-Technik (Sanitizer-sicher)
@@ -60,7 +60,7 @@ Filter bleibt also erhalten.
 | Schattierung | Terracotta `#B56E4D` |
 | Label gedämpft | `#8A8275` / `#6B6358` |
 
-(fiknow-Palette: siehe „fiknow — Clean-Variante" unten + `docs/BRAND-FINKNOW.md`.)
+(finknow-Palette: siehe „finknow — Clean-Variante" unten + `docs/BRAND-FINKNOW.md`.)
 
 ## Text / Labels
 
@@ -97,9 +97,9 @@ Zwei wiederkehrende Fehler, die den Eindruck sofort billig wirken lassen:
 
 ---
 
-## fiknow — Clean-Variante (FINNOFLEET)
+## finknow — Clean-Variante (FINNOFLEET)
 
-Quelle: `docs/BRAND-FINKNOW.md` + Brandbook-PDF. fiknow ist **clean &
+Quelle: `docs/BRAND-FINKNOW.md` + Brandbook-PDF. finknow ist **clean &
 weich**, *nicht* skizzenhaft — aber auch **nicht hart-geometrisch**.
 Beispiele: `examples/luv-lee-clean-finknow.svg`, `examples/ablauf-clean-finknow.svg`.
 

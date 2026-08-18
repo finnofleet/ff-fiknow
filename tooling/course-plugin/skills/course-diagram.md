@@ -22,7 +22,7 @@ platzierst es mit dem richtigen `<Figure>`-Tag in der Lesson-MDX.
 
 1. **Brand-Idiom bestimmen** — aus `platformBaseUrl` ableiten:
    - `verstande.ch` → **Sketch** (handgezeichnet, feste Elfenbein-Karte, Filter)
-   - `fiknow.ch` / `finnofleet` → **Clean** (theme-adaptiv, `currentColor`, kein Filter)
+   - `finknow.ch` / `finnofleet` → **Clean** (theme-adaptiv, `currentColor`, kein Filter)
    - Wenn unklar oder nicht konfiguriert: kurz nachfragen.
 
 2. **Diagramm-Typ + Inhalt klären** — mit dem Autor abstimmen:
@@ -42,7 +42,7 @@ platzierst es mit dem richtigen `<Figure>`-Tag in der Lesson-MDX.
    - Cross-Hatching statt Schlagschatten; lavierende Füllungen (`fill-opacity` 0.2–0.5).
    - Fonts: `Newsreader, Georgia, serif` (Headlines); `'JetBrains Mono', ui-monospace, monospace` (Kicker).
 
-   **fiknow Clean:**
+   **finknow Clean:**
    - **KEIN** `<filter>`, **KEIN** Hintergrund-Rect (SVG bleibt transparent).
    - Tinte/Linien = `currentColor` (NICHT `#333` oder eine feste Farbe).
    - Neutral-Füllungen = `currentColor` mit `fill-opacity` 0.06–0.16.
@@ -83,7 +83,7 @@ platzierst es mit dem richtigen `<Figure>`-Tag in der Lesson-MDX.
    ```
 
 7. **Hinweis an den Autor** — kurz erwähnen:
-   - fiknow-Diagramme sind **automatisch theme-adaptiv** (Light/Dark): die
+   - finknow-Diagramme sind **automatisch theme-adaptiv** (Light/Dark): die
      Plattform rendert das SVG inline, `currentColor` erbt den Karten-Grund.
      Keine eigenen fixen Tinten-Farben verwenden, das würde die Adaption
      brechen.

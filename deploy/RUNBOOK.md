@@ -1,6 +1,6 @@
 # FINKNOW — Deployment-Runbook (Kubernetes / IBM)
 
-Schritt-für-Schritt-Anleitung, um FINKNOW (`ff-fiknow`) auf einem Kubernetes-
+Schritt-für-Schritt-Anleitung, um FINKNOW (`ff-finknow`) auf einem Kubernetes-
 Cluster in Betrieb zu nehmen. FINKNOW ist **OIDC-only** (Keycloak) und braucht
 ein **externes Postgres** — beide werden vom Cluster-/Firmen-Umfeld
 bereitgestellt, nicht vom Chart.
@@ -22,7 +22,7 @@ bereitgestellt, nicht vom Chart.
 | 4 | **Keycloak**: Realm + confidential Client + Rollen + Claim-Mapper (Abschnitt 2) | Keycloak-Admin-Konsole |
 | 5 | **Ingress-Controller** + DNS-Eintrag auf den öffentlichen Host | `kubectl get ingressclass` |
 | 6 | **TLS-Zertifikat** (cert-manager o. ä.) für den Host | — |
-| 7 | **GHCR-Pull-Zugriff** auf `ghcr.io/finnofleet/ff-fiknow` (public ODER Pull-Secret) | Abschnitt 4 |
+| 7 | **GHCR-Pull-Zugriff** auf `ghcr.io/finnofleet/ff-finknow` (public ODER Pull-Secret) | Abschnitt 4 |
 | 8 | **Persistenter Speicher** für `/data`, **falls** Medien-Uploads oder MCP-/Authoring genutzt werden — bei ≥2 Replicas ein **ReadWriteMany-PVC** (RWX). Sonst optional. | Abschnitt 7a |
 
 > **Datentöpfe nicht vergessen:** Kurs-Bundles (MCP/Authoring) und Payload-Medien
@@ -41,14 +41,14 @@ App migriert das Schema beim ersten Start selbst.
 
 1. Datenbank + User anlegen (Beispiel):
    ```sql
-   CREATE DATABASE fiknow;
-   CREATE USER fiknow WITH PASSWORD '…';
-   GRANT ALL PRIVILEGES ON DATABASE fiknow TO fiknow;
-   ALTER DATABASE fiknow OWNER TO fiknow;   -- damit Schema/Funktionen anlegbar
+   CREATE DATABASE finknow;
+   CREATE USER finknow WITH PASSWORD '…';
+   GRANT ALL PRIVILEGES ON DATABASE finknow TO finknow;
+   ALTER DATABASE finknow OWNER TO finknow;   -- damit Schema/Funktionen anlegbar
    ```
 2. Connection-String notieren (für das Secret in Abschnitt 3):
    ```
-   postgres://fiknow:<pw>@<host>:5432/fiknow?sslmode=require
+   postgres://finknow:<pw>@<host>:5432/finknow?sslmode=require
    ```
 
 > **Kein** `db:push` / kein manuelles Schema-Setup. Das Schema (inkl. der
@@ -64,24 +64,24 @@ Keycloak** föderiert — die App sieht nur Keycloak.
 
 ### 2.1 Client anlegen
 
-- Realm wählen/erstellen (z. B. `fiknow`).
+- Realm wählen/erstellen (z. B. `finknow`).
 - **Client** anlegen:
   - Client-ID: **`edu-platform`** (muss mit `OIDC_CLIENT_ID` übereinstimmen)
   - Client authentication: **On** (confidential)
   - Standard flow: **On**; Direct access grants: Off
   - **Valid redirect URI** (EXAKT, sonst „invalid redirect"):
     ```
-    https://app.fiknow.example.com/auth/oidc/callback
+    https://app.finknow.example.com/auth/oidc/callback
     ```
-  - **Valid post logout redirect URI**: `https://app.fiknow.example.com/*`
-  - Web origins: `https://app.fiknow.example.com`
+  - **Valid post logout redirect URI**: `https://app.finknow.example.com/*`
+  - Web origins: `https://app.finknow.example.com`
 - Unter **Credentials** das **Client-Secret** kopieren → `OIDC_CLIENT_SECRET`.
 
 ### 2.2 Rollen anlegen
 
 Realm-Rollen (oder Client-Rollen) erstellen, die auf App-Rollen gemappt werden:
-- `fiknow-curator` → App-Rolle `curator`
-- `fiknow-admin` → App-Rolle `admin`
+- `finknow-curator` → App-Rolle `curator`
+- `finknow-admin` → App-Rolle `admin`
 - (alles ohne Treffer = `learner`)
 
 Das Mapping steuert `OIDC_ROLE_MAP` (Abschnitt 5).
@@ -99,7 +99,7 @@ Im Client → **Client scopes** → dem dedizierten Scope einen Mapper hinzufüg
   Add to ID token: On), falls über Gruppen statt Rollen gesteuert wird.
 
 > Eine fertige Referenz-Realm-Konfig liegt im Repo:
-> `tooling/keycloak/fiknow-realm.json` (für den lokalen Test, aber die Mapper-/
+> `tooling/keycloak/finknow-realm.json` (für den lokalen Test, aber die Mapper-/
 > Client-Struktur ist 1:1 übertragbar).
 
 ### 2.4 Nutzer:innen
@@ -131,30 +131,30 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Secret anlegen (Variante A — direkt):
 ```bash
-kubectl create namespace fiknow
-kubectl -n fiknow create secret generic fiknow-env \
-  --from-literal=DATABASE_URL='postgres://fiknow:<pw>@<host>:5432/fiknow?sslmode=require' \
+kubectl create namespace finknow
+kubectl -n finknow create secret generic finknow-env \
+  --from-literal=DATABASE_URL='postgres://finknow:<pw>@<host>:5432/finknow?sslmode=require' \
   --from-literal=PAYLOAD_SECRET='<32hex>' \
   --from-literal=OIDC_CLIENT_SECRET='<keycloak-secret>' \
   --from-literal=OIDC_SESSION_SECRET='<32hex>'
 ```
 
 > In Prod besser über **Sealed-Secrets / IBM Secrets Manager / External-Secrets**
-> verwalten und im Chart per `secret.existingSecret: fiknow-env` referenzieren.
+> verwalten und im Chart per `secret.existingSecret: finknow-env` referenzieren.
 
 ---
 
 ## 4. Image-Pull (GHCR)
 
-Das Image liegt auf `ghcr.io/finnofleet/ff-fiknow`. Ein neues GHCR-Package ist
+Das Image liegt auf `ghcr.io/finnofleet/ff-finknow`. Ein neues GHCR-Package ist
 **privat by default** (auch bei public Repo). Eine von zwei Optionen:
 
 **A) Package public stellen** (einfachster Pull): GitHub → Org `finnofleet` →
-Packages → `ff-fiknow` → Package settings → *Change visibility → Public*.
+Packages → `ff-finknow` → Package settings → *Change visibility → Public*.
 
 **B) Pull-Secret** (Package bleibt privat):
 ```bash
-kubectl -n fiknow create secret docker-registry ghcr-pull \
+kubectl -n finknow create secret docker-registry ghcr-pull \
   --docker-server=ghcr.io \
   --docker-username=<github-user> \
   --docker-password=<PAT mit read:packages>
@@ -166,48 +166,48 @@ und im Chart: `imagePullSecrets: [{ name: ghcr-pull }]`.
 ## 5. Helm-Werte + Install
 
 Werte-Datei (an die Umgebung anpassen) — siehe auch das Beispiel
-`deploy/helm/fiknow/values-fiknow-oidc.yaml`:
+`deploy/helm/finknow/values-finknow-oidc.yaml`:
 
 ```yaml
 image:
-  repository: ghcr.io/finnofleet/ff-fiknow
+  repository: ghcr.io/finnofleet/ff-finknow
   tag: v0.5.1                      # Release-Tag pinnen, kein floating 'latest'
 
 config:
-  OIDC_ISSUER: https://keycloak.intern.example.com/realms/fiknow
+  OIDC_ISSUER: https://keycloak.intern.example.com/realms/finknow
   OIDC_CLIENT_ID: edu-platform     # == Keycloak Client-ID
-  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
+  OIDC_ROLE_MAP: "finknow-curator:curator,finknow-admin:admin"
   # OIDC_REDIRECT_BASE leer lassen → wird aus ingress.hosts[0] (https) abgeleitet
 
 ingress:
   enabled: true
   className: public-iks-k8s-nginx  # IBM IKS: anpassen (oder OpenShift-Route separat)
   hosts:
-    - host: app.fiknow.example.com
+    - host: app.finknow.example.com
       paths: [{ path: /, pathType: Prefix }]
   tls:
-    - secretName: fiknow-tls
-      hosts: [app.fiknow.example.com]
+    - secretName: finknow-tls
+      hosts: [app.finknow.example.com]
 
 secret:
-  existingSecret: fiknow-env       # aus Abschnitt 3
+  existingSecret: finknow-env       # aus Abschnitt 3
 
 # imagePullSecrets: [{ name: ghcr-pull }]   # nur bei privatem Package
 ```
 
 Installieren (aus dem Repo-Verzeichnis):
 ```bash
-helm upgrade --install fiknow ./deploy/helm/fiknow \
+helm upgrade --install finknow ./deploy/helm/finknow \
   -f my-values.yaml \
-  --namespace fiknow --create-namespace
+  --namespace finknow --create-namespace
 ```
 
 Alternativ aus der **OCI-Registry** (die CI veröffentlicht das Chart nach jedem
-main-Build nach `oci://ghcr.io/finnofleet/charts/fiknow`):
+main-Build nach `oci://ghcr.io/finnofleet/charts/finknow`):
 ```bash
-helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow \
+helm upgrade --install finknow oci://ghcr.io/finnofleet/charts/finknow \
   --version 0.3.2 -f my-values.yaml \
-  --namespace fiknow --create-namespace
+  --namespace finknow --create-namespace
 ```
 
 Das Chart **bricht vor dem Apply ab** (fail-fast), wenn `OIDC_ISSUER`, die
@@ -282,15 +282,15 @@ config:
 ## 6. Verifikation
 
 ```bash
-kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow
-kubectl -n fiknow logs -l app.kubernetes.io/instance=fiknow -f
+kubectl -n finknow get pods -l app.kubernetes.io/instance=finknow
+kubectl -n finknow logs -l app.kubernetes.io/instance=finknow -f
 ```
 Im Log beim ersten Start erwartet: `[auto-migrate] … fertig in <n> ms`, dann der
 Next-Start. Danach:
 
-1. `https://app.fiknow.example.com/dashboard` aufrufen → Redirect auf
+1. `https://app.finknow.example.com/dashboard` aufrufen → Redirect auf
    `/auth/oidc/login` → Keycloak-Login.
-2. Mit einem User mit Rolle `fiknow-curator` einloggen → zurück in der App,
+2. Mit einem User mit Rolle `finknow-curator` einloggen → zurück in der App,
    Zugriff auf `/manage` (Kurator-Recht).
 3. Logout (Abmelden) → Session weg + Keycloak-Logout.
 
@@ -379,13 +379,13 @@ dataVolume:
 > risikolos):
 >
 > 1. `kubectl apply -f deploy/ibmcloud/storageclass-fiknow.yaml`
-> 2. `kubectl -n fiknow scale deploy/fiknow --replicas=0`
-> 3. `kubectl -n fiknow delete pvc fiknow-data` (Retain → alter Share bleibt,
+> 2. `kubectl -n finknow scale deploy/finknow --replicas=0`
+> 3. `kubectl -n finknow delete pvc fiknow-data` (Retain → alter Share bleibt,
 >    später manuell aufräumen)
 > 4. neuen PVC `fiknow-data` mit `storageClassName: ibmc-vpc-file-fiknow-1001`
 >    (RWX, 20Gi) anlegen und Bindung abwarten
-> 5. `helm upgrade …` + `kubectl -n fiknow scale deploy/fiknow --replicas=2`
-> 6. Verify: `kubectl -n fiknow exec deploy/fiknow -- sh -c 'id; mkdir -p
+> 5. `helm upgrade …` + `kubectl -n finknow scale deploy/finknow --replicas=2`
+> 6. Verify: `kubectl -n finknow exec deploy/finknow -- sh -c 'id; mkdir -p
 >    /data/bundles /data/media && echo OK && ls -ld /data'` → `/data` gehört
 >    `1001 1001`, `OK`.
 
@@ -455,7 +455,7 @@ vorgesehen.
 Ein **CronJob** (`templates/cronjob.yaml`, Default: **aus** —
 `cronjob.retentionPurge.enabled: false`) löscht nachts abgelaufene
 **`training_assignments`-Nachweise** nach Ablauf der Frist
-(`FIKNOW_RETENTION_YEARS`, Default 3 Jahre). Betroffen ist **ausschliesslich**
+(`FINKNOW_RETENTION_YEARS`, Default 3 Jahre). Betroffen ist **ausschliesslich**
 diese Nachweis-Tabelle — Klasse-B-Daten und Keycloak-Nutzerkonten sind **nicht**
 betroffen (Keycloak verwaltet Nutzer:innen selbst, s. Abschnitt 2.4).
 
@@ -526,8 +526,8 @@ ist `SKIP_MIGRATIONS` der dokumentierte Notausstieg (Abschnitt 7 / 7a).
 
 Verifikation:
 ```bash
-kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow   # alle Ready
-curl -fsS https://app.fiknow.example.com/api/health
+kubectl -n finknow get pods -l app.kubernetes.io/instance=finknow   # alle Ready
+curl -fsS https://app.finknow.example.com/api/health
 psql "$DATABASE_URL" -c 'select count(*) from retention_purge_runs;'   # → 0
 ```
 
@@ -638,15 +638,15 @@ dokumentierte Notausstieg (Abschnitt 7 / 7a).
 
 Verifikation:
 ```bash
-kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow   # alle Ready
-curl -fsS https://app.fiknow.example.com/api/health
+kubectl -n finknow get pods -l app.kubernetes.io/instance=finknow   # alle Ready
+curl -fsS https://app.finknow.example.com/api/health
 psql "$DATABASE_URL" -c "\dT+ payload.enum_training_requirements_target_land_scope_land"   # Enum existiert mit DE/CH/LUX
 ```
 
 **Schritt 2 — OIDC_ROLE_MAP auf die echten Realm-Namen setzen (Pflicht für
 Rollen).**
 Der reale Token nutzt die Gruppen `/Administration`, `/Kuratoren`,
-`/Lernende` (NICHT die Beispiel-Namen `fiknow-curator`/`fiknow-admin`). In
+`/Lernende` (NICHT die Beispiel-Namen `finknow-curator`/`finknow-admin`). In
 der eigenen Prod-Werte-Datei:
 ```yaml
 config:
@@ -713,8 +713,8 @@ Beim Rolling Update migriert nur der erste Pod. Der zweite meldet
 
 Verifikation:
 ```bash
-kubectl -n fiknow get pods -l app.kubernetes.io/instance=fiknow   # Ready, 0 Restarts
-curl -fsS https://app.fiknow.example.com/api/health
+kubectl -n finknow get pods -l app.kubernetes.io/instance=finknow   # Ready, 0 Restarts
+curl -fsS https://app.finknow.example.com/api/health
 ```
 Backfill prüfen:
 ```sql

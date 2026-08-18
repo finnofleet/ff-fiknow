@@ -85,7 +85,7 @@ describe("retentionCutoff (mengenbasierter Stichtag)", () => {
   });
 });
 
-describe("parseRetentionYears (FIKNOW_RETENTION_YEARS Env-Override)", () => {
+describe("parseRetentionYears (FINKNOW_RETENTION_YEARS Env-Override)", () => {
   it("gültiger Override wird übernommen", () => {
     expect(parseRetentionYears("5")).toBe(5);
   });

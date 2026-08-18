@@ -1,25 +1,25 @@
 # ============================================================
-# Beispiel-Werte: FIKNOW auf IBM Kubernetes mit OIDC (Keycloak)
+# Beispiel-Werte: FINKNOW auf IBM Kubernetes mit OIDC (Keycloak)
 #
-#   helm upgrade --install fiknow ./deploy/helm/fiknow \
-#     -f ./deploy/helm/fiknow/values-fiknow-oidc.yaml \
-#     --namespace fiknow --create-namespace
+#   helm upgrade --install finknow ./deploy/helm/finknow \
+#     -f ./deploy/helm/finknow/values-finknow-oidc.yaml \
+#     --namespace finknow --create-namespace
 #
 # Secrets NICHT hier committen — in Prod via existingSecret (Sealed-Secrets /
 # IBM Secrets Manager). Die secret.data unten ist nur zur Veranschaulichung.
 # ============================================================
 
 image:
-  repository: ghcr.io/finnofleet/ff-fiknow
+  repository: ghcr.io/finnofleet/ff-finknow
   tag: latest
 
 replicaCount: 2
 
 config:
-  OIDC_ISSUER: https://keycloak.intern.example.com/realms/fiknow
+  OIDC_ISSUER: https://keycloak.intern.example.com/realms/finknow
   OIDC_CLIENT_ID: edu-platform
-  OIDC_ROLE_MAP: "fiknow-curator:curator,fiknow-admin:admin"
-  # Leer lassen → wird aus ingress.hosts[0] als https://app.fiknow.example.com
+  OIDC_ROLE_MAP: "finknow-curator:curator,finknow-admin:admin"
+  # Leer lassen → wird aus ingress.hosts[0] als https://app.finknow.example.com
   # abgeleitet. Hier nur, wenn der öffentliche Host abweicht.
   OIDC_REDIRECT_BASE: ""
 
@@ -27,22 +27,22 @@ ingress:
   enabled: true
   className: public-iks-k8s-nginx     # IBM IKS: ggf. anpassen
   hosts:
-    - host: app.fiknow.example.com
+    - host: app.finknow.example.com
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: fiknow-tls
+    - secretName: finknow-tls
       hosts:
-        - app.fiknow.example.com
+        - app.finknow.example.com
 
 # Prod: stattdessen ein extern verwaltetes Secret referenzieren:
 #   secret:
-#     existingSecret: fiknow-env
+#     existingSecret: finknow-env
 secret:
   create: true
   data:
-    DATABASE_URL: "postgres://USER:PASS@HOST:5432/fiknow?sslmode=require"
+    DATABASE_URL: "postgres://USER:PASS@HOST:5432/finknow?sslmode=require"
     PAYLOAD_SECRET: "CHANGE-ME-32+random"
     OIDC_CLIENT_SECRET: "CHANGE-ME-from-keycloak"
     OIDC_SESSION_SECRET: "CHANGE-ME-32+random"

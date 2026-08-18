@@ -468,7 +468,7 @@ export const retentionPurgeRuns = pgTable(
     ranAt: timestamp("ran_at", { withTimezone: true }).notNull().defaultNow(),
     /** Stichtag: Zeilen mit `completed_at <= cutoff_date` waren löschreif. */
     cutoffDate: timestamp("cutoff_date", { withTimezone: true }).notNull(),
-    /** Verwendete Aufbewahrungsfrist in Jahren (aus `FIKNOW_RETENTION_YEARS`). */
+    /** Verwendete Aufbewahrungsfrist in Jahren (aus `FINKNOW_RETENTION_YEARS`). */
     retentionYears: integer("retention_years").notNull(),
     /** True: Lauf war ein Dry-Run (nichts gelöscht, nur gezählt). */
     dryRun: boolean("dry_run").notNull(),

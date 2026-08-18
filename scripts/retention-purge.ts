@@ -3,7 +3,7 @@
  * (DSG Phase 7c — Teil „Retention", ADR 0006).
  *
  * Löscht abgeschlossene `training_assignments`, deren Aufbewahrungsfrist
- * (`FIKNOW_RETENTION_YEARS`, Default 3 J) abgelaufen ist. Klasse-(B)-Daten
+ * (`FINKNOW_RETENTION_YEARS`, Default 3 J) abgelaufen ist. Klasse-(B)-Daten
  * und Keycloak/Identität sind NICHT betroffen — separate Ebenen (ADR 0006).
  *
  * DRY-RUN ist Default: ohne `--confirm` wird nur gezählt/angezeigt, WAS
@@ -35,7 +35,7 @@ async function main(): Promise<void> {
 
   const mode = dryRun ? "DRY-RUN (nichts wird gelöscht)" : "APPLY (löscht)";
   console.log(`▶ Retention-Purge — ${mode}`);
-  console.log(`  Frist: ${RETENTION_YEARS} Jahr(e) (FIKNOW_RETENTION_YEARS)`);
+  console.log(`  Frist: ${RETENTION_YEARS} Jahr(e) (FINKNOW_RETENTION_YEARS)`);
   if (confirm && forcedDryRun) {
     console.log("  ⚠ --confirm durch RETENTION_PURGE_DRY_RUN übersteuert.");
   }

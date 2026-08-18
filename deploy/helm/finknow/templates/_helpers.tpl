@@ -1,10 +1,10 @@
 {{/* Chart-Name (mit Override). */}}
-{{- define "fiknow.name" -}}
+{{- define "finknow.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/* Voll qualifizierter Name. */}}
-{{- define "fiknow.fullname" -}}
+{{- define "finknow.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -17,36 +17,36 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "fiknow.chart" -}}
+{{- define "finknow.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "fiknow.labels" -}}
-helm.sh/chart: {{ include "fiknow.chart" . }}
-{{ include "fiknow.selectorLabels" . }}
+{{- define "finknow.labels" -}}
+helm.sh/chart: {{ include "finknow.chart" . }}
+{{ include "finknow.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Values.image.tag | default .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
-{{- define "fiknow.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "fiknow.name" . }}
+{{- define "finknow.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "finknow.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
-{{- define "fiknow.serviceAccountName" -}}
+{{- define "finknow.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-{{- default (include "fiknow.fullname" .) .Values.serviceAccount.name -}}
+{{- default (include "finknow.fullname" .) .Values.serviceAccount.name -}}
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
 
 {{/* Name des Secrets, aus dem die Env gezogen wird (existing oder selbst erzeugt). */}}
-{{- define "fiknow.secretName" -}}
+{{- define "finknow.secretName" -}}
 {{- if .Values.secret.existingSecret -}}
 {{- .Values.secret.existingSecret -}}
 {{- else -}}
-{{- printf "%s-env" (include "fiknow.fullname" .) -}}
+{{- printf "%s-env" (include "finknow.fullname" .) -}}
 {{- end -}}
 {{- end -}}
 
@@ -55,7 +55,7 @@ Effektive OIDC_REDIRECT_BASE: expliziter Wert, sonst aus dem ersten
 ingress-Host (https) abgeleitet. Leer, wenn keins von beidem da ist —
 dann muss der Wert anderweitig gesetzt werden (Prod fail-closed).
 */}}
-{{- define "fiknow.redirectBase" -}}
+{{- define "finknow.redirectBase" -}}
 {{- if .Values.config.OIDC_REDIRECT_BASE -}}
 {{- .Values.config.OIDC_REDIRECT_BASE -}}
 {{- else if and .Values.ingress.enabled (gt (len .Values.ingress.hosts) 0) -}}
@@ -65,12 +65,12 @@ dann muss der Wert anderweitig gesetzt werden (Prod fail-closed).
 {{- end -}}
 
 {{/* Fail-fast-Validierung kritischer Config (vor dem Apply). */}}
-{{- define "fiknow.validate" -}}
-{{/* FIKNOW ist OIDC-only — diese Prüfungen greifen immer. */}}
+{{- define "finknow.validate" -}}
+{{/* FINKNOW ist OIDC-only — diese Prüfungen greifen immer. */}}
 {{- if not .Values.config.OIDC_ISSUER -}}
-{{- fail "config.OIDC_ISSUER muss gesetzt sein (FIKNOW ist OIDC-only / Keycloak)." -}}
+{{- fail "config.OIDC_ISSUER muss gesetzt sein (FINKNOW ist OIDC-only / Keycloak)." -}}
 {{- end -}}
-{{- if not (include "fiknow.redirectBase" .) -}}
+{{- if not (include "finknow.redirectBase" .) -}}
 {{- fail "OIDC_REDIRECT_BASE (oder ingress.hosts[0].host) muss gesetzt sein — die App leitet die redirect_uri in Prod nicht aus Request-Headern ab (fail-closed)." -}}
 {{- end -}}
 {{- if and (not .Values.secret.existingSecret) (not .Values.secret.create) -}}

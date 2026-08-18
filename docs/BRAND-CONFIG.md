@@ -2,7 +2,7 @@
 
 Jede Instanz der edu-platform liest ihre Markenidentität aus einer einzigen
 YAML-Datei: `brand/brand.yaml`. Im Hauptrepo liegt der Default (verstande).
-Forks pflegen einen separaten kleinen Repo (z. B. `fiknow-brand`), der bei
+Forks pflegen einen separaten kleinen Repo (z. B. `finknow-brand`), der bei
 Production-Deployments als `/app/brand` über den Default gemountet wird.
 
 ## Schema
@@ -59,7 +59,7 @@ winziges Dockerfile und einen GitHub-Actions-Workflow.
 
 In Jelastic wird dann pro Env das jeweilige Brand-Image gepullt:
 - verstande-Env → `ghcr.io/<owner>/edu-platform:latest`
-- FinKnow-Env → `ghcr.io/<owner>/fiknow:latest`
+- FinKnow-Env → `ghcr.io/<owner>/finknow:latest`
 
 ## Brand-Repo aufsetzen
 
@@ -74,7 +74,7 @@ COPY --chown=nextjs:nodejs brand.yaml /app/brand/brand.yaml
 # Optional: COPY --chown=nextjs:nodejs assets/ /app/brand/assets/
 ```
 
-**`.github/workflows/build.yml`** — Vorlage aus dem fiknow-brand-Repo
+**`.github/workflows/build.yml`** — Vorlage aus dem finknow-brand-Repo
 übernehmen. Pusht das Image nach `ghcr.io/<owner>/<brand>:latest`.
 
 Damit der Workflow das edu-platform-Base-Image pullen kann, muss im
@@ -93,6 +93,6 @@ als Secret nötig.
 Brand-Repo lokal klonen und `BRAND_CONFIG_PATH` setzen:
 
 ```bash
-git clone <brand-repo> /tmp/fiknow-brand
-BRAND_CONFIG_PATH=/tmp/fiknow-brand/brand.yaml npm run dev
+git clone <brand-repo> /tmp/finknow-brand
+BRAND_CONFIG_PATH=/tmp/finknow-brand/brand.yaml npm run dev
 ```

@@ -17,9 +17,9 @@ Ganze Datei hinter `cronjob.retentionPurge.enabled` gated (Default: aus).
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "fiknow.fullname" . }}-retention-purge
+  name: {{ include "finknow.fullname" . }}-retention-purge
   labels:
-    {{- include "fiknow.labels" . | nindent 4 }}
+    {{- include "finknow.labels" . | nindent 4 }}
 spec:
   schedule: {{ .Values.cronjob.retentionPurge.schedule | quote }}
   {{- with .Values.cronjob.retentionPurge.timeZone }}
@@ -38,7 +38,7 @@ spec:
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          serviceAccountName: {{ include "fiknow.serviceAccountName" . }}
+          serviceAccountName: {{ include "finknow.serviceAccountName" . }}
           restartPolicy: Never
           securityContext:
             {{- toYaml .Values.podSecurityContext | nindent 12 }}
@@ -53,9 +53,9 @@ spec:
               command: ["node_modules/.bin/tsx", "scripts/retention-purge.ts", "--confirm"]
               envFrom:
                 - configMapRef:
-                    name: {{ include "fiknow.fullname" . }}-env
+                    name: {{ include "finknow.fullname" . }}-env
                 - secretRef:
-                    name: {{ include "fiknow.secretName" . }}
+                    name: {{ include "finknow.secretName" . }}
               env:
                 # Job braucht keinen großen Pool; schont die geteilten
                 # max_connections der Managed-DB.

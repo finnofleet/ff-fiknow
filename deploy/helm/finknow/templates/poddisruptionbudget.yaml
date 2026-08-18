@@ -2,9 +2,9 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "fiknow.fullname" . }}
+  name: {{ include "finknow.fullname" . }}
   labels:
-    {{- include "fiknow.labels" . | nindent 4 }}
+    {{- include "finknow.labels" . | nindent 4 }}
 spec:
   {{- if .Values.podDisruptionBudget.maxUnavailable }}
   maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
@@ -13,5 +13,5 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "fiknow.selectorLabels" . | nindent 6 }}
+      {{- include "finknow.selectorLabels" . | nindent 6 }}
 {{- end }}

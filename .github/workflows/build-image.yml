@@ -1,7 +1,7 @@
 name: Build & push image
 
 # Baut das Production-Image und schiebt es ins GitHub Container Registry.
-# Pull-Ziel für das Kubernetes-Deployment (Helm-Chart): ghcr.io/finnofleet/ff-fiknow:latest
+# Pull-Ziel für das Kubernetes-Deployment (Helm-Chart): ghcr.io/finnofleet/ff-finknow:latest
 #
 # Tags pro Push:
 #   - latest                  (immer der jüngste main-Build)
@@ -16,7 +16,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }} # → ghcr.io/finnofleet/ff-fiknow
+  IMAGE_NAME: ${{ github.repository }} # → ghcr.io/finnofleet/ff-finknow
 
 jobs:
   build-and-push:
@@ -99,8 +99,8 @@ jobs:
           output-format: table
 
   # Helm-Chart als OCI-Artefakt veröffentlichen →
-  #   oci://ghcr.io/<owner>/charts/fiknow:<chart-version>
-  # Install: helm upgrade --install fiknow oci://ghcr.io/finnofleet/charts/fiknow --version X.Y.Z
+  #   oci://ghcr.io/<owner>/charts/finknow:<chart-version>
+  # Install: helm upgrade --install finknow oci://ghcr.io/finnofleet/charts/finknow --version X.Y.Z
   #
   # NUR auf Version-Tags (vX.Y.Z): Chart-Version und appVersion werden aus dem
   # Tag gestempelt (Lockstep mit der App-Version) — so ist eindeutig, welches
@@ -127,7 +127,7 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"          # z. B. v0.5.2
           # version = striktes SemVer ohne v (Helm-Pflicht); appVersion = Image-Tag (mit v)
-          helm package ./deploy/helm/fiknow \
+          helm package ./deploy/helm/finknow \
             --version "${TAG#v}" --app-version "${TAG}" \
             --destination ./.chart-dist
-          helm push ./.chart-dist/fiknow-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts
+          helm push ./.chart-dist/finknow-*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts

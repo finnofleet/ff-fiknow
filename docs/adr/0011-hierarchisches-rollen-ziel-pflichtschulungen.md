@@ -1,6 +1,7 @@
 # ADR 0011 — Hierarchisches Rollen-Ziel für Pflichtschulungen
 
-- **Status:** Accepted — implementiert.
+- **Status:** Superseded by ADR 0007 §2 (Rechte-Achse abgeschlossen,
+  2026-09-02).
 - **Datum:** 2026-08-07
 - **Kontext-Phase:** Pflichtschulungen / Rollen-Modell
 - **Betroffene Bereiche:** `lib/auth/roles.ts` (`ROLE_RANK`, `roleMeetsTarget`),
@@ -11,6 +12,26 @@
   (Rollen-/Scope-Modell, `suspended`-Deny-all-Status).
 
 ---
+
+> **Abgelöst (2026-09-02).** Mit dem Abschluss der Rechte-Achse (ADR 0007
+> §2) ist die hier eingeführte Rang-Auswertung (`ROLE_RANK`/
+> `roleMeetsTarget`, „diese Rolle ODER höher") entfallen. Pflichtschulungs-
+> Ziele laufen jetzt über **Mengen-Zugehörigkeit** auf `profiles.role_keys`
+> (`roleTargetUserIds` in `lib/training/reconcile.ts`): jede aktive Person
+> trägt implizit `learner`, ein Admin zusätzlich `curator`
+> (`completeRoleKeys` in `lib/auth/role-keys.ts`). Die fachliche Aussage
+> dieser ADR bleibt damit **unverändert erhalten** — ein `learner`-Ziel
+> erfasst weiterhin alle aktiven Personen, unabhängig von Curator-/
+> Admin-Rechten. Der Grund für die Ablösung: ein **totales Rang-Modell**
+> kann per Konstruktion keine gleichrangigen/orthogonalen Rollen ausdrücken
+> (Compliance-Einsicht ist weder über noch unter Administration) — genau
+> die Grenze, die diese ADR unten unter „Grenzen/Negativ" bereits selbst
+> benannt hatte. Die Historie unten bleibt als Aufzeichnung des ursprünglichen
+> Vorfalls (Kurator hielt sich fälschlich für nicht betroffen) unverändert
+> stehen.
+>
+> Siehe CHANGELOG „Rechte-Achse abgeschlossen" bzw. „`ROLE_RANK`/
+> `roleMeetsTarget` entfallen" für den Umsetzungsstand.
 
 ## Kontext
 

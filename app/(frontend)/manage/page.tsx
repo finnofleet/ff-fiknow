@@ -5,6 +5,7 @@ import {
   Users,
   BookOpen,
   ShieldCheck,
+  SlidersHorizontal,
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
@@ -57,6 +58,13 @@ export default async function AdminDashboardPage() {
       href: "/manage/users",
       icon: <Users size={22} strokeWidth={1.5} />,
       available: can(caps, "users:manage"),
+    },
+    {
+      title: "Einstellungen",
+      desc: "Fachliche Richtwerte (z. B. Aufbewahrungsfrist der Nachweise) — jede Änderung wird protokolliert.",
+      href: "/manage/einstellungen",
+      icon: <SlidersHorizontal size={22} strokeWidth={1.5} />,
+      available: can(caps, "settings:manage"),
     },
     {
       title: "Pflichtkurse",

@@ -671,6 +671,44 @@ export const questions = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * Betriebs-/Policy-Einstellungen, die eine FACHLICHE Rolle setzt — nicht der
+ * Betrieb (ADR 0006/0007).
+ *
+ * **Abgrenzung zu Env-Vars.** In die Env gehoert, was gebraucht wird, BEVOR
+ * die DB nutzbar ist (`SKIP_MIGRATIONS`, `SKIP_DB_INIT`, `DATABASE_URL`), und
+ * was sich je Deployment/Integration unterscheidet (OIDC-Claim-Namen,
+ * Secrets). Hierher gehoert Policy, die eine fachliche Rolle besitzt und ohne
+ * Deployment aendern koennen soll — etwa die Aufbewahrungsfrist, die der
+ * Datenschutzbeauftragte final abnimmt.
+ *
+ * Der entscheidende Zusatzgrund fuer die DB: **die Aenderung selbst ist
+ * nachweisbar**. Eine Frist per Env-Var zu verkuerzen ist nur in der
+ * Cluster-Konfiguration sichtbar; hier schreibt jede Aenderung eine Zeile ins
+ * `audit_log` — mit handelnder Person und Zeitpunkt.
+ *
+ * Der Schluesselraum ist NICHT frei: nur in `lib/settings/registry.ts`
+ * deklarierte Keys werden gelesen (analog `ALL_CAPABILITIES` — die DB kann
+ * keine Einstellung „erfinden", die der Code nicht auswertet).
+ */
+export const settings = pgTable(
+  "settings",
+  {
+    /** Deklarierter Key aus `lib/settings/registry.ts`. */
+    key: text("key").primaryKey(),
+    /** Rohwert als Text; die Typisierung/Validierung macht die Registry. */
+    value: text("value").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    /** Wer zuletzt geaendert hat (nominelle Referenz auf profiles.user_id). */
+    updatedBy: uuid("updated_by"),
+  },
+  () => [
+    pgPolicy("settings_select_staff", { for: "select", using: isStaffRole }),
+  ],
+).enableRLS();
+
 export const auditLog = pgTable(
   "audit_log",
   {

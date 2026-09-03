@@ -23,6 +23,7 @@ import { and, eq } from "drizzle-orm";
 import type { Capability } from "@/lib/auth/capabilities";
 import { db } from "@/lib/db/client";
 import { roleAssignments, roleCapabilities } from "@/lib/db/schema";
+import { redactError } from "@/lib/log-redact";
 
 import { viewerScopeFromAssignments, type ViewerScope } from "./entity-scope";
 
@@ -58,7 +59,7 @@ export async function resolveViewerScope(
     // (-> unrestricted), nicht der Fehlerfall.
     console.error(
       "[training/viewer-scope] resolveViewerScope fehlgeschlagen — fail-closed (zeigt nichts)",
-      err,
+      redactError(err),
     );
     return { kind: "scoped", grants: [] };
   }

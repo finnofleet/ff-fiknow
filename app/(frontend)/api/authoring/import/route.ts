@@ -36,6 +36,7 @@ import { verifyBundleUploadToken } from "@/lib/authoring/asset-upload-token";
 import { VersionConflictError } from "@/lib/authoring/errors";
 import { importFromExtractedBundle } from "@/lib/authoring/import";
 import { extractZipToMap } from "@/lib/authoring/zip";
+import { redactError } from "@/lib/log-redact";
 import { rateLimit } from "@/lib/rate-limit";
 
 const MAX_BUNDLE_BYTES = 100 * 1024 * 1024; // 100 MB Hard-Limit (komprimiert)
@@ -186,7 +187,7 @@ export async function POST(request: NextRequest) {
     ) {
       return jsonError(400, "bundle_validation_failed", { detail: message });
     }
-    console.error("[/api/authoring/import] unexpected:", err);
+    console.error("[/api/authoring/import] unexpected:", redactError(err));
     return jsonError(500, "import_failed", { detail: message });
   }
 }

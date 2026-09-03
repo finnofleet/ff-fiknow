@@ -9,6 +9,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
 
+import { redactError } from "@/lib/log-redact";
+
 async function main() {
   const fileArg = process.argv[2];
   if (!fileArg) {
@@ -40,7 +42,7 @@ async function main() {
     await client.unsafe(sql);
     console.log("✓ Erfolgreich angewendet");
   } catch (err) {
-    console.error("✗ Fehler:", err);
+    console.error("✗ Fehler:", redactError(err));
     process.exit(1);
   } finally {
     await client.end();

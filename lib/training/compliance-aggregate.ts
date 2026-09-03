@@ -8,6 +8,7 @@
 import { getCourse } from "@/lib/content";
 import { db } from "@/lib/db/client";
 import { profiles, trainingAssignments } from "@/lib/db/schema";
+import { redactError } from "@/lib/log-redact";
 
 import {
   computeComplianceAggregate,
@@ -24,7 +25,7 @@ export async function getComplianceAggregate(
   } catch (err) {
     console.error(
       "[training/compliance-aggregate] reconcileAssignments() fehlgeschlagen",
-      err,
+      redactError(err),
     );
   }
 
@@ -74,7 +75,7 @@ export async function getComplianceAggregate(
       } catch (err) {
         console.error(
           `[training/compliance-aggregate] getCourse(${slug}) fehlgeschlagen`,
-          err,
+          redactError(err),
         );
       }
     }),

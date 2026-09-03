@@ -15,6 +15,7 @@ import { and, count, eq, isNotNull, isNull } from "drizzle-orm";
 
 import { recordAudit } from "@/lib/audit/log";
 import { db, schema } from "@/lib/db/client";
+import { redactError } from "@/lib/log-redact";
 import { purgeUserData } from "@/lib/privacy/purge-user";
 
 const UUID_RE =
@@ -122,6 +123,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("✗ Purge fehlgeschlagen:", err);
+  console.error("✗ Purge fehlgeschlagen:", redactError(err));
   process.exit(1);
 });

@@ -4,7 +4,7 @@
  * Sammelt alle Rohdaten (Assignments, Profile, Enrollments, Lesson-Progress,
  * Kurs-Titel) und übergibt sie an die reine Aggregation
  * (lib/training/compliance-compute.ts). Autorisierung ist App-seitig
- * (Rollen-Check in der aufrufenden Page via `canManageCourses`), NICHT über
+ * (Capability-Check `courses:manage` in der aufrufenden Page), NICHT über
  * RLS — diese Funktion läuft über die privilegierte Server-`db`-Connection
  * (RLS-Bypass, wie `training_assignments`-Select in reconcile.ts) und liest
  * daher bewusst ALLE User, nicht nur die des Aufrufers.
@@ -12,6 +12,7 @@
 import { getCourse } from "@/lib/content";
 import { db } from "@/lib/db/client";
 import { enrollments, lessonProgress, profiles, trainingAssignments } from "@/lib/db/schema";
+import { redactError } from "@/lib/log-redact";
 
 import { computeCompliance, type CourseCompliance } from "./compliance-compute";
 import { passesViewerScope, type ViewerScope } from "./entity-scope";
@@ -41,7 +42,7 @@ export async function getComplianceOverview(
   } catch (err) {
     console.error(
       "[training/compliance] reconcileAssignments() fehlgeschlagen",
-      err,
+      redactError(err),
     );
   }
 
@@ -149,7 +150,7 @@ export async function getComplianceOverview(
           }
         }
       } catch (err) {
-        console.error(`[training/compliance] getCourse(${slug}) fehlgeschlagen`, err);
+        console.error(`[training/compliance] getCourse(${slug}) fehlgeschlagen`, redactError(err));
       }
     }),
   );

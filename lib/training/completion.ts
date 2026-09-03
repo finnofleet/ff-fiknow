@@ -33,6 +33,7 @@ import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { profiles, quizAttempts, trainingAssignments } from "@/lib/db/schema";
 import { getCourse } from "@/lib/content";
+import { redactError } from "@/lib/log-redact";
 import { getCourseProgress, progressKey } from "@/lib/progress";
 
 import {
@@ -67,7 +68,7 @@ export async function syncCourseCompletion(
   } catch (err) {
     console.error(
       "[training/completion] reconcileForUser vor Abschluss fehlgeschlagen",
-      err,
+      redactError(err),
     );
   }
 

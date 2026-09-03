@@ -11,6 +11,7 @@
  */
 import { db } from "@/lib/db/client";
 import { auditLog } from "@/lib/db/schema";
+import { redactError } from "@/lib/log-redact";
 
 /** Herkunft der Aktion. */
 export type AuditSource = "session" | "authoring-token" | "cli" | "system";
@@ -58,6 +59,6 @@ export async function recordAudit(entry: AuditEntry): Promise<void> {
       bu: entry.bu ?? null,
     });
   } catch (err) {
-    console.error("[audit] recordAudit fehlgeschlagen (geschluckt)", err);
+    console.error("[audit] recordAudit fehlgeschlagen (geschluckt)", redactError(err));
   }
 }

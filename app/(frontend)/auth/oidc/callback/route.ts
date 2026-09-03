@@ -15,6 +15,7 @@ import {
   TX_COOKIE,
   verifyTx,
 } from "@/lib/auth/provider/oidc/session";
+import { redactError } from "@/lib/log-redact";
 
 /**
  * OIDC-Callback: validiert state (CSRF), tauscht den Code (PKCE), validiert das
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
   // Startseite mit einem Fehler-Query, der dort angezeigt werden kann.
   const fail = (reason: string, cause?: unknown) => {
     // Ursache serverseitig loggen (nicht an den Client leaken).
-    console.error(`[oidc-callback] ${reason}`, cause);
+    console.error(`[oidc-callback] ${reason}`, redactError(cause));
     const res = NextResponse.redirect(
       new URL(`/?oidc_error=${encodeURIComponent(reason)}`, origin),
     );

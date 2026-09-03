@@ -18,6 +18,150 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Hinzugefügt
+- **Scope-Achse Rechtseinheit (`bu`) aus dem OIDC-Token** (ADR 0007 §3): ein
+  konfigurierbarer Claim (`OIDC_ENTITY_CLAIM`) füllt `profiles.bu` beim
+  Login analog zur bestehenden `land`-Achse; ungesetzt bleibt `profiles.bu`
+  wie bisher unberührt. Neu ist ein **Claim-Gate**
+  (`lib/auth/provider/oidc/claim-gate.ts`), das jetzt auch vor `land` sitzt:
+  nur ein auflösbarer Claim-Wert wird geschrieben, ein unbekannter wird als
+  `[oidc-claims]`-Warnung geloggt (mit Rohwert) statt roh übernommen — ein
+  IdP-Rename kann damit nie mehr still einen korrekten Wert überschreiben. Ein
+  fehlender Claim nullt nie einen bestehenden Wert. `OIDC_ENTITY_MAP` /
+  `OIDC_LAND_MAP` erlauben n:1-Mappings (mehrere IdP-Werte → ein App-Token) —
+  das ist der Mechanismus, mit dem der anstehende Merger (viele heutige
+  Rechtseinheiten laufen bis Ende 2027 zu FINNOFLEET Deutschland/Schweiz/
+  Luxemburg zusammen) app-seitig per Env-Var-Tausch statt IdP-Umbau
+  abgefangen wird.
+- **Datenqualitäts-Hinweis „Unvollständige Zuordnung" im Compliance-
+  Dashboard** (`/manage/pflichtkurse`): der Scope-Filter ist strikt — eine
+  Person mit unaufgelöstem `land`/`bu` fällt lautlos aus jeder scoped
+  Auswertung heraus, ohne dass die Erfüllungsquote das anzeigt. Eine neue
+  Kennzahl (`lib/training/entity-coverage.ts`, bezogen auf Personen mit
+  mindestens einer Pflichtzuweisung) macht diese Lücke jetzt sichtbar, statt
+  sie erst bei einem Audit auffallen zu lassen; bewusst getrennt von der
+  k-anonymisierten Aggregat-Sicht, wo kleine Buckets sonst unterdrückt
+  würden.
+- **Rechte-Achse jetzt end-to-end aus dem IdP verdrahtet** (ADR 0007 §2):
+  bisher wertete nur die eine, per linearem Rang aus `OIDC_ROLE_MAP`
+  kollabierte `profiles.role` etwas aus — die Rollen-Matrix
+  (`roles`/`role_capabilities`) war seit ihrer Einführung nur für
+  Admin-manuelle `role_assignments` lebendig, nie für die vom IdP
+  gelieferten Rollen/Gruppen selbst. Keycloak schickt aber alle Rollen einer
+  Person, nicht nur eine — orthogonale Kombinationen („Admin UND
+  Compliance-Einsicht") waren dadurch nicht ausdrückbar. Jetzt werden beim
+  Login **alle** Rollen-Keys einer Person gegen die Matrix aufgelöst
+  (`lib/auth/role-keys.ts`, `resolveKnownRoleKeys`) und in der neuen Spalte
+  `profiles.role_keys` persistiert (`drizzle/0015_flashy_trauma.sql`,
+  `provisionProfile` in `lib/auth/provider/oidc/index.ts`). Die effektiven
+  Capabilities (`lib/auth/effective-capabilities.ts`,
+  `resolveEffectiveCapabilities`) sind jetzt eine Vereinigung aus drei
+  Quellen statt einer: Rang-Rolle (code-seitiger Boden, fail-safe bei
+  DB-Ausfall) ∪ Matrix-Capabilities für die IdP-Keys ∪ persönliche
+  `role_assignments`. Gelesen wird `role_keys` frisch pro Request (nicht aus
+  dem Session-Cookie) — dieselbe `liveRole`-Eigenschaft wie bisher, ein
+  Rechte-Entzug greift also sofort. **Bewusst System-Rollen
+  (`roles.isSystem`) ausgeschlossen** aus diesem Pfad: da
+  `extractRoleKeys` auch das letzte Pfadsegment von Keycloak-Gruppenpfaden
+  aufnimmt, würde sonst z. B. eine beliebige Gruppe `/Irgendwas/Admin` auf
+  die System-Rolle `admin` matchen und volle Admin-Rechte verleihen —
+  `curator`/`admin` kommen deshalb weiterhin ausschließlich über das
+  explizite `OIDC_ROLE_MAP`. **Rein additiv:** bestehende curator-/
+  admin-Rechte ändern sich nicht. Der Rechte-Inspektor (`/manage/rechte`)
+  zeigt neu die aufgelösten IdP-Rollen-Keys, damit ein Admin verifizieren
+  kann, dass eine Keycloak-Gruppe tatsächlich angekommen ist. Um eine
+  Keycloak-Gruppe anzubinden, genügt jetzt eine (Nicht-System-)Rolle in der
+  Matrix mit passendem `key` — kein zusätzliches Env-Mapping nötig.
+- **Rechte-Achse abgeschlossen: ein Rollen-Modell, eine Quelle** (ADR 0007
+  §2). Laufzeit-Capabilities kommen jetzt ausschließlich aus der
+  `roles`/`role_capabilities`-Matrix; `DECLARED_ROLES` (Code) ist nur noch
+  SEED dafür — der Boot-Initializer (`lib/db/initializers/system-roles.ts`)
+  gleicht die Matrix bei jedem Start daraus ab, inklusive **Löschen** nicht
+  mehr deklarierter Capabilities, damit ein Entzug im Code auch wirklich
+  ankommt. Als zweite Quellen/Fallen entfernt: `capabilitiesForSystemRole`,
+  `capabilitiesForRoleKeys` sowie die Wrapper `canSeeAdmin` /
+  `canManageCourses` / `canManageUsers` — alle 20 Gates in 13 Dateien prüfen
+  jetzt einheitlich `can(caps, …)` gegen `resolveEffectiveCapabilities`.
+  `profiles.role_keys` hält die vollständige Rollen-Menge einer Person,
+  zusammengesetzt beim Login (`completeRoleKeys`): der impliziten `learner`,
+  den jedes aktive Konto trägt, die Rang-Rolle aus `OIDC_ROLE_MAP`, die eine
+  tatsächlich geltende Implikation `admin ⇒ curator`, plus die aus
+  Keycloak-Gruppen gematchten Rollen. Ein `suspended`-Konto erhält eine
+  LEERE Menge — keine Rechte, kein Pflichtschulungs-Ziel. Eskalationsschutz
+  bleibt bestehen: aus Gruppenpfaden geerntete Keys können nie einer der vier
+  Rang-Rollennamen sein, die kommen ausschließlich über das explizite
+  `OIDC_ROLE_MAP`.
+- **Inhalt und Nachweis getrennt — Betriebsrats-Auflage** (ADR 0007 §2):
+  `curator` (Kurse pflegen) und `admin` (zusätzlich Nutzerverwaltung +
+  Audit-Log) tragen keine einzige `compliance:*`-Capability mehr. Wer
+  Schulungsnachweise sehen und exportieren darf
+  (`compliance:view-named`/`-aggregate`/`-export`), braucht jetzt zusätzlich
+  die eigene Rolle `finknow-compliance` — vergeben über eine **gleichnamige
+  Keycloak-Gruppe** (muss byte-identisch angelegt werden, sonst matcht
+  `resolveKnownRoleKeys` nicht). Weil Capabilities additiv sind, ist „Admin
+  UND Compliance" schlicht eine Person in beiden Gruppen. Ein Regressionstest
+  hält fest, dass weder `curator` noch `admin` je wieder eine
+  `compliance:*`-Capability tragen.
+- **`ROLE_RANK`/`roleMeetsTarget` entfallen — ADR 0011 durch Mengen-
+  Zugehörigkeit abgelöst.** Pflichtschulungs-Ziele (`roleTargetUserIds` in
+  `lib/training/reconcile.ts`) werten jetzt aus, ob der Ziel-Key in
+  `profiles.role_keys` steckt, statt einen numerischen Rang zu vergleichen
+  („diese Rolle ODER höher"). Die fachliche Aussage von ADR 0011 bleibt
+  exakt erhalten (jede aktive Person trägt `learner`, ein Admin zusätzlich
+  `curator`) — nur als Daten statt als totale Ordnung, die orthogonale
+  Rollen (Compliance ist weder über noch unter Administration) nicht
+  ausdrücken konnte. `RANK` in `lib/auth/provider/oidc/role-map.ts` bleibt
+  bestehen, ist aber keine Rechte-Hierarchie mehr — nur noch die Auswahl des
+  einen Werts für die Spalte `profiles.role`.
+- **Zwei neue Boot-Initializer** (`lib/db/initializers/`): `system-roles`
+  (siehe oben, gleicht die Matrix ab) und `backfill-role-keys` (füllt
+  `profiles.role_keys` für Bestandsprofile aus deren Rang-Rolle nach — ohne
+  Backfill würde jede Person, die seit dem Deploy nicht eingeloggt war, still
+  aus der Pflichtschulungs-Zuweisung herausfallen).
+- **`SKIP_MIGRATIONS` von der Initialisierung getrennt**: `SKIP_MIGRATIONS`
+  betrifft jetzt nur noch das Schema, ein neues `SKIP_DB_INIT` nur noch die
+  Initializer. `SKIP_DB_INIT=true` bedeutet damit: niemand hält irgendeine
+  Berechtigung — es gibt keinen code-seitigen Fallback mehr.
+- **Neue Audit-Actions `role.key-added`/`role.key-removed`**: protokollieren
+  beim Login die BEOBACHTETE Änderung der Rollen-Menge einer Person (ein
+  Eintrag je geänderter Key, nur bei tatsächlicher Änderung). Behauptet
+  bewusst NICHT, wer die Rolle vergeben hat — das sieht diese App nur als
+  Ergebnis in den Claims, nicht als Vorgang im IdP. Die Rechenschaftsspur
+  „wer hat zugewiesen" liegt in den **Keycloak-Admin-Events**, da Keycloak
+  das führende System für Rollen ist.
+
+- **Policy-Einstellungen in der Datenbank statt in Env-Vars, mit Admin-UI**
+  (`/manage/einstellungen`, Capability `settings:manage`): fachliche
+  Richtwerte, die eine Fachrolle besitzt und ohne Auslieferung ändern können
+  soll, liegen jetzt in der Tabelle `settings` — erste und bislang einzige
+  Einstellung ist die **Aufbewahrungsfrist der Nachweise**, die der
+  Datenschutzbeauftragte damit selbst abnehmen kann. Auflösung DB → Env →
+  Default, und das UI zeigt an, aus welcher Quelle der wirksame Wert
+  tatsächlich stammt. `FINKNOW_RETENTION_YEARS` bleibt als Fallback gültig.
+  **Der eigentliche Grund für die DB:** jede Änderung schreibt eine
+  Audit-Zeile (`setting.changed`) mit handelnder Person und Zeitpunkt — eine
+  Frist per Env-Var zu verkürzen wäre nur in der Cluster-Konfiguration
+  sichtbar. Der Schlüsselraum ist code-fest (`lib/settings/registry.ts`,
+  analog `ALL_CAPABILITIES`): ein Fremdeintrag in der Tabelle bleibt
+  wirkungslos, und es wird bewusst nur deklariert, was der Code auch
+  auswertet. Deployment- und Integrationswerte (`SKIP_MIGRATIONS`,
+  `SKIP_DB_INIT`, `OIDC_*`, Secrets) bleiben Env-Vars — sie werden gebraucht,
+  bevor die DB nutzbar ist, oder unterscheiden sich je Umgebung.
+
+### Behoben
+- **`compliance:export` war nie gescoped** — die Export-Route prüfte zwar die
+  Capability `compliance:export`, löste danach aber den Scope von
+  `compliance:view-named` auf; da `resolveViewerScope` bei null Treffern
+  `unrestricted` liefert, hätte eine auf eine Gesellschaft gescopte Rolle mit
+  nur `compliance:export` den CSV-Export über ALLE Gesellschaften gezogen —
+  fail-open genau in der Richtung, die das Scoping verhindern soll. Wird
+  scharf, sobald gescopte Rollen vergeben werden.
+- **Rohe Error-Objekte im Log** — mehrere Handler gaben Fehlerobjekte direkt
+  an `console.error`; Postgres-Fehler führen ein `detail`-Feld, das
+  Schlüsselwerte (z. B. User-UUIDs) enthalten kann. Jetzt laufen alle
+  betroffenen Stellen (24 Call-Sites, 20 Dateien) durch `redactError`
+  (`lib/log-redact.ts`).
+
 ## [0.6.0] – 2026-08-18
 
 ### Geändert

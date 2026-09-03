@@ -9,6 +9,8 @@
 import type { Role } from "@/lib/auth/roles";
 import { normalizeRole } from "@/lib/auth/roles";
 
+import { parseClaimMap } from "./claim-gate";
+
 export type OidcConfig = {
   issuer: string;
   clientId: string;
@@ -19,6 +21,26 @@ export type OidcConfig = {
   scopes: string;
   /** Mapping Keycloak-Rolle/-Gruppe → App-Rolle. */
   roleMap: ReadonlyMap<string, Role>;
+  /**
+   * Mapping IdP-`country`-Claim-Wert → Land-Token (ADR 0007 §3). Optional:
+   * die bekannten Tokens (`LAND_TOKENS`) gelten immer, die Map ergänzt nur
+   * Übersetzungen für abweichende IdP-Schreibweisen (`LU` → `LUX`).
+   */
+  landMap: ReadonlyMap<string, string>;
+  /**
+   * Name des Claims, der die Rechtseinheit/Gesellschaft trägt (z. B.
+   * `legal_entity`). `null` = die Achse wird nicht aus dem Token gefüllt
+   * (heutiger Zustand, `profiles.bu` bleibt unberührt).
+   */
+  entityClaim: string | null;
+  /**
+   * Mapping Entity-Claim-Wert → App-Entity-Token. LEER = Pass-Through (der
+   * Rohwert wird übernommen); GESETZT = Allowlist (alles Nicht-Gelistete
+   * ist `unmapped`). n:1 erlaubt, damit mehrere Gesellschaften app-seitig
+   * zu einer zusammengefasst werden können, bevor der Merger im IdP
+   * nachzieht.
+   */
+  entityMap: ReadonlyMap<string, string>;
   /** Session-Lebensdauer in Sekunden (Cookie-Max-Age + exp-Claim). */
   sessionMaxAgeSec: number;
 };
@@ -85,6 +107,9 @@ export function oidcConfig(): OidcConfig {
     sessionSecret,
     scopes: process.env.OIDC_SCOPES?.trim() || "openid profile email",
     roleMap: parseRoleMap(process.env.OIDC_ROLE_MAP),
+    landMap: parseClaimMap(process.env.OIDC_LAND_MAP),
+    entityClaim: process.env.OIDC_ENTITY_CLAIM?.trim() || null,
+    entityMap: parseClaimMap(process.env.OIDC_ENTITY_MAP),
     sessionMaxAgeSec,
   };
   return cached;

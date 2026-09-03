@@ -6,6 +6,17 @@
  * Idempotent: ein erneuter Aufruf mit denselben Werten überschreibt einfach
  * wieder dieselben Werte — kein Sonderfall nötig.
  *
+ * ACHTUNG Source-of-Truth-Vorrang bei aktivem OIDC-Claim-Gate
+ * (lib/auth/provider/oidc/claim-gate.ts): ein hier gesetzter `land`-Wert ist
+ * bereits heute nur ein Zwischenstand — beim nächsten Login überschreibt der
+ * `country`-Claim ihn, sobald der Claim einen auflösbaren Wert liefert. Für
+ * `bu` gilt dasselbe, sobald `OIDC_ENTITY_CLAIM` konfiguriert ist: dann wird
+ * der IdP zur Source of Truth für `bu`, und ein hier gesetzter Wert
+ * überlebt nur so lange, wie der konfigurierte Claim fehlt oder unauflösbar
+ * (`unmapped`) bleibt. Dieses Skript bleibt trotzdem nützlich — für Personen
+ * ohne (auswertbaren) Claim, für Tests und als Übergangs-Fix, bis ein
+ * IdP-seitiges Mapping nachgezogen ist.
+ *
  * Usage:
  *   DATABASE_URL='postgres://…' npx tsx scripts/set-user-entity.ts <userId> --land <LAND> --bu <BU>
  *   DATABASE_URL='postgres://…' npx tsx scripts/set-user-entity.ts <userId> --land <LAND>
@@ -16,6 +27,7 @@
 import { eq } from "drizzle-orm";
 
 import { db, schema } from "@/lib/db/client";
+import { redactError } from "@/lib/log-redact";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -98,6 +110,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("✗ Setzen fehlgeschlagen:", err);
+  console.error("✗ Setzen fehlgeschlagen:", redactError(err));
   process.exit(1);
 });

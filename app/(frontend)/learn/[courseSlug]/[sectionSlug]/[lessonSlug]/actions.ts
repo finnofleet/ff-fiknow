@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getCourse, getLesson } from "@/lib/content";
 import { db } from "@/lib/db/client";
 import { lessonProgress, quizAttempts } from "@/lib/db/schema";
+import { redactError } from "@/lib/log-redact";
 import { markLessonCompleted, resetExamSeed } from "@/lib/progress";
 import { extractExamQuestions, gradeExam } from "@/lib/quiz/exam-grade";
 import { getPoolQuestions } from "@/lib/quiz/pool-loader";
@@ -141,7 +142,7 @@ export async function submitQuizAttemptAction(payload: SubmitQuizPayload) {
       confirmed: payload.confirmed,
     });
   } catch (err) {
-    console.error("[training] syncCourseCompletion fehlgeschlagen:", err);
+    console.error("[training] syncCourseCompletion fehlgeschlagen:", redactError(err));
   }
 
   revalidatePath(`/learn/${payload.courseSlug}`, "layout");
@@ -174,7 +175,7 @@ export async function completeAndContinueAction(formData: FormData) {
   try {
     await syncCourseCompletion(user.id, courseSlug, { confirmed });
   } catch (err) {
-    console.error("[training] syncCourseCompletion fehlgeschlagen:", err);
+    console.error("[training] syncCourseCompletion fehlgeschlagen:", redactError(err));
   }
 
   revalidatePath(`/learn/${courseSlug}`, "layout");

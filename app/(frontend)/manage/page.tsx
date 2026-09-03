@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Upload, Users, BookOpen, ShieldCheck, ArrowRight, ExternalLink } from "lucide-react";
+import {
+  Upload,
+  Users,
+  BookOpen,
+  ShieldCheck,
+  SlidersHorizontal,
+  ArrowRight,
+  ExternalLink,
+} from "lucide-react";
 
 import { brandFullName } from "@/lib/brand";
-import { canManageCourses, canManageUsers, ROLE_LABEL } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
+import { ROLE_LABEL } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 
 import styles from "./page.module.css";
@@ -16,6 +26,7 @@ export const metadata: Metadata = {
 export default async function AdminDashboardPage() {
   // Auth wird im /manage/layout.tsx schon geprüft — hier nur User-Daten holen.
   const user = (await getCurrentUser())!;
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
 
   type Tile = {
     title: string;
@@ -32,28 +43,40 @@ export default async function AdminDashboardPage() {
       desc: "Course-Bundle (.zip) hochladen — vom Authoring-Plugin generiert oder manuell gepackt.",
       href: "/manage/import",
       icon: <Upload size={22} strokeWidth={1.5} />,
-      available: canManageCourses(user.role),
+      available: can(caps, "courses:manage"),
     },
     {
       title: "Kurse",
       desc: "Kurse veröffentlichen, offline nehmen, löschen und den KI-Tutor freischalten.",
       href: "/manage/courses",
       icon: <BookOpen size={22} strokeWidth={1.5} />,
-      available: canManageCourses(user.role),
+      available: can(caps, "courses:manage"),
     },
     {
       title: "Nutzer:innen",
       desc: "Rollen vergeben, Nutzer:innen sperren oder entsperren.",
       href: "/manage/users",
       icon: <Users size={22} strokeWidth={1.5} />,
-      available: canManageUsers(user.role),
+      available: can(caps, "users:manage"),
+    },
+    {
+      title: "Einstellungen",
+      desc: "Fachliche Richtwerte (z. B. Aufbewahrungsfrist der Nachweise) — jede Änderung wird protokolliert.",
+      href: "/manage/einstellungen",
+      icon: <SlidersHorizontal size={22} strokeWidth={1.5} />,
+      available: can(caps, "settings:manage"),
     },
     {
       title: "Pflichtkurse",
       desc: "Erfüllungsquote je Kurs + Nachweis, wer welche Pflichtschulung wann absolviert hat.",
       href: "/manage/pflichtkurse",
       icon: <ShieldCheck size={22} strokeWidth={1.5} />,
-      available: canManageCourses(user.role),
+      // Nachweis-Einsicht, NICHT Content-Pflege (Betriebsrats-Auflage): die
+      // Kachel muss dieselbe Bedingung tragen wie die Seite selbst, sonst
+      // sieht eine Kurator:in einen Einstieg, der sie nur wegwirft.
+      available:
+        can(caps, "compliance:view-named") ||
+        can(caps, "compliance:view-aggregate"),
     },
   ];
 

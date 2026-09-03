@@ -7,23 +7,37 @@
  * NICHT in der UI „erfunden" werden (im Gegensatz zu Rollen, die künftig
  * frei benennbar sind, ADR 0007 §2).
  *
- * `SYSTEM_ROLE_CAPABILITIES` ist die **Single Source of Truth** für die
- * beiden heutigen System-Rollen (`curator`, `admin`) — sowohl für die
- * Laufzeit-Ableitung hier im Code als auch für den DB-Seed
- * (`scripts/seed-system-roles.ts`), der `roles` + `role_capabilities` daraus
- * befüllt. Eine Änderung hier ist also gleichzeitig die Änderung am Seed.
+ * `DECLARED_ROLES` ist die **Saat** für die Rollen-Matrix: der
+ * Boot-Initializer (`lib/db/initializers/system-roles.ts`) gleicht `roles` +
+ * `role_capabilities` daraus ab — inklusive Löschen nicht mehr deklarierter
+ * Capabilities, damit auch ein ENTZUG ankommt. Zur Laufzeit gelesen wird
+ * ausschliesslich die Matrix (`resolveEffectiveCapabilities`), nie diese
+ * Konstante. Eine Änderung hier wirkt also beim nächsten Boot.
  *
- * **P1-Stand:** die Laufzeit-Durchsetzung bleibt code-abgeleitet über den
- * Compat-Shim `capabilitiesForLegacyRole` (weiterhin die bestehende
- * Single-Role aus `profiles.role`, siehe `lib/auth/roles.ts`). Die neuen
- * DB-Tabellen (`roles`, `role_capabilities`, `role_assignments`,
- * `lib/db/schema.ts`) sind in P1 nur das **Fundament** — sie werden noch
- * nicht zur Laufzeit gelesen. Das kommt erst mit der admin-editierbaren
- * Matrix + additiven Rollen-Zuweisungen (spätere Phasen, ADR 0007 §2/§8).
+ * **Stand: Rechte-Achse abgeschlossen.** Die effektiven Capabilities entstehen
+ * zur Laufzeit in `resolveEffectiveCapabilities` als Vereinigung aus dieser
+ * Konstante (fuer die Rang-Rolle) und der DB-Matrix (`roles` /
+ * `role_capabilities`) fuer die aus dem IdP aufgeloesten Rollen-Keys sowie
+ * die personengebundenen `role_assignments`.
+ *
+ * Diese Konstante bleibt die Quelle fuer die zwei System-Rollen — und zwar
+ * ohne DB-Zugriff. Das ist Absicht: `SKIP_MIGRATIONS=true` (dokumentierter
+ * Notausstieg, siehe deploy/RUNBOOK.md) und der E2E-Lauf ueberspringen die
+ * DB-Initializer, in denen die Matrix befuellt wird. Kaeme das Set der
+ * System-Rollen nur aus der Matrix, waere in genau diesen Faellen NIEMAND
+ * mehr berechtigt.
  */
-import type { Role } from "./roles";
-
-/** Feste Liste — jede Capability wird irgendwo im Code durchgesetzt. */
+/**
+ * Feste Liste — jede Capability wird irgendwo im Code durchgesetzt.
+ *
+ * AUSNAHME `audit:view`: bewusst deklariert, aber NICHT durchgesetzt. Ein
+ * Audit-Log-Viewer in der App ist bewusst NICHT gebaut worden — die
+ * Protokollierungs-Anforderung ist erfüllt, solange die Daten abfragbar sind
+ * (Auszug per SQL, siehe deploy/RUNBOOK.md). Die Capability bleibt als
+ * reservierter Platzhalter stehen, weil ADR 0007 §11 sie benennt; wer sie
+ * haelt, bekommt heute nichts. Sie zu vergeben ist wirkungslos, nicht
+ * gefaehrlich.
+ */
 export type Capability =
   | "courses:manage"
   | "users:manage"
@@ -31,7 +45,8 @@ export type Capability =
   | "compliance:view-aggregate"
   | "compliance:export"
   | "audit:view"
-  | "reindex:run";
+  | "reindex:run"
+  | "settings:manage";
 
 export const ALL_CAPABILITIES: Capability[] = [
   "courses:manage",
@@ -41,6 +56,7 @@ export const ALL_CAPABILITIES: Capability[] = [
   "compliance:export",
   "audit:view",
   "reindex:run",
+  "settings:manage",
 ];
 
 /**
@@ -56,64 +72,105 @@ export const SCOPED_CAPABILITIES: Capability[] = [
 ];
 
 /**
- * Capability-Set der beiden heutigen System-Rollen. `admin` = `curator`-Set
- * + `users:manage` + `audit:view` (Curator-Rechte plus Nutzerverwaltung +
- * Audit-Log-Einsicht). Diese Konstante ist die Quelle für den DB-Seed.
+ * Der Keycloak-Gruppen-/Rollenname der Compliance-Rolle. Muss BYTE-IDENTISCH
+ * mit der Gruppe im IdP sein — darüber matcht `resolveKnownRoleKeys` die aus
+ * dem Token geernteten Keys gegen die Matrix. Bewusst mit Präfix: kurze,
+ * generische Namen kollidieren mit Gruppen-Pfadsegmenten fremder Bäume.
  */
-export const SYSTEM_ROLE_CAPABILITIES: Record<"curator" | "admin", Capability[]> = {
-  curator: [
-    "courses:manage",
-    "compliance:view-named",
-    "compliance:export",
-    "reindex:run",
-  ],
-  admin: [
-    "courses:manage",
-    "compliance:view-named",
-    "compliance:export",
-    "reindex:run",
-    "users:manage",
-    "audit:view",
-  ],
+export const COMPLIANCE_ROLE_KEY = "finknow-compliance";
+
+/**
+ * Die code-deklarierten Rollen und ihre Capabilities — SAAT für die
+ * Rollen-Matrix (`lib/db/initializers/system-roles.ts` gleicht sie bei jedem
+ * Boot ab, inklusive Entzug). Gelesen wird zur Laufzeit ausschließlich die
+ * Matrix, nie diese Konstante.
+ *
+ * **Trennung Inhalt ↔ Nachweis (BR-Auflage).** `curator` und `admin` tragen
+ * KEINE `compliance:*`-Capability mehr: wer Kurse pflegt bzw. die Plattform
+ * administriert, sieht damit nicht mehr automatisch die namentlichen
+ * Schulungsnachweise aller Mitarbeitenden. Nachweis-Einsicht hängt allein an
+ * der eigenen Rolle `finknow-compliance`, die über eine gleichnamige
+ * Keycloak-Gruppe vergeben wird — additiv, also „Admin UND Compliance" ist
+ * eine Person mit beiden Gruppen.
+ *
+ * `admin` = `curator` + Nutzerverwaltung + Audit-Log-Einsicht.
+ *
+ * Offen gelassen: `compliance:export` sitzt hier in derselben Rolle wie die
+ * Einsicht. Der CSV-Export ist die Fläche mit der größten Streuung (die Datei
+ * verlässt Scope, Protokollierung und Aufbewahrung) — soll er getrennt
+ * vergeben werden, wird daraus eine zweite Rolle mit nur dieser Capability.
+ */
+export type DeclaredRole = {
+  /** Anzeigename in Admin-UI und Rechte-Inspektor. */
+  label: string;
+  description: string;
+  capabilities: Capability[];
 };
 
-/**
- * Vereinigung der Capabilities über eine Menge von Rollen-Keys. Unbekannte
- * Keys werden defensiv ignoriert (kein Throw) — Tippfehler oder künftige,
- * noch nicht ausgerollte Rollen-Keys sollen nicht versehentlich Rechte
- * gewähren oder die Anwendung zum Absturz bringen.
- *
- * In P1 sind nur die System-Keys (`curator`, `admin`) bekannt; frei
- * benennbare Rollen (ADR 0007 §2, `roles`-Tabelle) kommen in einer späteren
- * Phase dazu, sobald `role_capabilities` zur Laufzeit gelesen wird.
- */
-export function capabilitiesForRoleKeys(keys: string[]): Set<Capability> {
-  const result = new Set<Capability>();
-  for (const key of keys) {
-    const caps =
-      key === "curator" || key === "admin"
-        ? SYSTEM_ROLE_CAPABILITIES[key]
-        : undefined;
-    if (!caps) continue;
-    for (const cap of caps) result.add(cap);
-  }
-  return result;
-}
+export const DECLARED_ROLES: Record<string, DeclaredRole> = {
+  learner: {
+    label: "Lernend",
+    description:
+      "Grundzustand jeder Person mit Zugang — traegt keine Rechte, ist aber " +
+      "die Zielgruppe der Basis-Pflichtschulungen.",
+    capabilities: [],
+  },
+  curator: {
+    label: "Kurator:in",
+    description: "Kann Kurse hochladen und veröffentlichen.",
+    capabilities: ["courses:manage", "reindex:run"],
+  },
+  admin: {
+    label: "Admin",
+    description:
+      "Kann zusätzlich Nutzer:innen verwalten und das Audit-Log einsehen.",
+    capabilities: [
+      "courses:manage",
+      "reindex:run",
+      "users:manage",
+      "audit:view",
+      "settings:manage",
+    ],
+  },
+  [COMPLIANCE_ROLE_KEY]: {
+    label: "Compliance-Einsicht",
+    description:
+      "Darf Schulungsnachweise einsehen und exportieren — getrennt von " +
+      "Inhaltspflege und Administration (BR-Auflage).",
+    capabilities: [
+      "compliance:view-named",
+      "compliance:view-aggregate",
+      "compliance:export",
+    ],
+  },
+};
 
-/**
- * Compat-Shim: leitet aus der bestehenden Single-Role (`Role`,
- * `lib/auth/roles.ts`) das äquivalente Capability-Set ab. `suspended` und
- * `learner` tragen keine Capabilities — `suspended` ist ein Deny-all-Status,
- * `learner` ist der implizite Grundzustand ohne verwaltete Rolle (ADR 0007
- * §2). Das ist die Brücke, über die `roles.ts` seine Permission-Checks in
- * P1 weiterhin ohne DB-Zugriff auswerten kann.
+/*
+ * ENTFALLEN: `capabilitiesForRoleKeys(keys)`.
+ *
+ * Sie ordnete den Keys `"curator"`/`"admin"` die System-Rollen-Sets zu. Genau
+ * das ist der Eskalationspfad, den `resolveKnownRoleKeys`
+ * (`lib/auth/role-keys.ts`) bewusst schliesst: `extractRoleKeys` nimmt von
+ * Keycloak-Gruppen auch das letzte Pfadsegment auf, eine beliebige Gruppe
+ * `/Irgendwas/Admin` ergibt also den Key `admin`. Eine Funktion, die aus
+ * einem Key Admin-Rechte macht, waere damit eine offene Falle — deshalb
+ * entfernt statt ungenutzt liegengelassen. System-Rollen kommen
+ * ausschliesslich ueber `capabilitiesForSystemRole` (Quelle: die vom
+ * `OIDC_ROLE_MAP` gemappte Rang-Rolle).
  */
-export function capabilitiesForLegacyRole(role: Role): Set<Capability> {
-  if (role === "curator" || role === "admin") {
-    return new Set(SYSTEM_ROLE_CAPABILITIES[role]);
-  }
-  return new Set();
-}
+
+/*
+ * ENTFALLEN: `capabilitiesForSystemRole(role)`.
+ *
+ * Sie leitete die Capabilities der Rang-Rolle code-seitig ab — die zweite
+ * Quelle neben der Matrix. Zwei Quellen für dieselbe Aussage können
+ * auseinanderlaufen, und weil die effektiven Capabilities eine VEREINIGUNG
+ * sind, gewinnt dabei immer die großzügigere: ein Entzug im Code waere
+ * wirkungslos geblieben, solange die Matrix-Zeile noch das alte Recht trug.
+ * Genau das haette die BR-Auflage (Compliance aus `curator` herauslösen)
+ * still ins Leere laufen lassen. Jetzt: `DECLARED_ROLES` ist Saat,
+ * die Matrix ist die gelesene Wahrheit, der Boot-Initializer gleicht ab.
+ */
 
 /** Prüft, ob ein Capability-Set eine bestimmte Capability enthält. */
 export function can(

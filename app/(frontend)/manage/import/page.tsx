@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 
 import { ImportForm } from "./import-form";
@@ -20,7 +21,8 @@ export default async function AdminImportPage() {
   // und schützt vor späteren Rolle-Erweiterungen die SeeAdmin geben
   // ohne Course-Mgmt-Rechte.
   const user = (await getCurrentUser())!;
-  if (!canManageCourses(user.role)) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) {
     redirect("/manage?error=no_course_permission");
   }
 

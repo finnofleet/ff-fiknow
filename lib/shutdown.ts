@@ -18,6 +18,8 @@
  * (server.close, nextServer.close, Trace-Flush), bleibt genug Zeit, den Pool
  * zu drainen.
  */
+import { redactError } from "@/lib/log-redact";
+
 import { closeDb } from "./db/client";
 
 const LOG_PREFIX = "[shutdown]";
@@ -33,7 +35,7 @@ async function drain(signal: string): Promise<void> {
     console.log(`${LOG_PREFIX} DB-Pool geschlossen.`);
   } catch (err) {
     // Cleanup darf den Shutdown niemals blockieren/crashen.
-    console.error(`${LOG_PREFIX} Fehler beim Schliessen des DB-Pools:`, err);
+    console.error(`${LOG_PREFIX} Fehler beim Schliessen des DB-Pools:`, redactError(err));
   }
 }
 

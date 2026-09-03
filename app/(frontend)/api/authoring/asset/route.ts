@@ -37,6 +37,7 @@ import {
   AssetUploadError,
   validateAndStageAsset,
 } from "@/lib/authoring/asset-upload";
+import { redactError } from "@/lib/log-redact";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof AssetUploadError) {
       return jsonError(400, "asset_validation_failed", { detail: err.message });
     }
-    console.error("[/api/authoring/asset] unexpected:", err);
+    console.error("[/api/authoring/asset] unexpected:", redactError(err));
     return jsonError(500, "asset_upload_failed", {
       detail: (err as Error).message,
     });

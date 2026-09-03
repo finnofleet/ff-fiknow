@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { canManageUsers } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 
 import styles from "./page.module.css";
@@ -20,7 +21,8 @@ export const metadata: Metadata = {
  */
 export default async function AdminUsersPage() {
   const me = (await getCurrentUser())!;
-  if (!canManageUsers(me.role)) {
+  const caps = await resolveEffectiveCapabilities(me.id, me.role, me.roleKeys);
+  if (!can(caps, "users:manage")) {
     redirect("/manage?error=no_user_mgmt_permission");
   }
 

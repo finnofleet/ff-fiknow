@@ -56,9 +56,9 @@ const isStaffRole = sql`auth.role() in ('curator', 'admin')`;
  *   - `admin`      + kann Nutzer-Rollen verwalten
  *   - `suspended`  Soft-Ban, keinerlei Berechtigungen
  *
- * `editor` als Legacy-Wert wird vom Code als Curator behandelt — bei
- * Gelegenheit per `UPDATE profiles SET role='curator' WHERE role='editor'`
- * normalisieren.
+ * Der Legacy-Wert `editor` wird beim Boot vom Initializer
+ * `normalize-legacy-roles` auf `curator` umgeschrieben — der Code kennt ihn
+ * nicht mehr.
  */
 export const profiles = pgTable(
   "profiles",
@@ -73,6 +73,26 @@ export const profiles = pgTable(
      */
     land: text("land"),
     bu: text("bu"),
+    /**
+     * Alle beim Login aus den IdP-Claims aufgelösten Rollen-Keys (ADR 0007
+     * §2, Abschluss der Rechte-Achse). Keycloak liefert pro Person BELIEBIG
+     * VIELE Rollen/Gruppen; `profiles.role` kann davon nur eine halten
+     * (linearer Rang, siehe `role-map.ts`). Diese Spalte hält die volle
+     * Menge, aus der die effektiven Capabilities als VEREINIGUNG abgeleitet
+     * werden — damit sind orthogonale Rollen (z. B. „Admin UND
+     * Compliance-Einsicht") ausdrückbar, ohne sie in eine Hierarchie zu
+     * pressen, in die sie nicht gehören.
+     *
+     * Bewusst hier und nicht im Session-Cookie: `liveRole()` liest die Rechte
+     * absichtlich pro Request frisch aus der DB, damit ein Entzug SOFORT
+     * greift statt erst nach Cookie-Ablauf. Ein Cookie-Snapshot würde genau
+     * diese Eigenschaft aufgeben.
+     *
+     * Gefiltert auf BEKANNTE Keys (System-Rollen + `roles.key`) — unbekannte
+     * IdP-Gruppen landen nicht in unserer DB (kein Abbild der fremden
+     * Org-Struktur, kein Rauschen).
+     */
+    roleKeys: text("role_keys").array(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -485,22 +505,25 @@ export const retentionPurgeRuns = pgTable(
 ).enableRLS();
 
 /**
- * Rechte-Achse (ADR 0007, Phase P1) — Fundament für additive Rollen + feste
- * Capabilities. Drei Tabellen:
+ * Rechte-Achse (ADR 0007) — additive Rollen + feste Capabilities. Drei
+ * Tabellen:
  *
- *   - `roles`             frei benennbare Rollen (§2), P1 nur die zwei
- *                         System-Rollen `curator`/`admin` (`is_system`).
- *   - `role_capabilities` editierbare Rollen×Capability-Matrix (§2).
+ *   - `roles`             frei benennbare Rollen (§2); `is_system` markiert
+ *                         die code-deklarierten (`DECLARED_ROLES`).
+ *   - `role_capabilities` Rollen×Capability-Matrix (§2).
  *   - `role_assignments`  additive Zuweisung Rolle→User inkl. vorbereiteter
- *                         (in P1 ungenutzter) Scope-Spalten (§3).
+ *                         (noch ungenutzter) Scope-Spalten (§3).
  *
- * `SYSTEM_ROLE_CAPABILITIES` (`lib/auth/capabilities.ts`) ist die Single
- * Source of Truth, aus der `scripts/seed-system-roles.ts` `roles` +
- * `role_capabilities` befüllt. Zur Laufzeit werden diese Tabellen in P1
- * NOCH NICHT gelesen — die Permission-Checks laufen weiterhin über den
- * Compat-Shim `capabilitiesForLegacyRole` aus der bestehenden Single-Role in
- * `profiles.role` (ADR 0007 §10 — App-seitige Durchsetzung vorerst,
- * DB-Tabellen sind das Fundament für eine spätere admin-editierbare Matrix).
+ * **Diese Tabellen sind zur Laufzeit die EINZIGE Rechtequelle.** Es gibt
+ * keinen code-seitigen Boden mehr: `resolveEffectiveCapabilities`
+ * (`lib/auth/effective-capabilities.ts`) bildet die Vereinigung aus den
+ * Matrix-Capabilities der IdP-Rollen-Keys (`profiles.role_keys`) und den
+ * `role_assignments` — mehr nicht. Faellt der DB-Read aus, hat niemand
+ * Rechte (fail-closed).
+ *
+ * `DECLARED_ROLES` (`lib/auth/capabilities.ts`) ist die Seed dieser Matrix;
+ * der Boot-Initializer `system-roles` (`lib/db/initializers/`) gleicht sie
+ * bei jedem Start ab und entfernt dabei auch entzogene Capabilities.
  *
  * Keine Foreign Keys (konsistent mit dem Rest dieser Datei): `user_id` ist
  * überall eine nominelle Referenz, und Payload/Drizzle teilen sich kein
@@ -514,7 +537,8 @@ export const roles = pgTable(
     id: uuid("id")
       .primaryKey()
       .default(sql`gen_random_uuid()`),
-    /** Stabiler Slug, z. B. `curator` — worüber `capabilitiesForRoleKeys` matcht. */
+    /** Stabiler Slug. Muss dem Keycloak-Rollen-/Gruppennamen entsprechen —
+     * darueber matcht `resolveKnownRoleKeys` die IdP-Keys (lib/auth/role-keys.ts). */
     key: text("key").notNull().unique(),
     label: text("label").notNull(),
     description: text("description"),
@@ -644,6 +668,44 @@ export const questions = pgTable(
     ),
     index("questions_course_version_idx").on(t.courseSlug, t.version),
     // Wie lesson_chunks: enableRLS OHNE Policies — nur Server-Connection liest/schreibt.
+  ],
+).enableRLS();
+
+/**
+ * Betriebs-/Policy-Einstellungen, die eine FACHLICHE Rolle setzt — nicht der
+ * Betrieb (ADR 0006/0007).
+ *
+ * **Abgrenzung zu Env-Vars.** In die Env gehoert, was gebraucht wird, BEVOR
+ * die DB nutzbar ist (`SKIP_MIGRATIONS`, `SKIP_DB_INIT`, `DATABASE_URL`), und
+ * was sich je Deployment/Integration unterscheidet (OIDC-Claim-Namen,
+ * Secrets). Hierher gehoert Policy, die eine fachliche Rolle besitzt und ohne
+ * Deployment aendern koennen soll — etwa die Aufbewahrungsfrist, die der
+ * Datenschutzbeauftragte final abnimmt.
+ *
+ * Der entscheidende Zusatzgrund fuer die DB: **die Aenderung selbst ist
+ * nachweisbar**. Eine Frist per Env-Var zu verkuerzen ist nur in der
+ * Cluster-Konfiguration sichtbar; hier schreibt jede Aenderung eine Zeile ins
+ * `audit_log` — mit handelnder Person und Zeitpunkt.
+ *
+ * Der Schluesselraum ist NICHT frei: nur in `lib/settings/registry.ts`
+ * deklarierte Keys werden gelesen (analog `ALL_CAPABILITIES` — die DB kann
+ * keine Einstellung „erfinden", die der Code nicht auswertet).
+ */
+export const settings = pgTable(
+  "settings",
+  {
+    /** Deklarierter Key aus `lib/settings/registry.ts`. */
+    key: text("key").primaryKey(),
+    /** Rohwert als Text; die Typisierung/Validierung macht die Registry. */
+    value: text("value").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    /** Wer zuletzt geaendert hat (nominelle Referenz auf profiles.user_id). */
+    updatedBy: uuid("updated_by"),
+  },
+  () => [
+    pgPolicy("settings_select_staff", { for: "select", using: isStaffRole }),
   ],
 ).enableRLS();
 

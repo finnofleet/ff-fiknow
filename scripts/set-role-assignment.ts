@@ -21,6 +21,7 @@ import { and, eq } from "drizzle-orm";
 import { recordAudit } from "@/lib/audit/log";
 import { db, schema } from "@/lib/db/client";
 import { isLandToken } from "@/lib/land-tokens";
+import { redactError } from "@/lib/log-redact";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -197,6 +198,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("✗ Setzen fehlgeschlagen:", err);
+  console.error("✗ Setzen fehlgeschlagen:", redactError(err));
   process.exit(1);
 });

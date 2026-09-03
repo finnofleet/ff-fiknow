@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
 
+import { redactError } from "@/lib/log-redact";
+
 /**
  * Brand-Konfiguration aus brand/brand.yaml.
  *
@@ -70,7 +72,7 @@ function loadBrandConfig(): BrandConfig {
   } catch (err) {
     console.warn(
       `[brand] Konnte ${configPath} nicht lesen — verwende Fallback.`,
-      err instanceof Error ? err.message : err,
+      redactError(err),
     );
     return FALLBACK;
   }

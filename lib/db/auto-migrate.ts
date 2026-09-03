@@ -1,20 +1,37 @@
 /**
- * Auto-Migrate beim App-Start.
+ * DB-Bootstrap beim App-Start.
  *
- * Wird von Next.js' `instrumentation.ts` einmal pro Server-Boot
- * aufgerufen. Bringt die DB in den State, den der aktuelle Code
- * erwartet — kein manuelles `npm run db:bootstrap` mehr nötig.
+ * Wird von Next.js' `instrumentation.ts` einmal pro Server-Boot aufgerufen.
+ * Bringt die DB in den State, den der aktuelle Code erwartet — kein manuelles
+ * `npm run db:bootstrap` mehr nötig.
+ *
+ * **Zwei getrennte Anliegen, zwei getrennte Schalter.** Migrationen ändern das
+ * SCHEMA; Initializer stellen INHALTE her, die der Code als vorhanden
+ * voraussetzt (die Rollen-Matrix — also die Grundlage JEDER Berechtigung).
+ * Das sind verschiedene Risiken, und sie hingen früher an einem Flag: wer
+ * `SKIP_MIGRATIONS` als Notausstieg zog („fass mein Schema nicht an"), schaltete
+ * damit unbeabsichtigt auch die Inhalts-Initialisierung ab. Deshalb jetzt:
+ *
+ *   SKIP_MIGRATIONS=true  → nur die Migrationen aus (Schema unberührt)
+ *   SKIP_DB_INIT=true     → nur die Initializer aus
+ *
+ * Beide unabhängig. Der Regelfall für einen Notausstieg ist `SKIP_MIGRATIONS`
+ * allein — auf einem bestehenden System ist das Schema ja da, und die
+ * Initializer sollen weiterlaufen. `SKIP_DB_INIT` ist der zweite Notausstieg
+ * für den Fall, dass die Initializer selbst klemmen (z. B. weil das Schema
+ * wirklich unvollständig ist).
  *
  * Sequenz:
- *   1. Advisory-Lock holen (Postgres-Lock-ID 7392108564)
- *      → bei Multi-Instance läuft nur einer; andere warten oder skippen
- *   2. Schema `payload` sicherstellen
- *   3. Drizzle-Migrationen (drizzle/-Ordner)
- *   4. Payload-Migrationen (migrations/-Ordner)
- *   5. Lock freigeben
+ *   1. Advisory-Lock holen (Postgres-Lock-ID 1392108564)
+ *      → bei Multi-Instance läuft nur einer; andere warten
+ *   2. Schema `payload` sicherstellen         ⟍
+ *   2b. auth-Schema + uid/role-Helper          ⟩ nur ohne SKIP_MIGRATIONS
+ *   3. Drizzle-Migrationen (drizzle/)          |
+ *   4. Payload-Migrationen (migrations/)      ⟋
+ *   5. DB-Initializer (lib/db/initializers)   — nur ohne SKIP_DB_INIT
+ *   6. Lock freigeben
  *
- * Skip-Bedingungen:
- *   - process.env.SKIP_MIGRATIONS === "true" (für CI/Tests)
+ * Weitere Skip-Bedingung (beide Schritte):
  *   - process.env.DATABASE_URL fehlt (Build-Time-Fall — kein Crash)
  *
  * Failure-Verhalten:
@@ -29,15 +46,16 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate as drizzleMigrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
+import * as schema from "./schema";
 import { sslConfigFromUrl } from "./ssl-config";
 
 // Fester Lock-Key. Bewusst im int32-Bereich (< 2^31) gehalten, sodass
 // die int4-Variante von pg_advisory_lock greift — kein bigint-Boilerplate
 // nötig.
 const ADVISORY_LOCK_KEY = 1392108564;
-const LOG_PREFIX = "[auto-migrate]";
+const LOG_PREFIX = "[db-bootstrap]";
 
-let migrationsRan = false;
+let bootstrapRan = false;
 
 // Kanonische Definition von auth-Schema + uid/role-Helper, die die
 // RLS-Policies referenzieren (kein separates setup-auth.sql — dieser
@@ -80,42 +98,16 @@ async function applyAuthSchemaBootstrap(sql: any): Promise<void> {
   }
 }
 
-export async function runAutoMigrations(): Promise<void> {
-  if (migrationsRan) return; // Idempotenz auf Modul-Ebene
-
-  if (process.env.SKIP_MIGRATIONS === "true") {
-    console.log(`${LOG_PREFIX} SKIP_MIGRATIONS=true — übersprungen.`);
-    migrationsRan = true;
-    return;
-  }
-
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    console.log(`${LOG_PREFIX} DATABASE_URL fehlt — übersprungen (Build-Zeit?).`);
-    return;
-  }
-
-  const startedAt = Date.now();
-  const sql = postgres(databaseUrl, {
-    max: 1,
-    ssl: sslConfigFromUrl(databaseUrl),
-  });
-
-  try {
-    // --- 1. Advisory-Lock ---------------------------------------------
-    const [{ acquired }] = await sql<{ acquired: boolean }[]>`
-      SELECT pg_try_advisory_lock(${ADVISORY_LOCK_KEY}) AS acquired
-    `;
-    if (!acquired) {
-      console.log(
-        `${LOG_PREFIX} Andere Instance migriert gerade — warte auf Lock …`,
-      );
-      // Blockt bis Lock frei ist. Maximal so lange wie die andere Instance
-      // braucht (typisch <30s).
-      await sql`SELECT pg_advisory_lock(${ADVISORY_LOCK_KEY})`;
-    }
-
-    try {
+/**
+ * Die Schema-Schritte (payload-Schema, auth-Helper, Drizzle, Payload). Als
+ * eigene Funktion, damit der Einstiegspunkt die zwei Anliegen —
+ * Schema vs. Inhalte — flach nebeneinander zeigt statt verschachtelt.
+ */
+async function runSchemaMigrations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sql: any,
+  drizzleDb: ReturnType<typeof drizzle<typeof schema>>,
+): Promise<void> {
       // --- 2. payload-Schema ------------------------------------------
       await sql`CREATE SCHEMA IF NOT EXISTS payload`;
 
@@ -126,7 +118,6 @@ export async function runAutoMigrations(): Promise<void> {
       await applyAuthSchemaBootstrap(sql);
 
       // --- 3. Drizzle migrations -------------------------------------
-      const drizzleDb = drizzle(sql);
       await drizzleMigrate(drizzleDb, {
         migrationsFolder: path.join(process.cwd(), "drizzle"),
       });
@@ -171,13 +162,80 @@ export async function runAutoMigrations(): Promise<void> {
           `${LOG_PREFIX} Payload-Migrationen aktuell — CLI-Subprozess übersprungen.`,
         );
       }
+}
+
+export async function runDbBootstrap(): Promise<void> {
+  if (bootstrapRan) return; // Idempotenz auf Modul-Ebene
+
+  const skipMigrations = process.env.SKIP_MIGRATIONS === "true";
+  const skipInit = process.env.SKIP_DB_INIT === "true";
+  if (skipMigrations && skipInit) {
+    console.log(
+      `${LOG_PREFIX} SKIP_MIGRATIONS=true + SKIP_DB_INIT=true — komplett übersprungen.`,
+    );
+    bootstrapRan = true;
+    return;
+  }
+
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.log(`${LOG_PREFIX} DATABASE_URL fehlt — übersprungen (Build-Zeit?).`);
+    return;
+  }
+
+  const startedAt = Date.now();
+  const sql = postgres(databaseUrl, {
+    max: 1,
+    ssl: sslConfigFromUrl(databaseUrl),
+  });
+
+  try {
+    // --- 1. Advisory-Lock ---------------------------------------------
+    const [{ acquired }] = await sql<{ acquired: boolean }[]>`
+      SELECT pg_try_advisory_lock(${ADVISORY_LOCK_KEY}) AS acquired
+    `;
+    if (!acquired) {
+      console.log(
+        `${LOG_PREFIX} Andere Instance migriert gerade — warte auf Lock …`,
+      );
+      // Blockt bis Lock frei ist. Maximal so lange wie die andere Instance
+      // braucht (typisch <30s).
+      await sql`SELECT pg_advisory_lock(${ADVISORY_LOCK_KEY})`;
+    }
+
+    try {
+      // Der Drizzle-Client wird von BEIDEN Schritten gebraucht (Migrationen
+      // + Initializer), deshalb ausserhalb der Migrations-Verzweigung.
+      const drizzleDb = drizzle(sql, { schema });
+
+      if (skipMigrations) {
+        console.log(
+          `${LOG_PREFIX} SKIP_MIGRATIONS=true — Schema-Migrationen übersprungen.`,
+        );
+      } else {
+        await runSchemaMigrations(sql, drizzleDb);
+      }
+
+      // --- 5. DB-Initializer ------------------------------------------
+      // Inhalte statt Schema — und bewusst UNABHÄNGIG von SKIP_MIGRATIONS
+      // (siehe Datei-Kopf): auf einem bestehenden System ist das Schema da,
+      // die Rollen-Matrix soll trotzdem abgeglichen werden. Läuft noch
+      // INNERHALB des Advisory-Locks, damit bei mehreren Replicas genau eine
+      // Instanz abgleicht. Wirft bei Fehlern → Boot bricht ab (siehe
+      // lib/db/initializers).
+      if (skipInit) {
+        console.log(`${LOG_PREFIX} SKIP_DB_INIT=true — Initializer übersprungen.`);
+      } else {
+        const { runInitializers } = await import("./initializers");
+        await runInitializers(drizzleDb);
+      }
     } finally {
       await sql`SELECT pg_advisory_unlock(${ADVISORY_LOCK_KEY})`;
     }
 
     const elapsedMs = Date.now() - startedAt;
     console.log(`${LOG_PREFIX} fertig in ${elapsedMs} ms`);
-    migrationsRan = true;
+    bootstrapRan = true;
   } finally {
     await sql.end();
   }

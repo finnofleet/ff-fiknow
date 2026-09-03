@@ -24,4 +24,4 @@ Architecture Decision Records (ADRs) halten bedeutsame, schwer umkehrbare Archit
 | 0008 | [RLS-Härtung: DB-seitige Durchsetzung als Defense-in-Depth](0008-rls-haertung.md) | Entschieden (zurückgestellt) | 2026-07-28 |
 | 0009 | [Frage-Domäne: wiederverwendbare Frage-Blöcke](0009-frage-domaene.md) | Umgesetzt (D1–D3) | 2026-07-29 |
 | 0010 | [Kurs-Sichtbarkeit nach Land/BU](0010-kurs-sichtbarkeit-land-bu.md) | Proposed | 2026-07-31 |
-| 0011 | [Hierarchisches Rollen-Ziel für Pflichtschulungen](0011-hierarchisches-rollen-ziel-pflichtschulungen.md) | Accepted | 2026-08-07 |
+| 0011 | [Hierarchisches Rollen-Ziel für Pflichtschulungen](0011-hierarchisches-rollen-ziel-pflichtschulungen.md) | Superseded by ADR-0007 §2 (2026-09-02) | 2026-08-07 |

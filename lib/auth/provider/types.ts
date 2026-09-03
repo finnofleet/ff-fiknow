@@ -15,6 +15,15 @@ export type ServerIdentity = {
   email: string | null;
   displayName: string | null;
   role: Role;
+  /**
+   * Alle beim Login aufgelösten Rollen-Keys (ADR 0007 §2) — die Basis der
+   * effektiven Capabilities als Vereinigung — und seit ADR 0011 (superseded)
+   * auch die Zielmenge für Pflichtschulungen (Mengen-Zugehörigkeit statt
+   * Rang). `role` bleibt daneben bestehen, weil sie etwas trägt, das KEINE
+   * Rechte sind: den Deny-all-Status `suspended`. Wie `role` wird die Menge
+   * pro Request frisch aus der DB gelesen, damit ein Entzug sofort greift.
+   */
+  roleKeys: string[];
 };
 
 /**

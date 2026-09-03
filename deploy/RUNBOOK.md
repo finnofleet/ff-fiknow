@@ -313,7 +313,8 @@ Next-Start. Danach:
 | `DB_POOL_IDLE_TIMEOUT_SEC` | nein | Idle-Timeout der Pool-Connections (Default `20`) |
 | `MEDIA_STORAGE_DIR` | nein | Payload-Medien-Pfad (Chart-Default `/data/media`); s. 7a |
 | `BUNDLE_STORAGE_DIR` | nein | Authoring-Bundle-Pfad (Chart-Default `/data/bundles`); s. 7a |
-| `SKIP_MIGRATIONS` | nein | `true` = Auto-Migrate beim Boot überspringen |
+| `SKIP_MIGRATIONS` | nein | `true` = nur die Schema-Migrationen beim Boot überspringen |
+| `SKIP_DB_INIT` | nein | `true` = nur die DB-Initializer (Rollen-Matrix-Abgleich) überspringen — ⚠️ danach hat NIEMAND mehr irgendeine Permission, bis nachgeholt (s. 7f) |
 | `LLM_PROVIDER` / `LLM_BASE_URL` / `LLM_MODEL` / `LLM_MAX_TOKENS` | nein | KI-Tutor-LLM (Default Anthropic/claude-haiku-4-5); siehe 5a |
 | `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `WATSONX_PROJECT_ID` / `WATSONX_URL` / `RAG_RELEVANCE_THRESHOLD` | nein | RAG-Embeddings (Default watsonx/granite-embedding-278m; Voyage nur per `EMBEDDING_PROVIDER=voyage`); siehe 5a |
 | `WATSONX_PROJECT_ID` / `WATSONX_URL` / `WATSONX_API_VERSION` | nein | nur bei `EMBEDDING_PROVIDER=watsonx`; siehe 5a |
@@ -455,7 +456,10 @@ vorgesehen.
 Ein **CronJob** (`templates/cronjob.yaml`, Default: **aus** —
 `cronjob.retentionPurge.enabled: false`) löscht nachts abgelaufene
 **`training_assignments`-Nachweise** nach Ablauf der Frist
-(`FINKNOW_RETENTION_YEARS`, Default 3 Jahre). Betroffen ist **ausschliesslich**
+(Default 3 Jahre). Die Frist steht seit dem Settings-Release in den
+Policy-Einstellungen (`/manage/einstellungen`, Capability `settings:manage`) —
+der DSB passt sie dort ohne Deployment an, jede Aenderung wird protokolliert.
+`FINKNOW_RETENTION_YEARS` gilt nur noch als Fallback. Betroffen ist **ausschliesslich**
 diese Nachweis-Tabelle — Klasse-B-Daten und Keycloak-Nutzerkonten sind **nicht**
 betroffen (Keycloak verwaltet Nutzer:innen selbst, s. Abschnitt 2.4).
 
@@ -520,6 +524,11 @@ Abschnitt 5). Beim Pod-Start läuft das Auto-Migrate und legt
 `retention_purge_runs` an (Drizzle-Migration 0008). Erwartet im Log:
 `[auto-migrate] … fertig in <n> ms` (Abschnitt 6). Klemmt die Boot-Migration,
 ist `SKIP_MIGRATIONS` der dokumentierte Notausstieg (Abschnitt 7 / 7a).
+
+> Seit dem in Abschnitt 7f beschriebenen Release skippt `SKIP_MIGRATIONS`
+> NUR die Schema-Migrationen — die DB-Initializer (Rollen-Matrix) laufen
+> unabhängig davon weiter. Für einen Notausstieg dort: `SKIP_DB_INIT`
+> (Abschnitt 7 / 7f) — ⚠️ das setzt dann JEDE Berechtigung ausser Kraft.
 
 > Drizzle-Migrationen sind **vorwärts-only** (kein Auto-Down). Bei einem
 > Image-Rollback bleibt die neue Tabelle einfach stehen — das ist harmlos.
@@ -635,6 +644,11 @@ Payload-Migration `20260804_095928_add_land_scope_enum` (Enum-Typ anlegen
 + Spalte casten). Erwartet im Log: `[auto-migrate] … fertig in <n> ms`
 (Abschnitt 6). Klemmt die Boot-Migration, ist `SKIP_MIGRATIONS` der
 dokumentierte Notausstieg (Abschnitt 7 / 7a).
+
+> Seit dem in Abschnitt 7f beschriebenen Release skippt `SKIP_MIGRATIONS`
+> NUR die Schema-Migrationen — die DB-Initializer (Rollen-Matrix) laufen
+> unabhängig davon weiter. Für einen Notausstieg dort: `SKIP_DB_INIT`
+> (Abschnitt 7 / 7f) — ⚠️ das setzt dann JEDE Berechtigung ausser Kraft.
 
 Verifikation:
 ```bash
@@ -777,6 +791,67 @@ Zwei bewusst offene Alerts sind im CHANGELOG begründet.
   Lernbeginn wird dann beim ersten Lektionsstart gesetzt) oder gezieltes
   `UPDATE enrollments SET started_at = enrolled_at WHERE started_at IS NULL`
   für die betroffenen Zeilen.
+
+---
+
+## 7f. Update auf dieses Release (Rollen-Initialisierung + Compliance-Rolle)
+
+Dieses Release trennt Migrationen und DB-Initialisierung in **zwei
+unabhängige Schalter** (`SKIP_MIGRATIONS` / `SKIP_DB_INIT`, s. Abschnitt 7)
+und zieht die Nachweis-Einsicht aus `curator`/`admin` heraus in eine eigene
+Rolle. Die Initializer (`lib/db/initializers`) laufen ab jetzt bei JEDEM Boot
+innerhalb des bestehenden Advisory-Locks (Abschnitt 6) und gleichen `roles` +
+`role_capabilities` aus `DECLARED_ROLES` ab — **inklusive Löschen** nicht mehr
+deklarierter Capabilities, damit ein Entzug im Code auch wirklich ankommt.
+
+> ⚠️ **Pflicht-Vorabprüfung VOR dem Deploy (kritisch).** `curator` und
+> `admin` tragen ab diesem Release **keine** `compliance:*`-Capability mehr.
+> Nachweis-Einsicht (`/manage/pflichtkurse`, CSV-Export) hängt jetzt
+> ausschliesslich an einer neuen Rolle mit dem Key `finknow-compliance`
+> (`lib/auth/capabilities.ts`, `COMPLIANCE_ROLE_KEY`), gematcht gegen
+> Keycloak-Rolle/-Gruppe. **Vor dem Deploy muss existieren:**
+> 1. eine Keycloak-Realm-Rolle oder -Gruppe mit EXAKT dem Namen
+>    `finknow-compliance` (byte-identisch, s. Abschnitt 2.2/2.3),
+> 2. Mitgliedschaft der Personen, die Nachweis-Einsicht brauchen.
+>
+> Fehlt das, hat die Compliance-Auswertung nach dem Deploy **keine
+> Betrachter:innen mehr** — `/manage/pflichtkurse` redirected mit
+> `no_compliance_permission`, der CSV-Export liefert 403.
+
+**Audit-Log.** Ein Audit-Log existiert (Tabelle `audit_log`) und kann bei
+Bedarf vom Plattform-Team abgefragt werden. Ein Viewer in der App ist bewusst
+nicht gebaut — die Protokollierungs-Auflage ist erfüllt, solange die Daten
+abfragbar sind.
+
+Die Rechenschaftsspur „**wer** hat eine Rolle vergeben" liegt allerdings NICHT
+hier, sondern in den **Keycloak-Admin-Events** — Keycloak ist das führende
+System für Rollen, diese App sieht beim Login nur das Ergebnis. Zu prüfen:
+sind Admin-Events im Realm überhaupt aktiviert (Default: aus), welche
+Aufbewahrung ist gesetzt, und wer darf sie lesen.
+
+**Schritt 0 — Keycloak-Gruppe `finknow-compliance` anlegen (Pflicht, VOR
+Schritt 1).**
+Wie in Abschnitt 2.2/2.3: Realm-Rolle oder Gruppe `finknow-compliance`
+anlegen, ins ID-Token mappen (Realm-Roles- oder Group-Membership-Mapper,
+**Add to ID token: On**), betroffene Personen zuweisen. Ohne diesen Schritt
+NICHT weiter zu Schritt 1.
+
+**Schritt 1 — Image deployen (Pflicht).**
+Ausrollen wie gewohnt via `helm upgrade --install …` (Abschnitt 5). Beim Boot
+laufen die DB-Initializer `system-roles` (Rollen-Matrix-Abgleich) und
+`backfill-role-keys` (füllt `profiles.role_keys` nach). Erwartet im Log:
+`[db-init] system-roles: …` und `[db-init] backfill-role-keys: …`, danach wie
+gewohnt `[auto-migrate] … fertig in <n> ms`. Klemmt einer der beiden
+Initializer, bricht der Boot ab (broken-build-not-broken-prod-Muster) —
+`SKIP_DB_INIT` ist der dokumentierte Notausstieg dafür, aber ⚠️ er setzt
+JEDE Berechtigung ausser Kraft, solange er gesetzt ist (s. Abschnitt 7).
+
+**Verifikation.**
+`/manage/rechte` öffnen, eine Person aus der `finknow-compliance`-Gruppe
+auswählen — die Ansicht zeigt jetzt die aufgelösten „IdP-Rollen-Keys" und die
+daraus resultierenden effektiven Capabilities. Bereits eingeloggte Personen
+müssen sich NEU anmelden, damit ihre Keys aus dem Token neu aufgelöst werden
+(Auflösung passiert beim Login).
 
 ---
 

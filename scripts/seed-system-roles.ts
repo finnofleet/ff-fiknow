@@ -1,30 +1,24 @@
 /**
- * Seedet die beiden System-Rollen (`curator`, `admin`) + ihre
- * Rollen×Capability-Matrix in die neuen `roles`/`role_capabilities`-Tabellen
- * (ADR 0007, Phase P1 — „Rechte-Achse").
+ * CLI-Hülle um den `system-roles`-Initializer (ADR 0007 §2).
  *
- * EINE Quelle: `SYSTEM_ROLE_CAPABILITIES` aus `lib/auth/capabilities.ts` —
- * dieselbe Konstante, aus der auch die Laufzeit-Ableitung
- * (`capabilitiesForLegacyRole`) speist. Ändert sich dort das Capability-Set
- * einer System-Rolle, holt ein erneuter Seed-Lauf die Matrix nach.
+ * Die Logik selbst liegt in `lib/db/initializers/system-roles.ts` und läuft
+ * bei JEDEM App-Boot automatisch (`lib/db/auto-migrate.ts`, Schritt 5) — ein
+ * frisches System braucht diesen Aufruf also nicht mehr. Das Skript bleibt
+ * für den manuellen Anstoß: nach einer Änderung an
+ * `DECLARED_ROLES` gegen eine laufende Umgebung, ohne den Pod neu
+ * zu starten.
  *
- * Idempotent: `roles.key` ist unique, Upsert via `onConflictDoUpdate`
- * (No-Op-Update auf Label/Beschreibung) liefert die `id` in jedem Fall
- * zurück — egal ob neu eingefügt oder schon vorhanden. `role_capabilities`
- * hat einen Unique-Index auf `(role_id, capability)`; Inserts laufen mit
- * `onConflictDoNothing`, mehrfaches Ausführen erzeugt keine Duplikate.
- *
- * P1-Stand: diese Tabellen werden zur Laufzeit NOCH NICHT gelesen (die
- * Permission-Checks laufen weiter über den Compat-Shim aus der bestehenden
- * `profiles.role`-Single-Role). Dieser Seed legt nur das Fundament für die
- * spätere admin-editierbare Matrix (ADR 0007 §2/§8).
+ * ACHTUNG: der Abgleich ist beidseitig. Capabilities, die der Code für eine
+ * System-Rolle nicht mehr deklariert, werden in der DB GELÖSCHT — genau
+ * dafür ist er da (eine Entziehung im Code muss ankommen). Nicht-System-
+ * Rollen bleiben unangetastet.
  *
  * Usage:
  *   DATABASE_URL='postgres://…' npx tsx scripts/seed-system-roles.ts
  */
-import { SYSTEM_ROLE_CAPABILITIES } from "@/lib/auth/capabilities";
-import { ROLE_DESCRIPTION, ROLE_LABEL } from "@/lib/auth/roles";
-import { db, schema } from "@/lib/db/client";
+import { db } from "@/lib/db/client";
+import { syncSystemRoles } from "@/lib/db/initializers/system-roles";
+import { redactError } from "@/lib/log-redact";
 
 async function main(): Promise<void> {
   if (!process.env.DATABASE_URL) {
@@ -32,48 +26,12 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  for (const key of Object.keys(SYSTEM_ROLE_CAPABILITIES) as Array<
-    keyof typeof SYSTEM_ROLE_CAPABILITIES
-  >) {
-    const label = ROLE_LABEL[key];
-    const description = ROLE_DESCRIPTION[key];
-    const capabilities = SYSTEM_ROLE_CAPABILITIES[key];
-
-    const [role] = await db
-      .insert(schema.roles)
-      .values({ key, label, description, isSystem: true })
-      .onConflictDoUpdate({
-        target: schema.roles.key,
-        set: { label, description, isSystem: true },
-      })
-      .returning({ id: schema.roles.id });
-
-    if (!role) {
-      throw new Error(`Upsert von Rolle "${key}" lieferte keine Zeile zurück.`);
-    }
-
-    for (const capability of capabilities) {
-      await db
-        .insert(schema.roleCapabilities)
-        .values({ roleId: role.id, capability })
-        .onConflictDoNothing({
-          target: [
-            schema.roleCapabilities.roleId,
-            schema.roleCapabilities.capability,
-          ],
-        });
-    }
-
-    console.log(
-      `✓ Rolle "${key}" (${role.id}) — ${capabilities.length} Capability(s) geseedet.`,
-    );
-  }
-
-  console.log("✓ System-Rollen-Seed abgeschlossen.");
+  const summary = await syncSystemRoles(db);
+  console.log(`✓ ${summary}`);
   process.exit(0);
 }
 
 main().catch((err) => {
-  console.error("✗ Seed fehlgeschlagen:", err);
+  console.error("✗ Seed fehlgeschlagen:", redactError(err));
   process.exit(1);
 });

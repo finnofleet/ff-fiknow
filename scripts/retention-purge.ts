@@ -18,7 +18,10 @@
  * Exit-Code: 0 bei Erfolg (auch count=0), 1 bei Fehler — der K8s-CronJob
  * wertet das als Job-Status.
  */
+import { redactError } from "@/lib/log-redact";
 import { purgeExpiredNachweise } from "@/lib/privacy/purge-expired";
+import { SETTING_RETENTION_YEARS } from "@/lib/settings/registry";
+import { getSettingValue } from "@/lib/settings/store";
 import { RETENTION_YEARS } from "@/lib/privacy/retention";
 
 async function main(): Promise<void> {
@@ -33,14 +36,24 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Frist aus den Policy-Einstellungen (DB) — der DSB kann sie ohne Deploy
+  // anpassen. Fallback bleibt `FINKNOW_RETENTION_YEARS` bzw. der Default,
+  // siehe lib/settings/registry.ts.
+  const years = await getSettingValue(SETTING_RETENTION_YEARS);
+
   const mode = dryRun ? "DRY-RUN (nichts wird gelöscht)" : "APPLY (löscht)";
   console.log(`▶ Retention-Purge — ${mode}`);
-  console.log(`  Frist: ${RETENTION_YEARS} Jahr(e) (FINKNOW_RETENTION_YEARS)`);
+  console.log(
+    `  Frist: ${years} Jahr(e)` +
+      (years === RETENTION_YEARS
+        ? ""
+        : ` (Einstellung überschreibt FINKNOW_RETENTION_YEARS=${RETENTION_YEARS})`),
+  );
   if (confirm && forcedDryRun) {
     console.log("  ⚠ --confirm durch RETENTION_PURGE_DRY_RUN übersteuert.");
   }
 
-  const report = await purgeExpiredNachweise({ dryRun });
+  const report = await purgeExpiredNachweise({ dryRun, years });
 
   console.log(
     JSON.stringify(
@@ -64,6 +77,6 @@ async function main(): Promise<void> {
 main()
   .then(() => process.exit(0))
   .catch((err) => {
-    console.error("✗ Retention-Purge fehlgeschlagen:", err);
+    console.error("✗ Retention-Purge fehlgeschlagen:", redactError(err));
     process.exit(1);
   });

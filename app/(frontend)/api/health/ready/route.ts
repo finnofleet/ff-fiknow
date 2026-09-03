@@ -12,6 +12,7 @@
 import { NextResponse } from "next/server";
 
 import { pingDb } from "@/lib/db/client";
+import { redactError } from "@/lib/log-redact";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function GET() {
       { headers: { "cache-control": "no-store" } },
     );
   } catch (err) {
-    console.error("[health/ready] DB-Check fehlgeschlagen:", err);
+    console.error("[health/ready] DB-Check fehlgeschlagen:", redactError(err));
     return NextResponse.json(
       { ok: false, db: "down" },
       { status: 503, headers: { "cache-control": "no-store" } },

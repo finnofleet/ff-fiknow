@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 
 import { TopNav } from "@/components/top-nav";
 import { getAppVersion } from "@/lib/app-version";
+import { can } from "@/lib/auth/capabilities";
 import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
-import { canSeeAdmin } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 
 import styles from "./layout.module.css";
@@ -36,8 +36,8 @@ export default async function AdminLayout({
   // Traeger irgendeiner Management-Capability rein (leerer Cap-Satz = Lerner
   // -> weiterhin raus). Die FEINE Berechtigung pro Unterseite
   // (Kurse/Nutzer/Pflichtkurse) macht jede Page selbst.
-  const caps = await resolveEffectiveCapabilities(user.id, user.role);
-  if (!canSeeAdmin(user.role) && caps.size === 0) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage") && caps.size === 0) {
     redirect("/dashboard?error=no_admin_access");
   }
 

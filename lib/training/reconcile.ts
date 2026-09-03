@@ -20,7 +20,7 @@ import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { getPayload, type Where } from "payload";
 import config from "@payload-config";
 
-import { normalizeRole, roleMeetsTarget, type Role } from "@/lib/auth/roles";
+import { normalizeRole, type Role } from "@/lib/auth/roles";
 import { db } from "@/lib/db/client";
 import { enrollments, profiles, trainingAssignments } from "@/lib/db/schema";
 
@@ -76,6 +76,8 @@ type RequirementDoc = {
 type ProfileRow = {
   userId: string;
   role: string;
+  /** Vollstaendige Rollen-Menge (`completeRoleKeys`) — Basis des Ziel-Matchs. */
+  roleKeys: string[] | null;
   land: string | null;
   bu: string | null;
 };
@@ -154,6 +156,7 @@ async function fetchAllProfiles(): Promise<ProfileRow[]> {
     .select({
       userId: profiles.userId,
       role: profiles.role,
+      roleKeys: profiles.roleKeys,
       land: profiles.land,
       bu: profiles.bu,
     })
@@ -168,11 +171,22 @@ function nonSuspendedUserIds(rows: ProfileRow[]): string[] {
 }
 
 function roleTargetUserIds(rows: ProfileRow[], role: Role): string[] {
-  // Hierarchisch (ADR 0007): „diese Rolle ODER höher". Ein learner-Ziel erfasst
-  // damit auch Kurator:innen/Admins — alle müssen die Basis-Pflichtschulung
-  // absolvieren (Compliance). Siehe roleMeetsTarget/ROLE_RANK in lib/auth/roles.
+  // MENGEN-ZUGEHÖRIGKEIT statt Rangvergleich (löst ADR 0011 ab): trifft zu,
+  // wer den Ziel-Key in `profiles.role_keys` trägt. Die fachliche Aussage von
+  // ADR 0011 bleibt exakt erhalten, sie steckt jetzt in der Key-Menge selbst
+  // (`completeRoleKeys`): jede Person trägt implizit `learner`, ein Admin
+  // zusätzlich `curator`. Ein learner-Ziel erfasst damit weiterhin ALLE
+  // aktiven Personen — der Punkt, an dem seinerzeit ein Kurator fälschlich
+  // durchs Raster fiel.
+  //
+  // `suspended` fliegt weiterhin raus, und zwar an der Quelle: für ein
+  // gesperrtes Konto setzt `completeRoleKeys` gar keine Rollen-Keys.
   return rows
-    .filter((r) => roleMeetsTarget(normalizeRole(r.role), role))
+    .filter(
+      (r) =>
+        normalizeRole(r.role) !== "suspended" &&
+        (r.roleKeys ?? []).includes(role),
+    )
     .map((r) => r.userId);
 }
 
@@ -484,6 +498,7 @@ export async function reconcileForUser(userId: string): Promise<void> {
       .select({
         userId: profiles.userId,
         role: profiles.role,
+        roleKeys: profiles.roleKeys,
         land: profiles.land,
         bu: profiles.bu,
       })

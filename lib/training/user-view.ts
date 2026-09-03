@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm";
 import { getCourse } from "@/lib/content";
 import { db } from "@/lib/db/client";
 import { trainingAssignments } from "@/lib/db/schema";
+import { redactError } from "@/lib/log-redact";
 
 import { computeAmpel, type Ampel, type AmpelStatus } from "./ampel";
 import { pickCourseRepresentatives } from "./dedupe-assignments";
@@ -66,7 +67,7 @@ export async function getMyTrainingAssignments(
   } catch (err) {
     console.error(
       `[training/user-view] reconcileForUser(${userId}) fehlgeschlagen`,
-      err,
+      redactError(err),
     );
   }
 
@@ -108,7 +109,7 @@ export async function getMyTrainingAssignments(
       } catch (err) {
         console.error(
           `[training/user-view] getCourse(${slug}) fehlgeschlagen`,
-          err,
+          redactError(err),
         );
       }
     }),

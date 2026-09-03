@@ -31,7 +31,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "not_logged_in");
-  const caps = await resolveEffectiveCapabilities(user.id, user.role);
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
   if (!can(caps, "compliance:export")) {
     return jsonError(403, "insufficient_capability", {
       required: "compliance:export",
@@ -40,7 +40,17 @@ export async function GET(request: NextRequest) {
 
   const driver = request.nextUrl.searchParams.get("driver");
 
-  const viewerScope = await resolveViewerScope(user.id, "compliance:view-named");
+  // Scope der EIGENEN Capability aufloesen, nicht den von
+  // `compliance:view-named`. `compliance:export` steht in
+  // `SCOPED_CAPABILITIES` (lib/auth/capabilities.ts) — die Achse gilt also
+  // auch hier. Vorher wurde hier der view-named-Scope aufgeloest, was
+  // fail-OPEN war: `resolveViewerScope` liefert bei null Treffern
+  // `unrestricted`, also haette eine auf EINE Gesellschaft gescopte Rolle,
+  // die nur `compliance:export` traegt (und kein `view-named`), den CSV ueber
+  // ALLE Gesellschaften gezogen — genau in der Richtung, die das Scoping
+  // verhindern soll. Solange niemand gescopte Rollen haelt, ist das Ergebnis
+  // identisch; scharf wird es mit der ersten gescopten Zuweisung.
+  const viewerScope = await resolveViewerScope(user.id, "compliance:export");
   const overview = await getComplianceOverview({ viewerScope });
   const filtered = filterCoursesByDriver(overview, driver);
   const csv = buildComplianceCsv(filtered);

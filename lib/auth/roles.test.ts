@@ -1,30 +1,36 @@
 import { describe, expect, it } from "vitest";
 
+import { DECLARED_ROLES } from "./capabilities";
+import { completeRoleKeys, diffRoleKeys } from "./role-keys";
 import {
   ALL_ROLES,
   canLearn,
-  canManageCourses,
-  canManageUsers,
-  canSeeAdmin,
   isSuspended,
   normalizeRole,
-  ROLE_RANK,
-  roleMeetsTarget,
   type Role,
 } from "./roles";
 
 /**
- * Regressionsschutz (ADR 0007, Phase P1): `roles.ts` delegiert seit P1 intern
- * an die Capability-Schicht (`capabilitiesForLegacyRole` +
- * `can`), aber das beobachtbare Verhalten der vier Permission-Funktionen
- * MUSS bit-identisch zum alten Single-Role-Modell bleiben. Diese
- * Wahrheitstabelle ist exakt die aus der Aufgabenstellung — bricht sie,
- * hat der Capability-Umbau das Verhalten verändert.
+ * Regressionsschutz (ADR 0007): die Rollen-Wrapper (`canSeeAdmin`,
+ * `canManageCourses`, `canManageUsers`) sind entfallen — die Gates prüfen
+ * jetzt direkt Capabilities (`resolveEffectiveCapabilities` + `can`). Was
+ * NICHT entfallen darf, ist die zugrunde liegende Zuordnung Rolle →
+ * Capability-Set: sie ist der Boden jeder Berechtigung (System-Rollen kommen
+ * ausschliesslich hierueber, nicht aus der Matrix). Diese Wahrheitstabelle
+ * prueft daher dieselben Aussagen wie vorher, nur eine Schicht tiefer — am
+ * Capability-Set statt an den entfernten Wrappern. `canLearn` bleibt ein
+ * direkter Status-Check und wird unveraendert mitgeprueft.
  */
 const TRUTH_TABLE: Record<
   Role,
   {
     canLearn: boolean;
+    /**
+     * `canSeeAdmin` und `canManageCourses` waren zwei Wrapper ueber DERSELBEN
+     * Capability (`courses:manage`) — hier bleibt ein Feld je Wrapper
+     * erhalten, damit die Tabelle mit der historischen Fassung vergleichbar
+     * bleibt; geprueft wird beides gegen `courses:manage`.
+     */
     canSeeAdmin: boolean;
     canManageCourses: boolean;
     canManageUsers: boolean;
@@ -56,24 +62,23 @@ const TRUTH_TABLE: Record<
   },
 };
 
-describe("Permission-Wahrheitstabelle (roles.ts, Regressionsschutz)", () => {
+describe("Permission-Wahrheitstabelle (Rolle → Capabilities, Regressionsschutz)", () => {
   for (const role of ALL_ROLES) {
     const expected = TRUTH_TABLE[role];
+    // Rang-Rollen ohne Eintrag in der Deklaration (learner/suspended) tragen
+    // keine Capabilities — genau das prueft die Tabelle mit.
+    const caps = new Set(DECLARED_ROLES[role]?.capabilities ?? []);
 
     it(`${role}: canLearn === ${expected.canLearn}`, () => {
       expect(canLearn(role)).toBe(expected.canLearn);
     });
 
-    it(`${role}: canSeeAdmin === ${expected.canSeeAdmin}`, () => {
-      expect(canSeeAdmin(role)).toBe(expected.canSeeAdmin);
+    it(`${role}: courses:manage === ${expected.canSeeAdmin}`, () => {
+      expect(caps.has("courses:manage")).toBe(expected.canSeeAdmin);
     });
 
-    it(`${role}: canManageCourses === ${expected.canManageCourses}`, () => {
-      expect(canManageCourses(role)).toBe(expected.canManageCourses);
-    });
-
-    it(`${role}: canManageUsers === ${expected.canManageUsers}`, () => {
-      expect(canManageUsers(role)).toBe(expected.canManageUsers);
+    it(`${role}: users:manage === ${expected.canManageUsers}`, () => {
+      expect(caps.has("users:manage")).toBe(expected.canManageUsers);
     });
   }
 });
@@ -88,8 +93,12 @@ describe("isSuspended", () => {
 });
 
 describe("normalizeRole", () => {
-  it("legacy `editor` wird zu curator", () => {
-    expect(normalizeRole("editor")).toBe("curator");
+  it("der Legacy-Wert `editor` wird NICHT mehr abgefangen", () => {
+    // Bewusst: der Initializer `normalize-legacy-roles` schreibt ihn beim
+    // Boot auf `curator` um, BEVOR ihn etwas liest. Faellt er hier dennoch
+    // an, ist der defensive Default richtig — lieber zu wenig Rechte als
+    // eine stille Sonderregel, die Daten dauerhaft kompensiert.
+    expect(normalizeRole("editor")).toBe("learner");
   });
 
   it("unbekannte/null-Werte werden defensiv zu learner", () => {
@@ -106,57 +115,75 @@ describe("normalizeRole", () => {
  * Admins (Compliance: alle müssen die Basis-Pflichtschulung machen).
  * `suspended` erfüllt kein Ziel, unabhängig vom Rang.
  */
-describe("ROLE_RANK", () => {
-  it("Rang-Reihenfolge: suspended < learner < curator < admin", () => {
-    expect(ROLE_RANK.suspended).toBeLessThan(ROLE_RANK.learner);
-    expect(ROLE_RANK.learner).toBeLessThan(ROLE_RANK.curator);
-    expect(ROLE_RANK.curator).toBeLessThan(ROLE_RANK.admin);
+describe("completeRoleKeys (loest ROLE_RANK/roleMeetsTarget ab)", () => {
+  it("jede aktive Person traegt implizit learner", () => {
+    for (const role of ["learner", "curator", "admin"]) {
+      expect(completeRoleKeys(role, [])).toContain("learner");
+    }
+  });
+
+  it("admin traegt zusaetzlich curator (die einzige echte Implikation)", () => {
+    const keys = completeRoleKeys("admin", []);
+    expect(keys).toContain("admin");
+    expect(keys).toContain("curator");
+    expect(keys).toContain("learner");
+  });
+
+  it("curator traegt NICHT admin", () => {
+    expect(completeRoleKeys("curator", [])).not.toContain("admin");
+  });
+
+  it("ein learner-Ziel erfasst weiterhin curator und admin (ADR 0011)", () => {
+    // Genau der Fall, an dem seinerzeit ein Kurator faelschlich durchs
+    // Raster fiel — jetzt ueber Mengen-Zugehoerigkeit statt Rangvergleich.
+    for (const role of ["learner", "curator", "admin"]) {
+      expect(completeRoleKeys(role, []).includes("learner")).toBe(true);
+    }
+  });
+
+  it("suspended traegt GAR KEINE Rollen-Keys (kein Ziel, keine Rechte)", () => {
+    expect(completeRoleKeys("suspended", [])).toEqual([]);
+  });
+
+  it("Gruppen-Treffer kommen additiv dazu, ohne Rangfrage", () => {
+    const keys = completeRoleKeys("admin", ["finknow-compliance"]);
+    expect(new Set(keys)).toEqual(
+      new Set(["learner", "admin", "curator", "finknow-compliance"]),
+    );
   });
 });
 
-describe("roleMeetsTarget", () => {
-  describe("Ziel: learner", () => {
-    it("wird von learner, curator, admin erfüllt", () => {
-      expect(roleMeetsTarget("learner", "learner")).toBe(true);
-      expect(roleMeetsTarget("curator", "learner")).toBe(true);
-      expect(roleMeetsTarget("admin", "learner")).toBe(true);
-    });
-
-    it("wird NICHT von suspended erfüllt", () => {
-      expect(roleMeetsTarget("suspended", "learner")).toBe(false);
+describe("diffRoleKeys", () => {
+  it("erste Befuellung: alles ist added, nichts removed", () => {
+    expect(diffRoleKeys(null, ["learner", "curator"])).toEqual({
+      added: ["curator", "learner"],
+      removed: [],
     });
   });
 
-  describe("Ziel: curator", () => {
-    it("wird von curator, admin erfüllt", () => {
-      expect(roleMeetsTarget("curator", "curator")).toBe(true);
-      expect(roleMeetsTarget("admin", "curator")).toBe(true);
-    });
-
-    it("wird NICHT von learner oder suspended erfüllt", () => {
-      expect(roleMeetsTarget("learner", "curator")).toBe(false);
-      expect(roleMeetsTarget("suspended", "curator")).toBe(false);
+  it("unveraenderte Menge ergibt keinen Eintrag (kein Login-Rauschen)", () => {
+    expect(diffRoleKeys(["learner", "curator"], ["curator", "learner"])).toEqual({
+      added: [],
+      removed: [],
     });
   });
 
-  describe("Ziel: admin", () => {
-    it("wird NUR von admin erfüllt", () => {
-      expect(roleMeetsTarget("admin", "admin")).toBe(true);
-    });
-
-    it("wird NICHT von curator, learner oder suspended erfüllt", () => {
-      expect(roleMeetsTarget("curator", "admin")).toBe(false);
-      expect(roleMeetsTarget("learner", "admin")).toBe(false);
-      expect(roleMeetsTarget("suspended", "admin")).toBe(false);
-    });
+  it("Compliance-Rolle dazubekommen wird als added erfasst", () => {
+    expect(
+      diffRoleKeys(["learner"], ["learner", "finknow-compliance"]),
+    ).toEqual({ added: ["finknow-compliance"], removed: [] });
   });
 
-  describe("suspended als User-Rolle", () => {
-    it("erfüllt kein Rollen-Ziel", () => {
-      const targets: Role[] = ["learner", "curator", "admin"];
-      for (const target of targets) {
-        expect(roleMeetsTarget("suspended", target)).toBe(false);
-      }
+  it("Entzug wird als removed erfasst", () => {
+    expect(
+      diffRoleKeys(["learner", "finknow-compliance"], ["learner"]),
+    ).toEqual({ added: [], removed: ["finknow-compliance"] });
+  });
+
+  it("Sperrung (leere Menge) entfernt alles", () => {
+    expect(diffRoleKeys(["learner", "admin", "curator"], [])).toEqual({
+      added: [],
+      removed: ["admin", "curator", "learner"],
     });
   });
 });

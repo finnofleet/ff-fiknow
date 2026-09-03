@@ -149,6 +149,25 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Datenqualität: unvollständige Scope-Zuordnungen (ADR 0007 §3)        */
+/* ------------------------------------------------------------------ */
+
+.coverageNotice {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--warning);
+  border-left-width: 3px;
+  border-radius: 10px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.coverageNotice strong {
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ */
 /* Course list + card                                                   */
 /* ------------------------------------------------------------------ */
 

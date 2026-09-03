@@ -25,6 +25,7 @@ import {
   getEmbeddingProvider,
   isEmbeddingConfigured,
 } from "@/lib/embeddings";
+import { redactError } from "@/lib/log-redact";
 
 // Zwei kurze, bewusst DEUTSCHE Texte — deckt den Hauptnutzungsfall (deutsch-
 // sprachige Kursinhalte, multilinguales Modell) mit ab.
@@ -102,7 +103,7 @@ main()
     if (err instanceof EmbeddingError) {
       console.error(`\n✗ Embedding-Fehler [${err.code}]: ${err.message}`);
     } else {
-      console.error("\n✗ Smoke-Test fehlgeschlagen:", err);
+      console.error("\n✗ Smoke-Test fehlgeschlagen:", redactError(err));
     }
     process.exit(1);
   });

@@ -18,6 +18,8 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.7.0] – 2026-09-03
+
 ### Hinzugefügt
 - **Scope-Achse Rechtseinheit (`bu`) aus dem OIDC-Token** (ADR 0007 §3): ein
   konfigurierbarer Claim (`OIDC_ENTITY_CLAIM`) füllt `profiles.bu` beim
@@ -338,7 +340,8 @@ inkl. MDX-Bundle-Authoring, KI-Tutor + RAG, Katalog/Kurse, Lernpfade,
 Pflichtkurse & Compliance-Nachweis, OIDC/Keycloak-Auth, DSG-Retention. Details
 siehe `docs/ROADMAP.md` und `docs/adr/`.
 
-[Unreleased]: https://github.com/finnofleet/ff-finknow/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/finnofleet/ff-finknow/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/finnofleet/ff-finknow/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/finnofleet/ff-finknow/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/finnofleet/ff-finknow/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/finnofleet/ff-finknow/compare/v0.4.0...v0.5.0

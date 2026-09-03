@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "role_keys" text[];

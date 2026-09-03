@@ -31,7 +31,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "not_logged_in");
-  const caps = await resolveEffectiveCapabilities(user.id, user.role);
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
   if (!can(caps, "compliance:export")) {
     return jsonError(403, "insufficient_capability", {
       required: "compliance:export",

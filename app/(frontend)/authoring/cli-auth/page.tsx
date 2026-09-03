@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 
 import { CliAuthApprove } from "./cli-auth-approve";
@@ -92,7 +93,8 @@ export default async function CliAuthPage({
     )}&state=${encodeURIComponent(state)}`;
     redirect(`/login?redirect=${encodeURIComponent(self)}`);
   }
-  if (!canManageCourses(user.role)) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) {
     return (
       <main className={styles.shell}>
         <div className={styles.card}>

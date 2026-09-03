@@ -38,7 +38,7 @@ export default async function RightsInspectorPage({
   searchParams: SearchParams;
 }) {
   const me = (await getCurrentUser())!;
-  const caps = await resolveEffectiveCapabilities(me.id, me.role);
+  const caps = await resolveEffectiveCapabilities(me.id, me.role, me.roleKeys);
   if (!can(caps, "users:manage")) {
     redirect("/manage?error=no_rights_inspector");
   }
@@ -100,6 +100,14 @@ export default async function RightsInspectorPage({
             <div className={styles.metaRow}>
               <span>
                 Legacy-Rolle: <strong>{ROLE_LABEL[inspection.legacyRole]}</strong>
+              </span>
+              <span>
+                IdP-Rollen-Keys:{" "}
+                <strong>
+                  {inspection.roleKeys.length > 0
+                    ? inspection.roleKeys.join(", ")
+                    : "—"}
+                </strong>
               </span>
               <span>
                 Land: <strong>{inspection.land ?? "—"}</strong>

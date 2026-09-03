@@ -19,7 +19,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { profiles } from "@/lib/db/schema";
 
-import { canManageCourses, normalizeRole, type Role } from "./roles";
+import { can } from "./capabilities";
+import { resolveEffectiveCapabilities } from "./effective-capabilities";
+import { normalizeRole, type Role } from "./roles";
 import { getCurrentUser } from "./session";
 import { verifyAuthoringToken } from "./authoring-token";
 
@@ -65,18 +67,24 @@ export async function authenticateAuthoring(
     }
     // Rolle frisch lesen — der Token trägt keine eingebackene Berechtigung.
     const [profile] = await db
-      .select({ role: profiles.role })
+      .select({ role: profiles.role, roleKeys: profiles.roleKeys })
       .from(profiles)
       .where(eq(profiles.userId, verified.userId))
       .limit(1);
     const role = normalizeRole(profile?.role);
-    if (!canManageCourses(role)) return forbidden(role);
+    const caps = await resolveEffectiveCapabilities(
+      verified.userId,
+      role,
+      profile?.roleKeys ?? [],
+    );
+    if (!can(caps, "courses:manage")) return forbidden(role);
     return { ok: true, principal: { id: verified.userId, role, via: "token" } };
   }
 
   // Fallback: Browser-Session.
   const user = await getCurrentUser();
   if (!user) return { ok: false, status: 401, error: "not_logged_in" };
-  if (!canManageCourses(user.role)) return forbidden(user.role);
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) return forbidden(user.role);
   return { ok: true, principal: { id: user.id, role: user.role, via: "session" } };
 }

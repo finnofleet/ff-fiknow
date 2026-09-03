@@ -11,7 +11,8 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   mintAuthoringToken,
@@ -27,7 +28,8 @@ const MAX_LABEL_LEN = 200;
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "not_logged_in");
-  if (!canManageCourses(user.role)) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) {
     return jsonError(403, "insufficient_role", {
       required: ["curator", "admin"],
       got: user.role,
@@ -80,7 +82,8 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "not_logged_in");
-  if (!canManageCourses(user.role)) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) {
     return jsonError(403, "insufficient_role", {
       required: ["curator", "admin"],
       got: user.role,

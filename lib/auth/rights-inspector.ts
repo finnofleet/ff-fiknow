@@ -35,6 +35,13 @@ export type RightsInspection = {
   userId: string;
   displayName: string | null;
   legacyRole: Role;
+  /**
+   * Die aus dem IdP aufgeloesten Rollen-Keys (ADR 0007 §2). Gehoeren in den
+   * Inspektor, weil sie seit dem Abschluss der Rechte-Achse eine QUELLE der
+   * effektiven Capabilities sind — ohne sie zeigte er ein Ergebnis ohne
+   * seine Herkunft.
+   */
+  roleKeys: string[];
   land: string | null;
   bu: string | null;
   effectiveCapabilities: Capability[];
@@ -65,6 +72,7 @@ export async function inspectUserRights(userId: string): Promise<RightsInspectio
       role: profiles.role,
       land: profiles.land,
       bu: profiles.bu,
+      roleKeys: profiles.roleKeys,
     })
     .from(profiles)
     .where(eq(profiles.userId, userId))
@@ -72,8 +80,12 @@ export async function inspectUserRights(userId: string): Promise<RightsInspectio
   if (!profile) return null;
 
   const legacyRole = profile.role as Role;
+  // Dieselbe Key-Menge, aus der auch zur Laufzeit die Capabilities entstehen
+  // (ADR 0007 §2) — sonst zeigte der Inspektor weniger Rechte an, als die
+  // Person tatsaechlich hat, und waere als Nachweis wertlos.
+  const roleKeys = profile.roleKeys ?? [];
 
-  const effective = await resolveEffectiveCapabilities(userId, legacyRole);
+  const effective = await resolveEffectiveCapabilities(userId, legacyRole, roleKeys);
   const effectiveCapabilities = [...effective].sort();
 
   // Zuweisungen (Rolle + Scope) + je Rolle deren Capabilities.
@@ -116,6 +128,7 @@ export async function inspectUserRights(userId: string): Promise<RightsInspectio
     userId: profile.userId,
     displayName: profile.displayName,
     legacyRole,
+    roleKeys,
     land: profile.land,
     bu: profile.bu,
     effectiveCapabilities,

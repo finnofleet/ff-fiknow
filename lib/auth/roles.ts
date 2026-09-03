@@ -1,5 +1,5 @@
 /**
- * Zentrale Role-Definitionen + Permission-Helpers.
+ * Zentrale Role-Definitionen (Normalisierung + Anzeige).
  *
  * Drei aktive Rollen, plus ein Status:
  *
@@ -11,67 +11,54 @@
  *                  Berechtigungen — auch Lerner-Funktionen sind blockiert.
  *                  Reversibel durch Admin (Rolle zurück auf `learner`).
  *
- * Backward-Compat: alter Wert `editor` wird als Curator behandelt, damit
- * Bestands-DB-Einträge ohne Migration weiterfunktionieren. Bei Gelegenheit
- * sollte `UPDATE profiles SET role='curator' WHERE role='editor'` laufen.
- *
- * ADR 0007 (Phase P1): die Permission-Checks unten delegieren intern an die
- * Capability-Schicht (`lib/auth/capabilities.ts`) via
- * `capabilitiesForLegacyRole` — Signaturen und Verhalten bleiben identisch,
- * nur die Herleitung läuft jetzt über Capabilities statt harter
- * `role === "…"`-Vergleiche. Das ist der erste Schritt Richtung additive
- * Rollen + feste Capabilities; Call-Sites ändern sich nicht.
+ * ADR 0007 (abgeschlossen): dieses Modul trifft KEINE Rechteentscheidungen
+ * mehr. Berechtigungen kommen ausschliesslich aus der Capability-Schicht
+ * (`resolveEffectiveCapabilities` + `can`); die frueheren Wrapper
+ * (`canSeeAdmin`/`canManageCourses`/`canManageUsers`) und der Rang
+ * (`ROLE_RANK`/`roleMeetsTarget`) sind entfallen — siehe die ENTFALLEN-Notiz
+ * weiter unten. Uebrig bleiben Normalisierung, Anzeige-Labels und die zwei
+ * Zustands-Praedikate `canLearn`/`isSuspended`.
  */
-import { can, capabilitiesForLegacyRole } from "./capabilities";
 
 export type Role = "learner" | "curator" | "admin" | "suspended";
 
 export const ALL_ROLES: Role[] = ["learner", "curator", "admin", "suspended"];
 
 /**
- * Liest eine Role-String-Wert aus DB sicher in unseren Role-Type um.
+ * Liest einen Role-String-Wert aus der DB sicher in unseren Role-Type um.
  * Unbekannte Werte (Tippfehler etc.) und `null` werden zu `learner`
  * — defensive default, niemals zufällig Admin-Rechte vergeben.
  *
- * `editor` wird auf `curator` gemappt (Legacy-Name).
+ * Der Legacy-Wert `editor` (aus der Zeit vor Keycloak) wird hier NICHT mehr
+ * abgefangen: der Initializer `normalize-legacy-roles` schreibt ihn beim Boot
+ * auf `curator` um, bevor irgendetwas ihn liest. Der Code-Zweig war die
+ * Dauer-Kompensation für Daten, die einmalig zu bereinigen waren.
  */
 export function normalizeRole(raw: string | null | undefined): Role {
   if (raw === "admin") return "admin";
-  if (raw === "curator" || raw === "editor") return "curator";
+  if (raw === "curator") return "curator";
   if (raw === "suspended") return "suspended";
   return "learner";
 }
 
-/**
- * Rollen-Rang — die EINZIGE explizite Quelle der Rollen-Hierarchie. Eine höhere
- * Rolle schließt die niedrigere ein: für das Pflichtschulungs-Targeting zählt
- * ein Admin/Kurator damit auch als Lernende:r. `suspended` steht bewusst UNTER
- * `learner` (Deny-all-Status) und erfüllt daher kein Rollen-Ziel.
+/*
+ * ENTFALLEN: `ROLE_RANK` und `roleMeetsTarget`.
  *
- * ⚠️ BEKANNTE GRENZE (Multi-Rollen-Modell, siehe ADR 0007 + Multi-Rollen-Notiz): Dies
- * ist ein LINEARES Modell. Es kann KEINE gleichrangigen/orthogonalen Rollen
- * ausdrücken (zwei fachliche Rollen ohne Über-/Unterordnung). Sobald solche
- * Rollen kommen, greift `roleMeetsTarget` nicht mehr sinnvoll — dann braucht es
- * ein additives Multi-Rollen-Modell (Mitgliedschaft in einer Rollen-MENGE statt
- * eines einzelnen Rangs). Bis dahin bewusst linear.
+ * Beide bildeten eine TOTALE Ordnung über die Rollen („diese Rolle ODER
+ * höher") — brauchbar, solange alle Rollen ineinander liegen, aber
+ * grundsätzlich unfähig, gleichrangige/orthogonale Rollen auszudrücken
+ * (Compliance-Einsicht ist weder über noch unter Administration). Die
+ * Ordnung war ausserdem nur an einer einzigen Stelle wirklich Ordnung:
+ * beim Pflichtschulungs-Ziel.
+ *
+ * Ersetzt durch Mengen-Zugehörigkeit: jede Person trägt in
+ * `profiles.role_keys` ihre vollständige Rollen-Menge (`completeRoleKeys` in
+ * `lib/auth/role-keys.ts`) — inklusive des impliziten `learner` und der einen
+ * tatsächlich geltenden Implikation `admin ⇒ curator`. Rechte wie Ziele
+ * lesen dieselbe Menge. Die fachliche Aussage von ADR 0011 („wer mehr darf,
+ * ist auch Lernende:r") bleibt damit erhalten, steht aber als Datum statt als
+ * Zahlenvergleich.
  */
-export const ROLE_RANK: Record<Role, number> = {
-  suspended: -1,
-  learner: 0,
-  curator: 1,
-  admin: 2,
-};
-
-/**
- * Erfüllt `userRole` ein Rollen-Ziel `targetRole`? Hierarchisch — „diese Rolle
- * ODER höher". Macht die vorher implizite Annahme explizit („wer mehr darf, ist
- * auch Lernende:r"), an der genau dieses Missverständnis entstand. `suspended`
- * erfüllt nie ein Ziel.
- */
-export function roleMeetsTarget(userRole: Role, targetRole: Role): boolean {
-  if (userRole === "suspended") return false;
-  return ROLE_RANK[userRole] >= ROLE_RANK[targetRole];
-}
 
 // ============================================================
 // Permission-Checks — eine Funktion pro Capability, NICHT pro Rolle.
@@ -95,20 +82,16 @@ export function canLearn(role: Role): boolean {
   return role !== "suspended";
 }
 
-/** Darf den Admin-Bereich überhaupt sehen (egal welche Aktionen). */
-export function canSeeAdmin(role: Role): boolean {
-  return can(capabilitiesForLegacyRole(role), "courses:manage");
-}
-
-/** Darf Kurs-Bundles hochladen + publishen. */
-export function canManageCourses(role: Role): boolean {
-  return can(capabilitiesForLegacyRole(role), "courses:manage");
-}
-
-/** Darf Nutzer:innen verwalten (Rolle ändern, sperren). */
-export function canManageUsers(role: Role): boolean {
-  return can(capabilitiesForLegacyRole(role), "users:manage");
-}
+/*
+ * ENTFALLEN: `canSeeAdmin` / `canManageCourses` / `canManageUsers`.
+ *
+ * Diese Wrapper prueften eine Capability, nahmen aber nur die Rang-Rolle als
+ * Eingabe — die Matrix-Rollen aus dem IdP (`profiles.role_keys`) sahen sie
+ * nicht. Nach dem Abschluss der Rechte-Achse (ADR 0007 §2) waere ihr
+ * Weiterbestehen eine Falle: ein neuer Call-Site haette damit unbemerkt
+ * WENIGER Rechte gesehen als die Person hat. Gates prueffen deshalb direkt
+ * `can(caps, …)` mit `resolveEffectiveCapabilities`.
+ */
 
 // ============================================================
 // Human-readable Labels — für UI-Anzeige + Logs

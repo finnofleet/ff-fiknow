@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { type AuditActor } from "@/lib/audit/log";
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   deleteCourseCascade,
@@ -27,7 +28,8 @@ import {
 async function requireCurator() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Nicht eingeloggt.");
-  if (!canManageCourses(user.role)) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) {
     throw new Error("Nur Kurator:innen oder Admins können Kurse verwalten.");
   }
   return user;

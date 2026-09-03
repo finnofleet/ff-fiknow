@@ -11,7 +11,8 @@
 import { getAuthProvider } from "@/lib/auth/provider";
 import type { ServerIdentity } from "@/lib/auth/provider";
 
-import { canManageCourses } from "./roles";
+import { can } from "./capabilities";
+import { resolveEffectiveCapabilities } from "./effective-capabilities";
 
 /**
  * Eingeloggter User inkl. Rolle. Formgleich mit der Provider-`ServerIdentity`
@@ -39,5 +40,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
  */
 export async function viewerCanSeeDrafts(): Promise<boolean> {
   const user = await getCurrentUser();
-  return user !== null && canManageCourses(user.role);
+  if (!user) return false;
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  return can(caps, "courses:manage");
 }

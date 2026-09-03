@@ -12,7 +12,9 @@ import {
   quizAttempts,
 } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
-import { canManageCourses, normalizeRole } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
+import { normalizeRole } from "@/lib/auth/roles";
 import { listAuthoringTokens } from "@/lib/auth/authoring-token";
 
 import { AccessTokensManager, type TokenView } from "./access-tokens";
@@ -68,12 +70,17 @@ export default async function ProfilePage() {
     "";
   const initial = displayName.trim().charAt(0).toUpperCase() || "?";
   const role = normalizeRole(profile?.role ?? "learner");
+  const caps = await resolveEffectiveCapabilities(
+    user.id,
+    role,
+    profile?.roleKeys ?? [],
+  );
 
   // Authoring-Tokens + MCP-Endpoint-URL: nur für curator/admin serverseitig laden
   let authoringTokens: TokenView[] = [];
   let mcpUrl = "";
   let mcpUrlIsPlaceholder = false;
-  if (canManageCourses(role)) {
+  if (can(caps, "courses:manage")) {
     const rawTokens = await listAuthoringTokens(user.id);
     authoringTokens = rawTokens.map((t) => ({
       id: t.id,
@@ -172,7 +179,7 @@ export default async function ProfilePage() {
           </dl>
         </section>
 
-        {canManageCourses(role) && (
+        {can(caps, "courses:manage") && (
           <section className={styles.section}>
             <div className={styles.sectionHd}>
               <h3>Zugriffstokens</h3>

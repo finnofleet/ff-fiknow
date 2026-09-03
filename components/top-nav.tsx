@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { canManageCourses, canSeeAdmin } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 import { brand } from "@/lib/brand";
 import { countPaths } from "@/lib/paths";
@@ -15,11 +16,14 @@ export async function TopNav({ active }: Props) {
   const initial = user
     ? (user.displayName ?? user.email ?? "?").trim().charAt(0).toLowerCase()
     : null;
-  const showAdminLink = user ? canSeeAdmin(user.role) : false;
+  const caps = user
+    ? await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys)
+    : null;
+  const showAdminLink = caps ? can(caps, "courses:manage") : false;
   // „Pfade" erst zeigen, wenn mindestens ein sichtbarer Lernpfad existiert —
-  // kein Menüpunkt ins Leere. Editoren (canManageCourses) sehen den Link schon
+  // kein Menüpunkt ins Leere. Editoren (courses:manage) sehen den Link schon
   // bei einem Draft, damit sie ihn testen können; Lerner erst bei published.
-  const canDrafts = user ? canManageCourses(user.role) : false;
+  const canDrafts = caps ? can(caps, "courses:manage") : false;
   const showPathsLink = (await countPaths({ includeDrafts: canDrafts })) > 0;
 
   return (

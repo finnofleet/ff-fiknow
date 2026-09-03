@@ -9,7 +9,8 @@
  */
 import { NextResponse } from "next/server";
 
-import { canManageCourses } from "@/lib/auth/roles";
+import { can } from "@/lib/auth/capabilities";
+import { resolveEffectiveCapabilities } from "@/lib/auth/effective-capabilities";
 import { getCurrentUser } from "@/lib/auth/session";
 import { revokeAuthoringToken } from "@/lib/auth/authoring-token";
 
@@ -19,7 +20,8 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "not_logged_in");
-  if (!canManageCourses(user.role)) {
+  const caps = await resolveEffectiveCapabilities(user.id, user.role, user.roleKeys);
+  if (!can(caps, "courses:manage")) {
     return jsonError(403, "insufficient_role", {
       required: ["curator", "admin"],
       got: user.role,

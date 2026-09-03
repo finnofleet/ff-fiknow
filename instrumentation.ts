@@ -1,13 +1,14 @@
 /**
  * Next.js Instrumentation-Hook — läuft einmal pro Server-Boot.
  *
- * Hier triggern wir das Auto-Migrate beim Start: Drizzle-Schema +
- * auth-Schema-Bootstrap (inline) + Payload-Migrationen, gegen die in
- * DATABASE_URL konfigurierte DB. Damit kommt jede neue Brand-Deployment-
- * Instanz mit korrektem Schema hoch, ohne manuelle Bootstrap-Schritte.
+ * Hier triggern wir den DB-Bootstrap beim Start: Schema-Migrationen
+ * (Drizzle + auth-Schema-Bootstrap + Payload) UND die DB-Initializer
+ * (Inhalte, z. B. die Rollen-Matrix), gegen die in DATABASE_URL
+ * konfigurierte DB. Damit kommt jede neue Deployment-Instanz vollständig
+ * hoch, ohne manuelle Bootstrap-Schritte.
  *
- * Siehe lib/db/auto-migrate.ts für Details + Skip-Flags
- * (SKIP_MIGRATIONS=true).
+ * Siehe lib/db/auto-migrate.ts für Details + die zwei unabhängigen
+ * Skip-Flags (SKIP_MIGRATIONS / SKIP_DB_INIT).
  *
  * Edge-Runtime bekommt das nicht — wir gucken auf NEXT_RUNTIME=nodejs.
  */
@@ -30,8 +31,8 @@ export async function register() {
   const { registerGracefulShutdown } = await import("./lib/shutdown");
   registerGracefulShutdown();
 
-  const { runAutoMigrations } = await import("./lib/db/auto-migrate");
-  await runAutoMigrations();
+  const { runDbBootstrap } = await import("./lib/db/auto-migrate");
+  await runDbBootstrap();
 }
 
 /**

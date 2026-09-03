@@ -69,3 +69,8 @@ next-env.d.ts
 # committete values-ibm-production.example.yaml — kopieren + eigene Werte
 # eintragen: cp values-ibm-production.example.yaml values-ibm-production.yaml
 /deploy/helm/finknow/values-ibm-production.yaml
+
+# Aus docs/*.md generierte PDFs (z. B. für den Versand an Gremien) — die
+# Markdown-Quelle ist die einzige Wahrheit, das PDF wird bei Bedarf neu
+# erzeugt und wäre sonst ein Binär-Duplikat mit eigenem Änderungsstand.
+/docs/*.pdf

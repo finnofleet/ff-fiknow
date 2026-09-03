@@ -16,6 +16,10 @@ import {
   type ParticipantStatus,
 } from "@/lib/training/compliance-compute";
 import { driverLabel } from "@/lib/training/compliance-drivers";
+import {
+  getEntityCoverage,
+  type EntityCoverage,
+} from "@/lib/training/entity-coverage";
 import { resolveViewerScope } from "@/lib/training/viewer-scope";
 
 import { ComplianceAggregateView } from "./aggregate-view";
@@ -65,13 +69,59 @@ function ParticipantRow({ participant }: { participant: Participant }) {
   );
 }
 
+/**
+ * Datenqualitäts-Hinweis (ADR 0007 §3): Personen ohne auflösbare Land-/
+ * Entity-Zuordnung fallen aus JEDER scoped Auswertung heraus, ohne dass die
+ * Erfüllungsquote das zeigt. Diese Zeile ist die einzige Stelle, an der ein
+ * stilles Untererfassen sichtbar wird — sie erscheint nur, wenn es wirklich
+ * eine Lücke gibt.
+ *
+ * Die Entity-Achse wird nur angezeigt, wenn sie überhaupt aus dem Token
+ * befüllt wird (`OIDC_ENTITY_CLAIM` gesetzt) — sonst wäre „alle ohne
+ * Zuordnung" kein Befund, sondern der erwartete Zustand. Bewusst ein
+ * direkter Env-Read statt `oidcConfig()`: der validierende Config-Loader
+ * wirft, wenn die OIDC-Vars fehlen (z. B. AUTH_PROVIDER != oidc), und ein
+ * Hinweis-Banner darf das Dashboard nicht abschießen.
+ */
+function CoverageNotice({ coverage }: { coverage: EntityCoverage | null }) {
+  if (!coverage) return null;
+  const entityAxisActive = Boolean(process.env.OIDC_ENTITY_CLAIM?.trim());
+  const showLand = coverage.missingLand > 0;
+  const showBu = entityAxisActive && coverage.missingBu > 0;
+  if (!showLand && !showBu) return null;
+
+  return (
+    <p className={styles.coverageNotice} role="status">
+      <strong>Unvollständige Zuordnung.</strong>{" "}
+      {showLand && (
+        <>
+          <strong>{coverage.missingLand}</strong> von{" "}
+          <strong>{coverage.withAssignments}</strong> Personen mit
+          Pflichtzuweisung haben kein aufgelöstes Land
+          {showBu ? ", " : ". "}
+        </>
+      )}
+      {showBu && (
+        <>
+          <strong>{coverage.missingBu}</strong> keine aufgelöste
+          Rechtseinheit.{" "}
+        </>
+      )}
+      Diese Personen erscheinen in eingeschränkten (scoped) Auswertungen
+      nicht — die Erfüllungsquote oben zeigt sie trotzdem nicht als Lücke.
+      Ursache steht im Server-Log (`[oidc-claims]`): entweder liefert der IdP
+      den Claim nicht, oder sein Wert fehlt im Mapping.
+    </p>
+  );
+}
+
 export default async function CompliancePage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
   const me = (await getCurrentUser())!;
-  const caps = await resolveEffectiveCapabilities(me.id, me.role);
+  const caps = await resolveEffectiveCapabilities(me.id, me.role, me.roleKeys);
   const canNamed = can(caps, "compliance:view-named");
   const canAggregate = can(caps, "compliance:view-aggregate");
   // ADR 0007 P3b: Zugang haengt an Capabilities. `view-named` -> namentliche
@@ -82,6 +132,11 @@ export default async function CompliancePage({
   if (!canNamed && !canAggregate) {
     redirect("/manage?error=no_compliance_permission");
   }
+
+  // Datenqualität beider Sichten (namentlich + Aggregat): unvollständige
+  // Scope-Zuordnungen sind in BEIDEN gleich folgenreich, also vor der
+  // Verzweigung laden. Best-effort — `null` blendet den Hinweis nur aus.
+  const coverage = await getEntityCoverage();
 
   if (!canNamed && canAggregate) {
     const aggregateScope = await resolveViewerScope(
@@ -100,7 +155,12 @@ export default async function CompliancePage({
         targetType: "compliance",
       });
     }
-    return <ComplianceAggregateView aggregate={aggregate} />;
+    return (
+      <>
+        <CoverageNotice coverage={coverage} />
+        <ComplianceAggregateView aggregate={aggregate} />
+      </>
+    );
   }
 
   const { driver: driverRaw } = await searchParams;
@@ -140,6 +200,8 @@ export default async function CompliancePage({
           absolviert hat. Nenner ist die Anzahl zugewiesener Teilnehmer:innen.
         </p>
       </header>
+
+      <CoverageNotice coverage={coverage} />
 
       {fullOverview.length > 0 && (
         <nav className={styles.filterBar} aria-label="Nach Compliance-Treiber filtern">
